@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Application xmlns="http://xmlns.oracle.com/adfm/application" version="12.1.3.16.21" id="DataBindings"
+             SeparateXMLFiles="false" Package="mobile" ClientType="Generic">
+  <pageMap>
+    <page path="/Department/DepartmentList.amx" usageId="mobile_pageDefs_DepartmentListPageDef"/>
+    <page path="/Department/Department.amx" usageId="mobile_pageDefs_DepartmentPageDef"/>
+    <page path="/Department/Employee.amx" usageId="mobile_pageDefs_EmployeePageDef"/>
+    <page path="/Region/RegionList.amx" usageId="mobile_pageDefs_RegionListPageDef"/>
+    <page path="/Region/Region.amx" usageId="mobile_pageDefs_RegionPageDef"/>
+    <page path="/Region/Country.amx" usageId="mobile_pageDefs_CountryPageDef"/>
+    <page path="/Region/Location.amx" usageId="mobile_pageDefs_LocationPageDef"/>
+  </pageMap>
+  <pageDefinitionUsages>
+    <page id="mobile_pageDefs_DepartmentListPageDef" path="mobile.pageDefs.DepartmentListPageDef"/>
+    <page id="mobile_pageDefs_DepartmentPageDef" path="mobile.pageDefs.DepartmentPageDef"/>
+    <page id="mobile_pageDefs_EmployeePageDef" path="mobile.pageDefs.EmployeePageDef"/>
+    <page id="mobile_pageDefs_RegionListPageDef" path="mobile.pageDefs.RegionListPageDef"/>
+    <page id="mobile_pageDefs_RegionPageDef" path="mobile.pageDefs.RegionPageDef"/>
+    <page id="mobile_pageDefs_CountryPageDef" path="mobile.pageDefs.CountryPageDef"/>
+    <page id="mobile_pageDefs_LocationPageDef" path="mobile.pageDefs.LocationPageDef"/>
+  </pageDefinitionUsages>
+  <dataControlUsages>
+    <dc id="RegionService" path="mobile.RegionService"/>
+    <dc id="HRSoapService" path="mobile.HRSoapService"/>
+    <dc id="ApplicationFeatures" path="application.ApplicationFeatures"/>
+    <dc id="DeviceFeatures" path="application.DeviceFeatures"/>
+    <dc id="DepartmentService" path="mobile.DepartmentService"/>
+  </dataControlUsages>
+</Application>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<pageDefinition xmlns="http://xmlns.oracle.com/adfm/uimodel" version="11.1.2.64.36" id="DataSynchPageDef"
+                Package="oracle.ateam.sample.mobile.datasynch">
+  <parameters/>
+  <executables>
+    <variableIterator id="variables"/>
+    <iterator Binds="root" RangeSize="25" DataControl="DataSynchService" id="DataSynchServiceIterator"/>
+    <accessorIterator MasterBinding="DataSynchServiceIterator" Binds="currentDataSynchManager" RangeSize="25"
+                      DataControl="DataSynchService" BeanClass="oracle.ateam.sample.mobile.persistence.service.DataSynchManager"
+                      id="currentDataSynchManagerIterator"/>
+    <accessorIterator MasterBinding="currentDataSynchManagerIterator" Binds="dataSynchActions" RangeSize="25"
+                      DataControl="DataSynchService" BeanClass="oracle.ateam.sample.mobile.persistence.service.DataSynchAction"
+                      id="dataSynchActionsIterator"/>
+  </executables>
+  <bindings>
+    <tree IterBinding="dataSynchActionsIterator" id="dataSynchActions">
+      <nodeDefinition DefName="oracle.ateam.sample.mobile.persistence.service.DataSynchAction" Name="dataSynchActions0">
+        <AttrNames>
+          <Item Value="id"/>
+          <Item Value="action"/>
+          <Item Value="customMethodName"/>
+          <Item Value="dateCreated"/>
+          <Item Value="entityShortName"/>
+        </AttrNames>
+      </nodeDefinition>
+    </tree>
+    <attributeValues IterBinding="dataSynchActionsIterator" id="lastSynchAttempt">
+      <AttrNames>
+        <Item Value="lastSynchAttempt"/>
+      </AttrNames>
+    </attributeValues>
+    <attributeValues IterBinding="dataSynchActionsIterator" id="lastSynchError">
+      <AttrNames>
+        <Item Value="lastSynchError"/>
+      </AttrNames>
+    </attributeValues>
+    <attributeValues IterBinding="dataSynchActionsIterator" id="action">
+      <AttrNames>
+        <Item Value="action"/>
+      </AttrNames>
+    </attributeValues>
+    <attributeValues IterBinding="dataSynchActionsIterator" id="customMethodName">
+      <AttrNames>
+        <Item Value="customMethodName"/>
+      </AttrNames>
+    </attributeValues>
+    <attributeValues IterBinding="dataSynchActionsIterator" id="dateCreated">
+      <AttrNames>
+        <Item Value="dateCreated"/>
+      </AttrNames>
+    </attributeValues>
+    <attributeValues IterBinding="dataSynchActionsIterator" id="data">
+      <AttrNames>
+        <Item Value="data"/>
+      </AttrNames>
+    </attributeValues>
+    <action IterBinding="dataSynchActionsIterator" id="Delete" RequiresUpdateModel="false" Action="removeCurrentRow"/>
+    <methodAction IterBinding="currentDataSynchManagerIterator" id="synchronize" RequiresUpdateModel="true"
+                  Action="invokeMethod" MethodName="synchronize" IsViewObjectMethod="false"
+                  DataControl="DataSynchService"
+                  InstanceName="bindings.currentDataSynchManagerIterator.currentRow.dataProvider"
+                  IsLocalObjectReference="true">
+      <NamedData NDName="inBackground" NDValue="#{true}"
+                 NDType="boolean"/>
+    </methodAction>
+  </bindings>
+</pageDefinition>

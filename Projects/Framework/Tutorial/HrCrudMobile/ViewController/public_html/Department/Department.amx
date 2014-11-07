@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<amx:view xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amx="http://xmlns.oracle.com/adf/mf/amx"
+          xmlns:dvtm="http://xmlns.oracle.com/adf/mf/amx/dvt">
+  <amx:panelPage id="pp1">
+    <amx:facet name="header">
+      <amx:outputText value="Department" id="ot1"/>
+    </amx:facet>
+    <amx:facet name="primary">
+      <amx:commandButton action="__back" id="cbbck" text="Back"/>
+    </amx:facet>
+    <amx:facet name="secondary">
+      <amx:panelGroupLayout id="pglsec" layout="horizontal" valign="middle">
+        <amx:commandLink actionListener="#{bindings.saveDepartment.execute}" action="__back" id="cb2">
+          <amx:image id="isave" source="/images/ic_action_save.png" inlineStyle="height:32px; width:32px;"/>
+        </amx:commandLink>
+        <amx:commandLink id="clmenu">
+          <amx:image id="imenu" source="/images/ic_action_overflow.png" inlineStyle="height:32px; width:32px;"/>
+          <amx:showPopupBehavior align="bottomCenter" decoration="anchor" alignId="clmenu" type="action" popupId="p1"/>
+        </amx:commandLink>
+      </amx:panelGroupLayout>
+    </amx:facet>
+    <amx:panelStretchLayout id="psl1" scrollPolicy="scroll">
+      <amx:facet name="top">
+        <amx:panelFormLayout id="pfl1" fieldHalign="start" labelWidth="40%" fieldWidth="60%" labelPosition="end">
+          <amx:inputText value="#{bindings.departmentId.inputValue}" label="#{bindings.departmentId.hints.label}"
+                         readOnly="false" inputType="number" id="it1">
+            <amx:convertNumber groupingUsed="false" id="cn1"/>
+          </amx:inputText>
+          <amx:inputText value="#{bindings.departmentName.inputValue}" label="#{bindings.departmentName.hints.label}"
+                         readOnly="false" id="it2"></amx:inputText>
+          <amx:inputText value="#{bindings.locationId.inputValue}" label="#{bindings.locationId.hints.label}"
+                         readOnly="false" inputType="number" id="it3">
+            <amx:convertNumber groupingUsed="false" id="cn3"/>
+          </amx:inputText>
+          <amx:panelLabelAndMessage label="Manager" id="plam1">
+            <amx:outputText value="#{bindings.lastName.inputValue}" id="ot2"/>
+          </amx:panelLabelAndMessage>
+        </amx:panelFormLayout>
+      </amx:facet>
+      <amx:facet name="center">
+        <amx:outputText id="hdrEmployee" value="Employees"/>
+        <amx:listView var="row" value="#{bindings.employees.collectionModel}"
+                      fetchSize="#{bindings.employees.rangeSize}" id="lv1Employee"
+                      selectedRowKeys="#{bindings.employees.collectionModel.selectedRow}"
+                      selectionListener="#{bindings.employees.collectionModel.makeCurrent}"
+                      showMoreStrategy="autoScroll" bufferStrategy="viewport">
+          <amx:listItem id="liEmployee" action="Employee">
+            <amx:tableLayout width="100%" id="tl1Employee">
+              <amx:rowLayout id="rl1Employee">
+                <amx:cellFormat width="10px" rowSpan="2" id="cf2Employee"/>
+                <amx:cellFormat width="60%" height="28px" id="cf3Employee">
+                  <amx:outputText value="#{row.lastName}" id="ot2Employee"/>
+                </amx:cellFormat>
+                <amx:cellFormat width="10px" rowSpan="2" id="cf1Employee"/>
+                <amx:cellFormat width="40%" halign="end" id="cf4Employee">
+                  <amx:outputText value="#{row.firstName}" styleClass="adfmf-listItem-highlightText" id="ot3Employee"/>
+                </amx:cellFormat>
+              </amx:rowLayout>
+              <amx:rowLayout id="rl2Employee">
+                <amx:cellFormat width="60%" height="12px" id="cf5Employee"></amx:cellFormat>
+                <amx:cellFormat width="40%" halign="end" id="cf6Employee"></amx:cellFormat>
+              </amx:rowLayout>
+            </amx:tableLayout>
+          </amx:listItem>
+        </amx:listView>
+      </amx:facet>
+    </amx:panelStretchLayout>
+  </amx:panelPage>
+  <amx:popup id="p1" animation="slideDown" autoDismiss="true" inlineStyle="width:50%;">
+    <amx:panelGroupLayout id="pglpu" layout="vertical">
+      <amx:spacer height="10" id="ms1"/>
+      <amx:commandLink actionListener="#{bindings.DeleteDepartment.execute}" text="Delete" action="__back" id="mendel"/>
+      <amx:spacer height="20" id="msDel"/>
+      <amx:commandLink actionListener="#{bindings.CreateEmployee.execute}" text="New Employee" action="newEmployee"
+                       id="newEmployee"/>
+      <amx:spacer height="20" id="msnewEmployee"/>
+      <amx:commandLink id="menSync"
+                       disabled="#{!bindings.hasDepartmentDataSynchActions.inputValue or deviceScope.hardware.networkStatus=='NotReachable' or deviceScope.hardware.networkStatus=='unknown'}"
+                       actionListener="#{bindings.synchronizeDepartment.execute}" text="Synchronize">
+        <amx:closePopupBehavior id="mencSync" popupId="p1" type="action"/>
+      </amx:commandLink>
+      <amx:spacer height="20" id="ms3"/>
+      <amx:commandLink id="menPsa" disabled="#{!bindings.hasDepartmentDataSynchActions.inputValue}"
+                       text="Pending Sync Actions" actionListener="#{GoToFeature.goToDataSynchFeature}">
+        <amx:setPropertyListener id="menspaspl" from="mobile.model.Department"
+                                 to="#{applicationScope.dataSynchEntity}"/>
+        <amx:closePopupBehavior id="mencPsa" popupId="p1" type="action"/>
+      </amx:commandLink>
+      <amx:spacer height="10" id="ms4"/>
+    </amx:panelGroupLayout>
+  </amx:popup>
+</amx:view>

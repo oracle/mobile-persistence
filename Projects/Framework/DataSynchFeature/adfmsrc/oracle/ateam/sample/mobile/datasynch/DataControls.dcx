@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<DataControlConfigs xmlns="http://xmlns.oracle.com/adfm/configuration" version="11.1.2.64.36" id="DataControls"
+                    Package="oracle.ateam.sample.mobile.datasynch">
+  <AdapterDataControl id="DataSynchService" FactoryClass="oracle.adf.model.adapter.DataControlFactoryImpl"
+                      ImplDef="oracle.adf.model.adapter.bean.BeanDCDefinition" SupportsTransactions="false"
+                      SupportsSortCollection="true" SupportsResetState="false" SupportsRangesize="false"
+                      SupportsFindMode="false" SupportsUpdates="true"
+                      Definition="oracle.ateam.sample.mobile.datasynch.model.DataSynchService"
+                      BeanClass="oracle.ateam.sample.mobile.datasynch.model.DataSynchService"
+                      xmlns="http://xmlns.oracle.com/adfm/datacontrol">
+    <CreatableTypes>
+      <TypeInfo FullName="oracle.ateam.sample.mobile.datasynch.model.DataSynchService"/>
+    </CreatableTypes>
+    <Source>
+      <bean-definition BeanClass="oracle.ateam.sample.mobile.datasynch.model.DataSynchService"
+                       xmlns="http://xmlns.oracle.com/adfm/adapter/bean"/>
+    </Source>
+  </AdapterDataControl>
+</DataControlConfigs>

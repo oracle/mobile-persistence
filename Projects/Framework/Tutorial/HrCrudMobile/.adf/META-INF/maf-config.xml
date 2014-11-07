@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<adfmf-config xmlns="http://xmlns.oracle.com/adf/mf/config">
+  <skin-family>mobileAlta</skin-family>
+  <skin-version>v1.1</skin-version>
+  <generic-type>
+    <conversion>
+      <validated>false</validated>
+    </conversion>
+  </generic-type>
+  <allowLoginInSlidingWindows>false</allowLoginInSlidingWindows>
+  <autoHideSlidingWindows>true</autoHideSlidingWindows>
+</adfmf-config>

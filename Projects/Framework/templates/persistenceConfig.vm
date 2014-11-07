@@ -1,0 +1,10 @@
+# SQL Lite db name
+db.name=${WSM.workspaceName}.db
+db.encryption.type=
+
+# DB creation script
+ddl.script=META-INF/${WSM.workspaceName}.sql
+
+# Location ofXML mapping file in classpath
+persistence.mapping.xml=META-INF/persistenceMapping.xml
+

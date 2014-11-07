@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<xsd:schema elementFormDefault="qualified" xmlns:sdoJava="commonj.sdo/java" sdoJava:package="oracle.ateam.hr.soapdemo.model.common" targetNamespace="/oracle/ateam/hr/soapdemo/model/common/" xmlns="/oracle/ateam/hr/soapdemo/model/common/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:import namespace="commonj.sdo/java" schemaLocation="sdoJava.xsd"/>
+  <xsd:include schemaLocation="CountriesViewSDO.xsd"/>
+  <xsd:complexType name="RegionsViewSDO">
+    <xsd:annotation>
+      <xsd:appinfo source="http://xmlns.oracle.com/adf/svc/metadata/">
+        <key xmlns="http://xmlns.oracle.com/adf/svc/metadata/">
+          <attribute>RegionId</attribute>
+        </key>
+      </xsd:appinfo>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element minOccurs="0" name="RegionId" type="xsd:decimal"/>
+      <xsd:element minOccurs="0" name="RegionName" nillable="true" type="xsd:string"/>
+      <xsd:element maxOccurs="unbounded" minOccurs="0" name="CountriesView" type="CountriesViewSDO"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element name="regionsViewSDO" type="RegionsViewSDO"/>
+</xsd:schema>

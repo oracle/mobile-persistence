@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<amx:view xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amx="http://xmlns.oracle.com/adf/mf/amx"
+          xmlns:dvtm="http://xmlns.oracle.com/adf/mf/amx/dvt">
+  <amx:loadBundle basename="oracle.ateam.sample.mobile.datasynch.DataSynchFeatureBundle"
+                  var="dsb" id="lb1"/>
+  <amx:panelPage id="pp1">
+    <amx:facet name="header">
+      <amx:outputText value="#{dsb.DATA_SYNC_ACTIONS}" id="ot1"/>
+    </amx:facet>
+    <amx:facet name="primary">
+      <amx:commandLink  id="cb1" rendered="#{GoToFeature.previousFeatureId!=null}" actionListener="#{GoToFeature.goToPreviousFeature}">
+          <amx:image id="iback" source="/images/ic_action_previous_item.png" inlineStyle="height:32px; width:32px;"/>
+      </amx:commandLink>
+    </amx:facet>
+    <amx:panelGroupLayout id="pgl2" layout="vertical">
+      <amx:listView var="row" value="#{bindings.dataSynchActions.collectionModel}"
+                    fetchSize="#{bindings.dataSynchActions.rangeSize}" id="lv2">
+        <amx:listItem id="li2" showLinkIcon="false">
+          <amx:tableLayout width="100%" id="tl1">
+            <amx:rowLayout id="rl1">
+              <amx:cellFormat width="10px" rowSpan="2" id="cf3"/>
+              <amx:cellFormat width="60%" height="28px" id="cf1">
+                <amx:outputText value="#{row.entityShortName}" id="ot9"/>
+              </amx:cellFormat>
+              <amx:cellFormat width="10px" rowSpan="2" id="cf2"/>
+              <amx:cellFormat width="40%" halign="end" id="cf4">
+                <amx:outputText value="#{row.action=='Custom' ? row.customMethodName : row.action}" styleClass="adfmf-listItem-highlightText" id="ot10"/>
+              </amx:cellFormat>
+            </amx:rowLayout>
+            <amx:rowLayout id="rl2">
+              <amx:cellFormat width="100%" height="12px" id="cf5" columnSpan="2">
+                <amx:outputText value="#{row.dateCreated}" styleClass="adfmf-listItem-captionText" id="ot11">
+                  <amx:convertDateTime pattern="#{dsb.DATE_TIME_FORMAT}" id="cdt1"/>
+                </amx:outputText>
+              </amx:cellFormat>
+            </amx:rowLayout>
+          </amx:tableLayout>
+          <amx:setPropertyListener from="#{row.rowKey}" type="action"
+                                   to="#{bindings.dataSynchActionsIterator.iterator.currentIndexWithKey}" id="spl2"/>
+          <amx:showPopupBehavior id="spb1" popupId="p1" type="action" alignId="pp1" align="overlapBottom"/>
+        </amx:listItem>
+      </amx:listView>
+      <!--<amx:panelGroupLayout id="pgl3" layout="horizontal" halign="center">
+        does not work with data control persistence manager: data control not found
+        <amx:commandButton actionListener="#{bindings.synchronize.execute}" text="#{dsb.SYNCHRONIZE}"
+                     action="toSelf"  disabled="#{deviceScope.hardware.networkStatus=='NotReachable' or deviceScope.hardware.networkStatus=='unknown'}" id="cb3"/>
+      </amx:panelGroupLayout>-->
+    </amx:panelGroupLayout>
+  </amx:panelPage>
+  <amx:popup id="p1" autoDismiss="true">
+    <amx:panelGroupLayout id="pgl4" halign="start" layout="vertical">
+
+      <amx:outputText value="#{dsb.SYNC_ACTION_DETAILS}" id="ot5" inlineStyle="font-weight:bold;"/>
+      <amx:spacer id="s2" height="5" width="5"/>
+      <amx:outputText value="#{bindings.action.hints.label}: #{bindings.action.inputValue=='Custom' ? bindings.customMethodName.inputValue : bindings.action.inputValue}" id="it2"/>
+      <amx:outputText value="#{bindings.data.hints.label}: #{bindings.data.inputValue}" id="ot8"/>
+      <amx:panelGroupLayout id="pgl5" layout="horizontal">
+        <amx:outputText value="#{bindings.dateCreated.hints.label}: " id="ot3"/>
+        <amx:outputText value="#{bindings.dateCreated.inputValue}" id="id3">
+          <amx:convertDateTime pattern="#{dsb.DATE_TIME_FORMAT}" id="cn21"/>
+        </amx:outputText>
+      </amx:panelGroupLayout>
+      <amx:panelGroupLayout id="pgl6" layout="horizontal">
+        <amx:outputText value="#{bindings.lastSynchAttempt.hints.label}: " id="ot4"/>
+        <amx:outputText value="#{bindings.lastSynchAttempt.inputValue}" id="id4">
+          <amx:convertDateTime pattern="#{dsb.DATE_TIME_FORMAT}" id="cn3"/>
+        </amx:outputText>
+      </amx:panelGroupLayout>
+      <amx:outputText value="#{bindings.lastSynchError.hints.label}:" id="ot6"/>
+      <amx:outputText value="#{bindings.lastSynchError.inputValue}" id="ot7"/>
+      <amx:panelGroupLayout id="pgl7" layout="horizontal" halign="center">
+        <amx:commandButton actionListener="#{bindings.Delete.execute}" text="#{dsb.REMOVE}"
+                            id="cb2">
+          <amx:closePopupBehavior id="cpb1" popupId="p1"/>
+        </amx:commandButton>
+      </amx:panelGroupLayout>
+
+    </amx:panelGroupLayout>
+  </amx:popup>
+</amx:view>

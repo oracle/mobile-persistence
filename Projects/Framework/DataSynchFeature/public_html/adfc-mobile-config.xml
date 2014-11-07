@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="windows-1252" ?>
+<adfc-mobile-config xmlns="http://xmlns.oracle.com/adf/controller" version="1.0">
+  <managed-bean id="__1">
+    <managed-bean-name>GoToFeature</managed-bean-name>
+    <managed-bean-class>oracle.ateam.sample.mobile.controller.bean.GoToFeatureBean</managed-bean-class>
+    <managed-bean-scope>application</managed-bean-scope>
+  </managed-bean>
+</adfc-mobile-config>

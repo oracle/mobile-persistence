@@ -1,0 +1,37 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<SDM>
+   <OverallProperties
+      id="OverallProperties1">
+      <property
+         name="y">266.5</property>
+      <property
+         name="x">91.5</property>
+   </OverallProperties>
+   <View
+      id="View2">
+      <property
+         name="activityId">DataSynch</property>
+      <property
+         name="page">/oracle.ateam.sample.mobile.datasynch/DataSynch.amx</property>
+      <property
+         name="start">true</property>
+      <property
+         name="description">&lt;html>&lt;p>&lt;b>DataSynch&lt;/b> (Default Activity)&lt;/p>&lt;p>Activity Type:  View&lt;/p></property>
+      <property
+         name="exceptionHandler">false</property>
+      <property
+         name="y">98.79883</property>
+      <property
+         name="x">91.5</property>
+   </View>
+   <ControlFlowCase
+      islink="true"
+      id="ControlFlowCase3"
+      from="View2"
+      to="View2">
+      <property
+         name="fromOutcome">toSelf</property>
+      <property
+         name="sdm:polyPoints">T44,88.0,44.73242,95.0,44.73242,T56</property>
+   </ControlFlowCase>
+</SDM>

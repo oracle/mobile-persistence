@@ -1,0 +1,117 @@
+package ${WSM.packageName};
+
+#if (${WSM.currentDataObject.children.size()}>0)
+import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
+import oracle.ateam.sample.mobile.persistence.util.EntityUtils;
+#end
+#if (${WSM.currentDataObject.parents.size()}>0)
+import oracle.ateam.sample.mobile.persistence.service.ValueHolder;
+import oracle.ateam.sample.mobile.persistence.service.ValueHolderInterface;
+#end
+import oracle.ateam.sample.mobile.persistence.model.Entity;
+
+  #foreach($type in ${WSM.currentDataObject.attributeImportTypes})
+     import ${type};
+  #end
+
+public class ${WSM.currentDataObject.className} extends Entity
+{
+
+  #foreach($attr in ${WSM.currentDataObject.attributeDefs})
+    private $attr.javaType $attr.attrName;
+  #end
+
+  #foreach($child in ${WSM.currentDataObject.children})
+    private List ${child.childAccessorListName} = createIndirectList("${child.childAccessorListName}");
+  #end
+
+  #foreach($parent in ${WSM.currentDataObject.parents})
+    private ValueHolderInterface ${parent.parentAccessorName}Holder = createValueHolder("${parent.parentAccessorName}");
+    private transient ${parent.parentDataObject.className} ${parent.parentAccessorName};
+  #end
+
+  #foreach($attr in ${WSM.currentDataObject.attributeDefs})
+    public $attr.javaType ${attr.getterMethodName}()
+    {
+      return this.${attr.attrName};
+    }
+
+    public void ${attr.setterMethodName}(${attr.javaType} ${attr.attrName})
+    {
+      this.${attr.attrName} = ${attr.attrName};
+    }
+
+  #end
+  #foreach($child in ${WSM.currentDataObject.children})
+
+    public void ${child.childAccessorListSetterMethodName}(List ${child.childAccessorListName})
+    {
+      this.${child.childAccessorListName}=${child.childAccessorListName};
+    }
+
+    /**
+     * This method is called when entity instance is recreated from persisted JSON string in DataSynchAction
+     */
+    public void ${child.childAccessorListSetterMethodName}(${child.childDataObject.className}[] ${child.childAccessorListName})
+    {
+     this.${child.childAccessorListName} = Arrays.asList(${child.childAccessorListName});
+    }
+
+    public List ${child.childAccessorListGetterMethodName}()
+    {
+      return this.${child.childAccessorListName};
+    }
+
+    public ${child.childDataObject.className}[] ${child.childAccessorGetterMethodName}()
+    {
+      List dataObjectList = ${child.childAccessorListGetterMethodName}();
+      
+return (${child.childDataObject.className}[]) dataObjectList.toArray(new ${child.childDataObject.className}[dataObjectList.size()]);
+    }
+
+  public void add${child.childDataObject.className}(int index, ${child.childDataObject.className} ${child.childDataObject.classVariableName})
+  {
+    ${child.childDataObject.classVariableName}.setIsNewEntity(true);
+    EntityUtils.generatePrimaryKeyValue(${child.childDataObject.classVariableName}, 1);
+    #foreach($mapping in $child.attributeMappings) 
+     ${child.childDataObject.classVariableName}.${mapping.childAttrSetterMethod}(${mapping.parentAttrGetterMethod}());
+    #end
+    ${child.childAccessorListGetterMethodName}().add(index, ${child.childDataObject.classVariableName});
+  }
+
+  public void remove${child.childDataObject.className}(${child.childDataObject.className} ${child.childDataObject.classVariableName})
+  {
+    ${child.childAccessorListGetterMethodName}().remove(${child.childDataObject.classVariableName});
+  }
+
+
+  #end
+
+  #foreach($parent in ${WSM.currentDataObject.parents})
+
+  public ${parent.parentDataObject.className} ${parent.parentAccessorGetterMethodName}()
+  {
+    return (${parent.parentDataObject.className}) this.${parent.parentAccessorName}Holder.getValue();
+  }
+
+  protected ValueHolderInterface ${parent.parentAccessorGetterMethodName}Holder()
+  {
+    return this.${parent.parentAccessorName}Holder;
+  }
+
+  public void ${parent.parentAccessorSetterMethodName}(${parent.parentDataObject.className} ${parent.parentAccessorName})
+  {
+    this.${parent.parentAccessorName}Holder.setValue(${parent.parentAccessorName});
+  }
+
+  protected void ${parent.parentAccessorSetterMethodName}Holder(ValueHolderInterface ${parent.parentAccessorName})
+  {
+    this.${parent.parentAccessorName}Holder = ${parent.parentAccessorName};
+  }
+
+  #end
+
+
+}

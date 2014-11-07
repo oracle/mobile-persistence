@@ -1,0 +1,156 @@
+package ${WSM.servicePackageName};
+
+
+import java.util.ArrayList;
+
+import java.util.List;
+
+import oracle.ateam.sample.mobile.persistence.util.EntityUtils;
+import oracle.ateam.sample.mobile.persistence.service.EntityCRUDService;
+
+import ${WSM.packageName}.${WSM.currentDataObject.className};
+
+
+public class ${WSM.currentDataObject.className}Service
+  extends EntityCRUDService
+{
+
+  public ${WSM.currentDataObject.className}Service()
+  {
+  }
+
+  protected Class getEntityClass()
+  {
+    return ${WSM.currentDataObject.className}.class;
+  }
+
+  protected String getEntityListName()
+  {
+    return "${WSM.currentDataObject.classVariableName}";
+  }
+
+  public ${WSM.currentDataObject.className}[] get${WSM.currentDataObject.className}()
+  {
+    List dataObjectList = getEntityList();
+    
+       ${WSM.currentDataObject.className}[] dataObjects= (${WSM.currentDataObject.className}[]) dataObjectList.toArray(new ${WSM.currentDataObject.className}[dataObjectList.size()]);
+    return dataObjects;
+  }
+
+   /**
+     * This method is automatically called when using the Create operation on the ${WSM.currentDataObject.className.toLowerCase()} collection
+     * in the data control palette. It gets a new ${WSM.currentDataObject.className.toLowerCase()} instance as argument and adds this instance to the 
+     * ${WSM.currentDataObject.className.toLowerCase()} list. 
+     * Do NOT drag and drop this method from the data control palette, use the Create operation instead to ensure 
+     * that iterator binding and ${WSM.currentDataObject.className.toLowerCase()} list stay in sync.
+     * @param index
+     * @param ${WSM.currentDataObject.className.toLowerCase()}
+     */
+    public void add${WSM.currentDataObject.className}(int index, ${WSM.currentDataObject.className} ${WSM.currentDataObject.className.toLowerCase()})
+    {
+      addEntity(index, ${WSM.currentDataObject.className.toLowerCase()});
+    }
+
+    /**
+     * This method is automatically called when using the Delete operation on the ${WSM.currentDataObject.className.toLowerCase()} collection
+     * in the data control palette. It removes the ${WSM.currentDataObject.className.toLowerCase()} instance passed in from the ${WSM.currentDataObject.className.toLowerCase()} list, deletes the
+     * corresponding row from the database (if persisted) and calls the configured remove method on the remote
+     * persistence manager.  
+     * Do NOT drag and drop this method from the data control palette, use the Delete operation instead to ensure 
+     * that iterator binding and ${WSM.currentDataObject.className.toLowerCase()} list stay in sync.
+     * @param ${WSM.currentDataObject.className.toLowerCase()}
+     */
+    public void remove${WSM.currentDataObject.className}(${WSM.currentDataObject.className} ${WSM.currentDataObject.className.toLowerCase()})
+    {
+      removeEntity(${WSM.currentDataObject.className.toLowerCase()});
+    }
+    
+    /**
+     * Inserts or updates a ${WSM.currentDataObject.className.toLowerCase()} using the configured persistence managers.
+     * The insert or update is determined by calling isNewEntity on the ${WSM.currentDataObject.className.toLowerCase()} instance.
+     * @param ${WSM.currentDataObject.className.toLowerCase()}
+     */
+    public void save${WSM.currentDataObject.className}(${WSM.currentDataObject.className} ${WSM.currentDataObject.className.toLowerCase()})
+    {
+      super.mergeEntity(${WSM.currentDataObject.className.toLowerCase()});
+    }
+
+    /**
+     * Retrieves all ${WSM.currentDataObject.className.toLowerCase()} instances using the configured persistence managers and populates the ${WSM.currentDataObject.className.toLowerCase()} list 
+     * with the result.
+     * When this method is called for the first time, and a remote persistence manager is configured,
+     * the data is fetched remotely and the local DB is populated with the results.
+     */
+    public void findAll${WSM.currentDataObject.className}()
+    {
+      super.findAll();
+    }
+
+    /**
+     * Retrieves all ${WSM.currentDataObject.className.toLowerCase()} instances using the findAll method on the remote persistence manager
+     * and populates the ${WSM.currentDataObject.className.toLowerCase()} list 
+     */
+    public void findAll${WSM.currentDataObject.className}Remote()
+    {
+      super.doRemoteFindAll();
+    }
+
+    /**
+     * Retrieves the ${WSM.currentDataObject.className.toLowerCase()} instances that match the searchValue filter using the configured persistence 
+     * managers and populates the ${WSM.currentDataObject.className.toLowerCase()} list with the result.
+     * By default, the search value is applied to all string attributes using a "startsWith" operator. 
+     * To customize the attributes on which the searchValue is applied, you can override method getQuickSearchAttributeNames. 
+     * If a find method is configured against the remote persistence manager, then this method will also
+     * call this method.
+     * @param searchValue
+     */
+    public void find${WSM.currentDataObject.className}(String searchValue)
+    {
+      super.find(searchValue);
+    }
+
+  #if (${WSM.currentDataObject.getCanonicalMethod})
+  /**
+   * Invokes the getCanonical method on the remote persistence manager if this has not happened yet
+   * for this instance during this application session. The corresponding row in the local database is also updated if
+   * the entity is persistable. Note that this method ignores the setting of remote-read-in-background property
+   * in persistenceMapping.xml, this method is always executed in the foreground because the user typically
+   * wants to see the additional entity data immediately
+   * @param entity
+   */
+  public void getCanonical${WSM.currentDataObject.className}(${WSM.currentDataObject.className} ${WSM.currentDataObject.className.toLowerCase()})
+  {
+    super.getCanonical(${WSM.currentDataObject.className.toLowerCase()});
+  }
+  #end
+
+
+    /**
+     * Synchronizes all pending data sync actions using the remote persistence manager
+     * @param inBackground
+     */
+    public void synchronize${WSM.currentDataObject.className}(Boolean inBackground)
+    {
+      super.synchronize(inBackground);
+    }
+
+    /**
+     * Resets the values of the ${WSM.currentDataObject.className.toLowerCase()} instance to the values as stored in the SQLite database. This method
+     * will do nothing when the ${WSM.currentDataObject.className.toLowerCase()} is not persisted to the database.
+     * @param ${WSM.currentDataObject.className.toLowerCase()}
+     */
+    public void reset${WSM.currentDataObject.className}(${WSM.currentDataObject.className} ${WSM.currentDataObject.className.toLowerCase()})
+    {
+      super.resetEntity(${WSM.currentDataObject.className.toLowerCase()});
+    }
+    
+    /**
+     * Returns true when there are pending ${WSM.currentDataObject.className.toLowerCase()} data sync actions. Returns false if there are no such actions.
+     */
+    public boolean getHas${WSM.currentDataObject.className}DataSynchActions()
+    {
+      return getDataSynchManager().getHasDataSynchActions();
+    }
+}
+
+

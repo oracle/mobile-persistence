@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="windows-1252" ?>
+<adfc-mobile-config xmlns="http://xmlns.oracle.com/adf/controller" version="1.0">
+  <task-flow-definition id="Region-task-flow">
+    <default-activity>RegionList</default-activity>
+    <view id="RegionList">
+      <page>/Region/RegionList.amx</page>
+    </view>
+    <view id="Region">
+      <page>/Region/Region.amx</page>
+    </view>
+    <view id="Country">
+      <page>/Region/Country.amx</page>
+    </view>
+    <view id="Location">
+      <page>/Region/Location.amx</page>
+    </view>
+    <control-flow-rule id="__1">
+      <from-activity-id>RegionList</from-activity-id>
+      <control-flow-case id="__2">
+        <from-outcome>Region</from-outcome>
+        <to-activity-id>Region</to-activity-id>
+      </control-flow-case>
+    </control-flow-rule>
+    <control-flow-rule id="__3">
+      <from-activity-id>Region</from-activity-id>
+      <control-flow-case id="__4">
+        <from-outcome>Country</from-outcome>
+        <to-activity-id>Country</to-activity-id>
+      </control-flow-case>
+    </control-flow-rule>
+    <control-flow-rule id="__5">
+      <from-activity-id>Region</from-activity-id>
+      <control-flow-case id="__6">
+        <from-outcome>newCountry</from-outcome>
+        <to-activity-id>Country</to-activity-id>
+      </control-flow-case>
+    </control-flow-rule>
+    <control-flow-rule id="__7">
+      <from-activity-id>Country</from-activity-id>
+      <control-flow-case id="__8">
+        <from-outcome>Location</from-outcome>
+        <to-activity-id>Location</to-activity-id>
+      </control-flow-case>
+    </control-flow-rule>
+    <control-flow-rule id="__9">
+      <from-activity-id>Country</from-activity-id>
+      <control-flow-case id="__10">
+        <from-outcome>newLocation</from-outcome>
+        <to-activity-id>Location</to-activity-id>
+      </control-flow-case>
+    </control-flow-rule>
+  </task-flow-definition>
+</adfc-mobile-config>

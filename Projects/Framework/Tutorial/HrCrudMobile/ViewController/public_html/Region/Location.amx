@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<amx:view xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amx="http://xmlns.oracle.com/adf/mf/amx"
+          xmlns:dvtm="http://xmlns.oracle.com/adf/mf/amx/dvt">
+  <amx:panelPage id="pp1">
+    <amx:facet name="header">
+      <amx:outputText value="Location" id="ot1"/>
+    </amx:facet>
+    <amx:facet name="primary">
+      <amx:commandButton action="__back" id="cbbck" text="Back"/>
+    </amx:facet>
+    <amx:facet name="secondary">
+      <amx:panelGroupLayout id="pglsec" layout="horizontal" valign="middle">
+        <amx:commandLink actionListener="#{bindings.saveRegion.execute}" action="__back" id="cb2">
+          <amx:image id="isave" source="/images/ic_action_save.png" inlineStyle="height:32px; width:32px;"/>
+        </amx:commandLink>
+        <amx:commandLink id="clmenu">
+          <amx:image id="imenu" source="/images/ic_action_overflow.png" inlineStyle="height:32px; width:32px;"/>
+          <amx:showPopupBehavior align="bottomCenter" decoration="anchor" alignId="clmenu" type="action" popupId="p1"/>
+        </amx:commandLink>
+      </amx:panelGroupLayout>
+    </amx:facet>
+    <amx:panelStretchLayout id="psl1" scrollPolicy="scroll">
+      <amx:facet name="top">
+        <amx:panelFormLayout id="pfl1" fieldHalign="start" labelWidth="40%" fieldWidth="60%" labelPosition="end">
+          <amx:inputText value="#{bindings.locationId.inputValue}" label="#{bindings.locationId.hints.label}"
+                         readOnly="false" inputType="number" id="it1">
+            <amx:convertNumber groupingUsed="false" id="cn1"/>
+          </amx:inputText>
+          <amx:inputText value="#{bindings.streetAddress.inputValue}" label="#{bindings.streetAddress.hints.label}"
+                         readOnly="false" id="it2"></amx:inputText>
+          <amx:inputText value="#{bindings.postalCode.inputValue}" label="#{bindings.postalCode.hints.label}"
+                         readOnly="false" id="it3"></amx:inputText>
+          <amx:inputText value="#{bindings.city.inputValue}" label="#{bindings.city.hints.label}" readOnly="false"
+                         id="it4"></amx:inputText>
+          <amx:inputText value="#{bindings.stateProvince.inputValue}" label="#{bindings.stateProvince.hints.label}"
+                         readOnly="false" id="it5"></amx:inputText>
+          <amx:inputText value="#{bindings.countryId.inputValue}" label="#{bindings.countryId.hints.label}"
+                         readOnly="false" id="it6"></amx:inputText>
+        </amx:panelFormLayout>
+      </amx:facet>
+      <amx:facet name="center"></amx:facet>
+    </amx:panelStretchLayout>
+  </amx:panelPage>
+  <amx:popup id="p1" animation="slideDown" autoDismiss="true" inlineStyle="width:50%;">
+    <amx:panelGroupLayout id="pglpu" layout="vertical">
+      <amx:spacer height="10" id="ms1"/>
+      <amx:commandLink id="menSync"
+                       disabled="#{!bindings.hasLocationDataSynchActions.inputValue or deviceScope.hardware.networkStatus=='NotReachable' or deviceScope.hardware.networkStatus=='unknown'}"
+                       actionListener="#{bindings.synchronizeLocation.execute}" text="Synchronize">
+        <amx:closePopupBehavior id="mencSync" popupId="p1" type="action"/>
+      </amx:commandLink>
+      <amx:spacer height="20" id="ms3"/>
+      <amx:commandLink id="menPsa" disabled="#{!bindings.hasLocationDataSynchActions.inputValue}"
+                       text="Pending Sync Actions" actionListener="#{GoToFeature.goToDataSynchFeature}">
+        <amx:setPropertyListener id="menspaspl" from="mobile.model.Location" to="#{applicationScope.dataSynchEntity}"/>
+        <amx:closePopupBehavior id="mencPsa" popupId="p1" type="action"/>
+      </amx:commandLink>
+      <amx:spacer height="10" id="ms4"/>
+    </amx:panelGroupLayout>
+  </amx:popup>
+</amx:view>

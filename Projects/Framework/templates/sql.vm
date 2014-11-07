@@ -1,0 +1,24 @@
+## add current file content first (regenerated table are removed from this content)
+${WSM.sqlFileContent}#foreach($dataObject in ${WSM.selectedDataObjects})
+CREATE TABLE ${dataObject.tableName} 
+(
+  #foreach($attr in ${dataObject.attributeDefs})
+    ${attr.columnName} ${attr.columnType} #if (${attr.required}) NOT NULL#end,
+  #end
+  CONSTRAINT ${dataObject.tableName}_PK PRIMARY KEY(${dataObject.keyColumnNamesAsString})
+);
+#end
+
+CREATE TABLE DATA_SYNCH_ACTIONS 
+(
+      ID NUMERIC NOT NULL,
+      SERVICE_CLASS_NAME VARCHAR NOT NULL,
+      ENTITY_CLASS_NAME VARCHAR NOT NULL,
+      JSON_PAYLOAD VARCHAR ,
+      ACTION VARCHAR NOT NULL,
+      DATE_CREATED DATE NOT NULL,
+      DATE_LAST_SYNCH DATE NOT NULL,
+      LAST_SYNCH_ERROR VARCHAR,
+      CUSTOM_METHOD_NAME VARCHAR,
+    CONSTRAINT DSA_PK PRIMARY KEY(SERVICE_CLASS_NAME ,ID)
+);

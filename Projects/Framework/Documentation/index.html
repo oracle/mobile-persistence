@@ -1,0 +1,43 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en"> <html> <head>    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">    <meta name="GENERATOR" content="Mozilla/4.79 [en] (Windows NT 5.0; U) [Netscape]">    <title>MAF Persistence Sample - Read Me</title> <link rel="STYLESHEET" type="text/css" href="blafdoc.css"> </head>
+<body>  
+
+<h1>MAF Persistence Sample - Read Me</h1> 
+<h3>Version 12.1.3.0.50 </h3>  
+
+<h2>What is MAF Persistence Sample?</h2> 
+The MAF Persistence Sample is a  JDeveloper extension that contains generic, reusable code that significantly speeds up and eases the implementation of local on-device persistence in the SQLite database as well as remote data synchronization. In addition, a wizard is provided to generate a default crud-style mobile user interface.
+<br>
+It is intended as a sample, you can use it "as-is", or copy, modify and extend parts of it.
+
+<h2>Getting Started</h2>  
+The best way to get started is to view the following video's:
+<ul>
+<li><a href="custom:external:http://www.ateam-oracle.com/wp-content/uploads/2014/02/PersistenceSample.mp4">Creating a Mobile Application Using SOAP Web Service</a> This video demonstrates how to generate a fully functional MAF application that reads and writes data using an ADF BC SOAP web service. All data retrieved through web service calls is stored locally on the device in the SQLite database, allowing you to use the application in offline mode. The video also demonstrates the data synchronization functionality that is provided to process transactions made in offline mode.</li>
+<li><a href="custom:external:http://www.ateam-oracle.com/wp-content/uploads/2014/02/RestJson.mp4">Creating the Business Objects Layer in a Mobile Application Using REST-JSON Web Service</a> This video demonstrates how to generate the business objects layer when using REST-JSON a web service. Generation of the mobile user interface layer is not included in this video as the process is the same as shown in the previous video.</li>
+<li><a href="custom:external:http://www.ateam-oracle.com/wp-content/uploads/2014/02/AuraPlayer.mp4">Creating a Mobile Application Using AuraPlayer Web Service</a> This video demonstrates how to generate an MAF application on top of AuraPlayer web services. AuraPlayer is a third-party product that allows you to record Oracle Forms scenario's and publish them as web services, allowing you to reuse Oracle Forms business logic in a mobile application. For more information see the <a href="custom:external:http://www.auraplayer.com/">AuraPlayer website</a>.
+</li>
+</ul>
+
+<br>
+In directory <code>[jdev_home]\jdev\extensions\oracle.ateam.sample.mobile.extensions\samples</code>, you can find the following files:
+<ul>
+<li><b>HRDemoRest.zip</b>: This is a web application that uses JPA persistence and TopLink data services to expose CRUD functionality as RESTful web services. To use this application, unzip the HrDemoRest zip file, open the HrDemoRest.jws in JDeveloper 12.1.3 and modify the connection details in persistence.xml as needed to connect to your local HR schema. Deploy the application by selecting the ViewController project node, right-mouse click and choose "Deploy". To test whether the deploymeny is succesful, enter <code>http://host:port/HrDemoRest/persistence/v1.0/Model1/query/Department.findAll</code> in your browser.
+</li>
+<li><b>HrDemoSOAP.zip</b>: This is an ADF BC application that exposes ADF BC CRUD functionality as SDO SOAP web services. To use this application, unzip the HrDemoSOAP zip file. Open the HrDemoSoap.jws in JDeveloper 12.1.3 and modify the connection details as needed to connect to your local HR schema. Deploy the HRDemoSoap Model application by right-mouse-clicking on HRServiceServiceImpl.java (inside serviceinterface  package) and choosing Run. To test the deployed web service, right-mouse-click on HRServiceService.wsdl and choose Test Web Service. The HTTP Analyzer window will appear. Select the findDepartments method in the Operations field, and click the Send Request button. The departments and its employees should now be displayed in response window. 
+</li>
+<li><b>HRCrudMobile.zip</b>: This zip contains a finished HR CRUD application. After unzipping, open HrCrudMobile.jws in JDeveloper 12.1.3 to view and run the application. This application uses the HrDemoSOAP and HrDemoRest applications as remote persistence providers. Make sure you change the IP addresses in connections.xml before you run the sample. The Department features uses the REST-JSON persistence manager with the HrDemorest application as backend server, the region features uses the SOAP DataControl persistence manager with the HrDemoSOAP application as backend server.
+If you get an error when navigating to the Pending Sync Actions, then go to Application Properties -&gt; Libraries and ClassPath and check the path for DataSynchFeature.jar. If the path does not exist, then re-add the jar using the correct path info.</li>
+</ul>
+
+<h2>Disclaimer</h2>  
+THE SAMPLE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. ORACLE FURTHER DISCLAIMS ALL WARRANTIES, EXPRESS AND IMPLIED, INCLUDING WITHOUT LIMITATION, ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR NONINFRINGEMENT. 
+
+<h2>More Information</h2>  
+For questions and feedback, please contact Steven Davelaar (steven.davelaar@oracle.com), consulting solutions architect in Oracle Fusion Middleware A-Team.
+
+<br>
+<br>
+You can re-open this readme file using the JDeveloper -> Help menu.
+
+</body> 
+</html>

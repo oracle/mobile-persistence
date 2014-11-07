@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Application xmlns="http://xmlns.oracle.com/adfm/application" version="11.1.2.64.36" id="DataBindings"
+             SeparateXMLFiles="false" Package="oracle.ateam.sample.mobile.datasynch" ClientType="Generic">
+  <pageMap>
+    <page path="/oracle.ateam.sample.mobile.datasynch/DataSynch.amx" usageId="oracle_ateam_sample_mobile_datasynch_DataSynchPageDef"/>
+  </pageMap>
+  <pageDefinitionUsages>
+    <page id="oracle_ateam_sample_mobile_datasynch_DataSynchPageDef" path="oracle.ateam.sample.mobile.datasynch.DataSynchPageDef"/>
+  </pageDefinitionUsages>
+  <dataControlUsages>
+    <dc id="DataSynchService" path="oracle.ateam.sample.mobile.datasynch.DataSynchService"/>
+  </dataControlUsages>
+</Application>

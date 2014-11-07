@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<amx:view xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amx="http://xmlns.oracle.com/adf/mf/amx"
+          xmlns:dvtm="http://xmlns.oracle.com/adf/mf/amx/dvt">
+#set ($pageDef = ${MPS.pageDef})
+#set ($taskFlow = ${MPS.taskFlowModel})
+#set ($dataObject = ${MPS.currentDataObject})
+#set ($dataObjectName = ${dataObject.name})
+#set ($iteratorName = "${dataObject.accessorName}Iterator")
+$pageDef.createFormPageDef($taskFlow.name)
+$pageDef.createIteratorBindings($dataObject)
+$pageDef.createDataSynchBindings()
+  <amx:panelPage id="pp1">
+    <amx:facet name="header">
+## need isNewEntity binding for readOnly expression when create is allowed and update not allowed
+ ${pageDef.createValueBinding("isNewEntity",$iteratorName,"isNewEntity",false)}
+##      #if ($dataObject.update) #set ($editVerb = "Edit") #else #set ($editVerb = "View") #end        
+##      <amx:outputText value="#{bindings.${pageDef.createValueBinding("isNewEntity",$iteratorName,"isNewEntity")}.inputValue ? 'New 
+## ${dataObject.displayTitleSingular}': '${editVerb} ${dataObject.displayTitleSingular}'}" id="ot1"/>
+      <amx:outputText value="${dataObject.displayTitleSingular}" id="ot1"/>
+    </amx:facet>
+    <amx:facet name="primary">
+       <amx:commandButton action="__back" id="cbbck" text="Back"/>
+    </amx:facet>
+    <amx:facet name="secondary">
+      <amx:panelGroupLayout id="pglsec" layout="horizontal" valign="middle">
+      #if ($dataObject.create || $dataObject.update)
+      <amx:commandLink actionListener="#{bindings.${pageDef.createMergeEntityBinding($dataObject)}.execute}" 
+             #if (!${dataObject.update}) rendered="#{bindings.${pageDef.createValueBinding("isNewEntity",$iteratorName,"isNewEntity")}.inputValue}" #end action="__back"
+                           id="cb2">
+          <amx:image id="isave" source="/images/ic_action_save.png" inlineStyle="height:32px; width:32px;"/>
+      </amx:commandLink>       
+      #end
+          <amx:commandLink  id="clmenu">
+            <amx:image id="imenu" source="/images/ic_action_overflow.png" inlineStyle="height:32px; width:32px;"/>
+            <amx:showPopupBehavior align="bottomCenter" decoration="anchor" alignId="clmenu" type="action" popupId="p1"/>
+          </amx:commandLink>
+      </amx:panelGroupLayout>
+
+    </amx:facet>
+    <amx:panelStretchLayout id="psl1" scrollPolicy="scroll">
+      <amx:facet name="top">
+       <amx:panelFormLayout id="pfl1" fieldHalign="start" labelWidth="40%" fieldWidth="60%" labelPosition="end">
+         #set ($counter = 1)
+         #foreach ($attr in $dataObject.attributeDefs)
+         #if ($attr.displayInForm) 
+         #if ($attr.date) #set ($elemName="inputDate") #elseif ($attr.javaType=="Boolean") #set ($elemName="selectBooleanCheckbox") #else #set ($elemName="inputText") #end
+        <amx:${elemName} value="#{bindings.${pageDef.createValueBinding($attr.attrName,$iteratorName,$attr.attrName)}.inputValue}" label="#{bindings.${attr.attrName}.hints.label}" readOnly="${attr.readOnlyExpression}" #if ($attr.number) inputType="number" #end
+                       id="it${counter}">
+          #if ($attr.number)
+          <amx:convertNumber groupingUsed="false" id="cn${counter}"/>
+          #end  
+        </amx:${elemName}>
+         #set ($counter = ${counter}+1)
+         #end
+        #end
+      </amx:panelFormLayout>
+      </amx:facet>
+      <amx:facet name="center">
+      #foreach($childDataObject in $dataObject.childrenOnSamePage)
+        $pageDef.createIteratorBindings($childDataObject)
+
+        <amx:outputText id="hdr${childDataObject.name}" value="$childDataObject.displayTitlePlural"/>
+
+       <amx:listView var="row" value="#{bindings.${pageDef.createTreeBinding($childDataObject)}.collectionModel}"
+                    fetchSize="#{bindings.${childDataObject.accessorName}.rangeSize}" id="lv1${childDataObject.name}"
+                   selectedRowKeys="#{bindings.${childDataObject.accessorName}.collectionModel.selectedRow}"
+ 
+                   selectionListener="#{bindings.${childDataObject.accessorName}.collectionModel.makeCurrent}" 
+                  
+                   showMoreStrategy="autoScroll"
+ bufferStrategy="viewport"
+
+ 
+            #if ($childDataObject.dividerAttribute) dividerAttribute="${childDataObject.dividerAttribute}" dividerMode="${childDataObject.dividerMode}"#end >
+
+        <amx:listItem id="li${childDataObject.name}" action="${taskFlow.addChildPageControlFlowRule($dataObject.name,$childDataObject)}">
+ 
+         #LIST_ITEM_CONTENT($childDataObject)
+
+        </amx:listItem>
+      </amx:listView>
+      #end 
+      </amx:facet>
+    </amx:panelStretchLayout>
+  </amx:panelPage>
+  <amx:popup id="p1" animation="slideDown" autoDismiss="true" inlineStyle="width:50%;">
+    <amx:panelGroupLayout id="pglpu" layout="vertical">
+      <amx:spacer height="10" id="ms1"/>
+
+      #if (${dataObject.delete})  
+        <amx:commandLink actionListener="#{bindings.${pageDef.createDeleteBinding($dataObject)}.execute}" text="Delete" action="__back" id="mendel"/>
+        <amx:spacer height="20" id="msDel"/>
+      #end
+
+      #foreach($childDataObject in $dataObject.childrenOnSeparatePage)
+        <amx:commandLink text="$childDataObject.displayTitlePlural" action="$taskFlow.addChildPageControlFlowRule($dataObject.name,$childDataObject)" id="$childDataObject.name">
+          <amx:closePopupBehavior id="menc${childDataObject.name}" popupId="p1" type="action"/>                         
+        </amx:commandLink>
+        <amx:spacer height="20" id="ms${childDataObject.name}"/>
+      #end      
+
+      #foreach($childDataObject in $dataObject.childrenOnSamePage)
+
+        #if ($childDataObject.create)  
+          <amx:commandLink actionListener="#{bindings.${pageDef.createCreateBinding($childDataObject)}.execute}" text="New ${childDataObject.displayTitleSingular}" action="${taskFlow.addNewChildPageControlFlowRule($dataObject.name,$childDataObject)}"
+                         id="new${childDataObject.name}"/>
+        <amx:spacer height="20" id="msnew${childDataObject.name}"/>
+        #end
+       #end
+
+      #SYNCHRONIZE_LINK($dataObject)
+      <amx:spacer height="20" id="ms3"/>
+      #PENDING_SYNCH_ACTIONS_LINK($dataObject)
+      <amx:spacer height="10" id="ms4"/>
+
+    </amx:panelGroupLayout>
+  </amx:popup>
+</amx:view>

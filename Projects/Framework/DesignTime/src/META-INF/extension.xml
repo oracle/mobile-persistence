@@ -1,0 +1,213 @@
+<extension id="oracle.ateam.sample.mobile.persistence" version="12.1.3.0.50" 
+           xmlns="http://jcp.org/jsr/198/extension-manifest" esdk-version="1.0">
+  <name>MAF Persistence Sample</name>
+  <required-bundles>
+    <bundle>oracle.jdeveloper</bundle>
+    <bundle>oracle.ide</bundle>
+    <bundle>oracle.ide.library</bundle>
+    <bundle>oracle.ide.library.navigator</bundle>
+    <bundle>oracle.jdeveloper.java.core</bundle>
+    <bundle>oracle.javamodel-rt</bundle>
+    <bundle>oracle.javatools</bundle>
+    <bundle>oracle.javatools-nodeps</bundle>
+    <bundle>oracle.adfm</bundle>
+    <bundle>oracle.adf-common-dt</bundle>
+    <bundle>oracle.adfmcoredt</bundle>
+    <bundle>oracle.adfm.dc-adapters</bundle>
+    <bundle>oracle.adfm.dcpalette</bundle>
+    <bundle>oracle.ide.webupdate</bundle>
+    <bundle>oracle.jewt-core</bundle>
+    <bundle>oracle.idert</bundle>
+    <bundle>oracle.bc4jdt-dc</bundle>
+    <bundle>oracle.adf-model</bundle>
+
+    <bundle>oracle.ide.db</bundle>
+    <bundle>oracle.jdeveloper.db</bundle>
+    <bundle>oracle.jdeveloper.db.connection</bundle>
+    <bundle>oracle.db-api</bundle>
+    <bundle>oracle.toplink</bundle>
+    <bundle>oracle.adf.mobile</bundle>
+    <bundle>oracle.adf.pageflow.dt</bundle>
+    <bundle>oracle.adf.pageflow.mobile.dt</bundle>
+    <bundle>oracle.adf-controller-mobile</bundle>
+    <bundle>oracle.xmlef</bundle>
+    <bundle>oracle.xmlef-core</bundle>
+    <bundle>oracle.xmlef-swing</bundle>
+    <bundle>oracle.ide.xmlef</bundle>
+    <bundle>oracle.jdeveloper.xmlef</bundle>
+    <bundle>oracle.jdeveloper.common</bundle>
+    <bundle>oracle.controller.dt</bundle>
+    <bundle>oracle.adf-transactions-dt</bundle>
+
+    <bundle>oracle.icons</bundle>
+    
+    <bundle>oracle.jdeveloper.rescat2.model</bundle>
+    <bundle>oracle.rcsrt</bundle>
+    <bundle>oracle.adf-share-ca</bundle>
+    <bundle>oracle.j2ee-xml-flateditor</bundle>
+    <bundle>oracle.uic</bundle>
+
+    <!--<bundle>oracle.external.xdk</bundle>
+    <bundle>oracle.external.jaxrpc</bundle>
+    <bundle>oracle.external.jaxws</bundle>
+    <bundle>oracle.external.jaxb</bundle>
+    <bundle>oracle.uic-xmlef</bundle>
+    <bundle>oracle.jdeveloper.xml</bundle>
+    <bundle>oracle.jdeveloper.j2ee.xmlef</bundle>
+    <bundle>oracle.j2ee.xml.core</bundle>
+    <bundle>oracle.j2ee.xml.descriptors</bundle>
+    <bundle>oracle.j2ee.xml.descriptors.oracle</bundle>
+    <bundle>oracle.jdeveloper.xml</bundle>
+    <bundle>oracle.xml-factory</bundle>
+    <bundle>oracle.xml-descriptor</bundle>
+    <bundle>oracle.external.oracle-jrf-wsclient</bundle>
+    <bundle>oracle.external.oracle-webservices-1013</bundle>-->
+
+
+    <bundle>oracle.adfm.dc-adapters</bundle>
+    <bundle>oracle.external.httpclient</bundle>
+
+
+<!--
+    <bundle>oracle.jdeveloper.db.transfer</bundle>
+    <bundle>oracle.jdeveloper.db.java</bundle>
+    <bundle>oracle.jdeveloper.db.navigator</bundle>
+    <bundle>oracle.db-ca</bundle>
+    <bundle>oracle.db-api-impl</bundle>
+-->
+</required-bundles>
+
+  <trigger-hooks xmlns="http://xmlns.oracle.com/ide/extension">
+    <rules>
+      <rule id="project-has-adfmf-techscope" type="project-has-techscope">
+        <parameters>
+          <param name="technology-keys" value="MAF"/>
+          <param name="match" value="any"/>
+        </parameters>
+      </rule>
+      <composite-rule id="java-node">
+        <and>
+          <rule-reference id="context-has-project"/>
+          <rule-reference id="on-single-selection"/>
+          <rule-reference id="context-has-java-source-node"/>
+          <rule-reference id="context-has-concrete-java-class"/>
+        </and>
+      </composite-rule>
+    </rules>
+    <triggers>
+
+      <gallery xmlns="http://xmlns.oracle.com/jdeveloper/1013/extension">
+
+        <item rule="project-has-adfmf-techscope">
+          <name>oracle.ateam.sample.mobile.dt.view.wizard.BusinessObjectsFromWSDataControlWizard</name>
+          <description>MAF Business Objects From Web Service Data Control</description>
+          <help>Launches the Create MAF Business Objects From Web Service Data Control wizard, in which you generate Java data objects and service objects that can be used to read and write data from the data control web service, as well as from the on-device SQLite database, allowing you to use your mobile application in off-line mode. A SQL DDL script to auto-create the on-device SQLite database is also generated. To build the MAF user interface, you can create a data control from the generated service objects. To enable this option, you must select an MAF project or a file within such a project in the Application Navigator.</help>
+          <icon>res:/AddinWizard.gif</icon>
+          <category>Business Tier</category>
+          <folder>Mobile Application Framework</folder>
+          <technologyKey>MAF</technologyKey>
+        </item>
+
+        <item rule="project-has-adfmf-techscope">
+          <name>oracle.ateam.sample.mobile.dt.view.wizard.BusinessObjectsFromRestWSWizard</name>
+          <description>MAF Business Objects From REST Web Service</description>
+          <help>Launches the Create MAF Business Objects From REST Web Service wizard, in which you generate Java data objects and service objects that can be used to read and write data from a REST web service, as well as from the on-device SQLite database, allowing you to use your mobile application in off-line mode. A SQL DDL script to auto-create the on-device SQLite database is also generated. To build the MAF user interface, you can create a data control from the generated service objects. To enable this option, you must select an MAF project or a file within such a project in the Application Navigator.</help>
+          <icon>res:/AddinWizard.gif</icon>
+          <category>Business Tier</category>
+          <folder>Mobile Application Framework</folder>
+          <technologyKey>MAF</technologyKey>
+        </item>
+
+        <item rule="project-has-adfmf-techscope">
+          <name>oracle.ateam.sample.mobile.dt.view.wizard.BusinessObjectsFromTablesWizard</name>
+          <description>MAF Business Objects From Tables</description>
+          <help>Launches the Create MAF Business Objects From Tables wizard, in which you generate Java data objects and service objects that can be used to read and write data from the on-device SQLite database. A SQL DDL script to auto-create the on-device SQLite database is also generated. To build the MAF user interface, you can create a data control from the generated service objects. To enable this option, you must select an MAF project or a file within such a project in the Application Navigator.</help>
+          <icon>res:/AddinWizard.gif</icon>
+          <category>Business Tier</category>
+          <folder>Mobile Application Framework</folder>
+          <technologyKey>MAF</technologyKey>
+        </item>
+
+        <item rule="project-has-adfmf-techscope">
+          <name>oracle.ateam.sample.mobile.dt.view.wizard.UIGeneratorWizard</name>
+          <description>MAF User Interface Generator</description>
+          <help>Launches the MAF User Interface Generator wizard, in which you generate a default mobile CRUD user interface consisting of features, AMX list and form pages and associated page definitions based on an EntityCRUDService bean data control. To enable this option, you must select an MAF project or a file within such a project in the Application Navigator.</help>
+          <icon>res:/AddinWizard.gif</icon>
+          <category>Client Tier</category>
+          <folder>Mobile Application Framework</folder>
+          <technologyKey>MAF</technologyKey>
+        </item>
+
+      </gallery>
+
+      <actions xmlns="http://xmlns.oracle.com/jdeveloper/1013/extension">
+        <!--<action id="oracle.ateam.sample.mobile.EntityClassModifier">
+          <properties>
+            <property name="Name">Enable Class for MAF Persistence</property>
+             <property name="LongDescription">Enable Class for MAF Persistence</property>          
+          </properties>
+         <command-class>oracle.ateam.sample.mobile.dt.EntityClassModifier</command-class>     
+        </action>-->
+        <action id="oracle.ateam.sample.mobile.OpenDoc">
+            <properties>
+              <property name="Name">MAF Persistence Sample - Read Me</property>
+            </properties>
+        </action>
+      </actions> 
+    
+      <controllers>
+        <controller class="oracle.ateam.sample.mobile.dt.MobileController">
+          <update-rules>
+            <!--<update-rule rule="always-enabled" >
+              <action id="oracle.ateam.sample.mobile.EntityClassModifier"/>
+            </update-rule>-->
+            <update-rule rule="always-enabled">
+              <action id="oracle.ateam.sample.mobile.OpenDoc"/>
+            </update-rule>
+          </update-rules>
+        </controller>
+      </controllers>
+<!--    
+      <context-menu-hook rule="java-node">      
+        <site idref="navigator"></site>
+          <menu>
+            <section xmlns="http://jcp.org/jsr/198/extension-manifest" id="MY_CUSTOM_MENU_SECTION_ONE" weight="9.1">
+             <item action-ref="oracle.ateam.sample.mobile.EntityClassModifier"></item>
+            </section>
+         </menu>
+      </context-menu-hook>
+-->      
+      <menu-hook xmlns="http://jcp.org/jsr/198/extension-manifest">
+        <menus>
+          <menubar id="javax.ide.view.MAIN_WINDOW_MENUBAR_ID">
+           <menu id="javax.ide.HELP_MENU_ID">
+            <section id="help-jdev-section-id" weight="2.0">
+              <item action-ref="oracle.ateam.sample.mobile.OpenDoc" weight="2.0"/>
+            </section>
+           </menu>
+          </menubar>
+        </menus>
+        </menu-hook>
+      <libraries xmlns="http://xmlns.oracle.com/jdeveloper/1013/jdev-libraries" >
+      <library name="MAF Persistence Sample Designtime" deployed="false" forceExtensionInitialization="true"   >
+          <classpath>oracle.ateam.sample.mobile.persistence.jar</classpath>
+      </library>    
+      <library name="MAF Persistence Sample Runtime" deployed="true"  forceExtensionInitialization="false"   >
+            <classpath>oracle.ateam.sample.mobile.persistence/Runtime.jar</classpath>
+            <srcpath>oracle.ateam.sample.mobile.persistence/Runtime-src.zip</srcpath>
+            <docpath>oracle.ateam.sample.mobile.persistence/Runtime-javadoc.zip</docpath>
+      </library>    
+    </libraries>
+      
+    </triggers>
+  </trigger-hooks>
+  
+  <hooks>
+  
+    <jdeveloper-hook xmlns="http://xmlns.oracle.com/jdeveloper/1013/extension">
+      <addins>
+        <addin>oracle.ateam.sample.mobile.dt.MobileAddin</addin>
+      </addins>
+    </jdeveloper-hook>
+  </hooks>  
+</extension>              

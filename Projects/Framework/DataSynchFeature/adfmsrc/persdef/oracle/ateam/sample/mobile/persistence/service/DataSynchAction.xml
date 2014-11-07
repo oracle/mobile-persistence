@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="windows-1252" ?>
+<!DOCTYPE PDefViewObject SYSTEM "jbo_03_01.dtd">
+<!---->
+<PDefViewObject
+  xmlns="http://xmlns.oracle.com/bc4j"
+  Name="DataSynchAction">
+  <DesignTime>
+    <Attr Name="_DCName" Value="oracle.ateam.sample.mobile.datasynch.DataControls.DataSynchService"/>
+    <Attr Name="_SDName" Value="oracle.ateam.sample.mobile.persistence.service.DataSynchAction"/>
+  </DesignTime>
+  <PDefAttribute
+    Name="id"
+    PrimaryKey="true">
+  </PDefAttribute>
+  <PDefAttribute
+    Name="action">
+    <Properties>
+      <SchemaBasedProperties>
+        <LABEL
+          ResId="${adfBundle['oracle.ateam.sample.mobile.datasynch.DataSynchFeatureBundle']['oracle.ateam.sample.mobile.persistence.service.DataSynchAction.action_LABEL']}"/>
+      </SchemaBasedProperties>
+    </Properties>
+  </PDefAttribute>
+  <PDefAttribute
+    Name="lastSynchAttempt">
+    <Properties>
+      <SchemaBasedProperties>
+        <LABEL
+          ResId="${adfBundle['oracle.ateam.sample.mobile.datasynch.DataSynchFeatureBundle']['oracle.ateam.sample.mobile.persistence.service.DataSynchAction.lastSynchAttempt_LABEL']}"/>
+      </SchemaBasedProperties>
+    </Properties>
+  </PDefAttribute>
+  <PDefAttribute
+    Name="dateCreated">
+    <Properties>
+      <SchemaBasedProperties>
+        <LABEL
+          ResId="${adfBundle['oracle.ateam.sample.mobile.datasynch.DataSynchFeatureBundle']['oracle.ateam.sample.mobile.persistence.service.DataSynchAction.dateCreated_LABEL']}"/>
+      </SchemaBasedProperties>
+    </Properties>
+  </PDefAttribute>
+  <PDefAttribute
+    Name="lastSynchError">
+    <Properties>
+      <SchemaBasedProperties>
+        <LABEL
+          ResId="${adfBundle['oracle.ateam.sample.mobile.datasynch.DataSynchFeatureBundle']['oracle.ateam.sample.mobile.persistence.service.DataSynchAction.lastSynchError_LABEL']}"/>
+      </SchemaBasedProperties>
+    </Properties>
+  </PDefAttribute>
+  <PDefAttribute
+    Name="data">
+    <Properties>
+      <SchemaBasedProperties>
+        <LABEL
+          ResId="${adfBundle['oracle.ateam.sample.mobile.datasynch.DataSynchFeatureBundle']['oracle.ateam.sample.mobile.persistence.service.DataSynchAction.data_LABEL']}"/>
+      </SchemaBasedProperties>
+    </Properties>
+  </PDefAttribute>
+</PDefViewObject>

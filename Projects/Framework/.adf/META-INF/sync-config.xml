@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Settings xmlns="http://xmlns.oracle.com/sync/config">
+  <BaseUri>http://127.0.0.1</BaseUri>
+  <AppId/>
+  <LazyPersistence/>
+  <RefreshPolicy/>
+  <DbStorageFolderPath/>
+  <FileStorageFolderPath/>
+  <Policies>
+    <DefaultPolicy>
+      <FetchPolicy>FETCH_FROM_SERVICE</FetchPolicy>
+      <UpdatePolicy>UPDATE_IF_ONLINE</UpdatePolicy>
+      <ExpirationPolicy>NEVER_EXPIRE</ExpirationPolicy>
+      <EvictionPolicy>MANUAL_EVICTION</EvictionPolicy>
+    </DefaultPolicy>
+  </Policies>
+</Settings>

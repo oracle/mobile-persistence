@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+#macro (ADD_METHOD $methodElem $method)
+       <$methodElem 
+#if ($WSM.restfulWebService)
+ #if ($method.accessorAttribute) name="${method.accessorAttribute}"#end  uri="${method.name}" connectionName="${method.connectionName}" requestType="${method.requestType}"
+ #if (${method.sendSerializedDataObjectAsPayload}) sendDataObjectAsPayload="true" #end
+#else
+name="${method.name}" dataControlName="${method.dataControlName}" 
+#end
+secured="${method.isSecured}"
+#if ($methodElem=='find-all-method') deleteLocalRows="${method.dataObject.deleteLocalRows}" #end 
+#if ($method.payloadElementName) payloadElementName="${method.payloadElementName}" #end 
+#if ($method.payloadRowElementName) payloadRowElementName="${method.payloadRowElementName}" #end >
+          #foreach($param in $WSM.headerParams)
+            #if ($param.name && ""!=$param.name && $param.value && ""!=$param.value)
+            <header-parameter name="${param.name}" value="${param.value}"/>
+            #end
+          #end
+          #foreach($param in $method.params)
+           #if ($param.name)
+          <parameter name="${param.name}" #if (${param.valueProvider}) valueProvider="${param.valueProvider}" #end #if (${param.dataObjectAttribute}) dataObjectAttribute="${param.dataObjectAttribute}" #end #if (${param.value}) value="${param.value}" #end #if (${param.javaType}) javaType="${param.javaType}" #end #if ($param.pathParam) pathParam="true" #end />
+           #end
+          #end
+       </$methodElem>
+#end
+<mobile-object-persistence>
+   <class-mapping-descriptors>
+     ## add existing mappings
+     #foreach($mapping in ${WSM.existingDescriptorMappings})
+        ${mapping}
+     #end
+     #foreach($dataObject in ${WSM.selectedDataObjects})
+      <class-mapping-descriptor>
+         <class>${WSM.packageName}.${dataObject.className}</class>
+
+      <crud-service-class>
+        <class-name>${WSM.servicePackageName}.${dataObject.rootDataObject.className}Service</class-name>
+        <auto-increment-primary-key>true</auto-increment-primary-key>
+         #if (!(${dataObject.parent}))   
+
+#if (${WSM.webServiceDataControl})
+ #set ($rpmClassName = "DataControlPersistenceManager")
+#elseif (${WSM.restfulWebService})
+  #if ($WSM.currentDataObject.xmlPayload)
+   #set ($rpmClassName = "RestXMLPersistenceManager")
+  #else
+   #set ($rpmClassName = "RestJSONPersistenceManager")
+  #end 
+#end
+
+        <local-persistence-manager>oracle.ateam.sample.mobile.persistence.manager.DBPersistenceManager</local-persistence-manager>
+        <remote-persistence-manager>oracle.ateam.sample.mobile.persistence.manager.${rpmClassName}</remote-persistence-manager>
+        <remote-read-in-background>true</remote-read-in-background>
+        <remote-write-in-background>true</remote-write-in-background>
+        <show-web-service-invocation-errors>true</show-web-service-invocation-errors>
+        <auto-query>true</auto-query>
+         #end    
+      </crud-service-class>
+
+         <persisted>${dataObject.persisted}</persisted>
+         #if ($dataObject.rootDataObject.payloadDateFormat)<date-format>${dataObject.rootDataObject.payloadDateFormat}</date-format>#end
+         #if ($dataObject.rootDataObject.payloadDateTimeFormat)<date-time-format>${dataObject.rootDataObject.payloadDateTimeFormat}</date-time-format>#end         
+         #if ($dataObject.orderBy)<order-by>${dataObject.orderBy}</order-by>#end
+         <table>${dataObject.tableName}</table>
+         <primary-key>
+           #foreach($attr in ${dataObject.keyAttributes})
+            <column-name>${attr.columnName}</column-name>
+           #end
+         </primary-key>
+         <attribute-mappings>
+           #foreach($attr in ${dataObject.attributeDefs})
+            <attribute-mapping type="direct-mapping">
+               <attribute-name>${attr.attrName}</attribute-name>
+               <column name="${attr.columnName}" dataType="${attr.columnType}"/>
+            #if ($attr.payloadName)<payload-attribute-name>${attr.payloadName}</payload-attribute-name>#end   
+            #if ($attr.parentReferenceAttribute)<parent-attribute-name>${attr.parentReferenceAttribute.attrName}</parent-attribute-name>#end 
+               <required>${attr.required}</required>
+               <persisted>${attr.persisted}</persisted>
+            </attribute-mapping>
+           #end
+           #foreach($child in ${dataObject.children})
+            <attribute-mapping type="one-to-many-mapping">
+               <attribute-name>${child.childAccessorListName}</attribute-name>
+                #if ($child.childAccessorMethod)
+               <accessor-method>${child.childAccessorMethod.name}</accessor-method>
+                #end 
+                #if ($child.childAccessorPayloadName)
+                <payload-attribute-name>${child.childAccessorPayloadName}</payload-attribute-name>
+                #end 
+               <reference-class>${WSM.packageName}.${child.childDataObject.className}</reference-class>
+               <target-foreign-key>
+                 #foreach($mapping in ${child.attributeMappings}) 
+                  <column-reference>
+                     <source-column table="${child.childDataObject.tableName}" name="${mapping.childAttr.columnName}" />
+                     <target-column table="${child.parentDataObject.tableName}" name="${mapping.parentAttr.columnName}" />
+                  </column-reference>
+                 #end  
+               </target-foreign-key>
+               <send-as-array-if-only-one-entry>true</send-as-array-if-only-one-entry>
+            </attribute-mapping>
+           #end
+           #foreach($parent in ${dataObject.parents})
+            <attribute-mapping type="one-to-one-mapping">
+               <attribute-name>${parent.parentAccessorName}</attribute-name>
+                #if ($parent.parentAccessorMethod)
+               <accessor-method>${parent.parentAccessorMethod.name}</accessor-method>
+                #end
+               <reference-class>${WSM.packageName}.${parent.parentDataObject.className}</reference-class>
+               <foreign-key>
+                 #foreach($mapping in ${parent.attributeMappings}) 
+                  <column-reference>
+                     <source-column table="${parent.childDataObject.tableName}" name="${mapping.childAttr.columnName}" />
+                     <target-column table="${parent.parentDataObject.tableName}" name="${mapping.parentAttr.columnName}" />
+                  </column-reference>
+                 #end  
+               </foreign-key>
+            </attribute-mapping>
+           #end
+         </attribute-mappings>
+      #if ($dataObject.findAllMethod)
+       #ADD_METHOD("find-all-method" $dataObject.findAllMethod)   
+      #end
+      #foreach ($method in $dataObject.findAllInParentMethods)
+       #ADD_METHOD("find-all-in-parent-method" $method)   
+      #end
+      #foreach ($method in $dataObject.getAsParentMethods)
+       #ADD_METHOD("get-as-parent-method" $method)   
+      #end
+      #if ($dataObject.getCanonicalMethod)
+       #ADD_METHOD("get-canonical-method" $dataObject.getCanonicalMethod)   
+      #end
+      #if ($dataObject.findMethod)
+       #ADD_METHOD("find-method" $dataObject.findMethod)   
+      #end
+      #if ($dataObject.createMethod)
+       #ADD_METHOD("create-method" $dataObject.createMethod)   
+      #end
+      #if ($dataObject.updateMethod)
+       #ADD_METHOD("update-method" $dataObject.updateMethod)   
+      #end
+      #if ($dataObject.mergeMethod)
+       #ADD_METHOD("merge-method" $dataObject.mergeMethod)   
+      #end
+      #if ($dataObject.deleteMethod)
+       #ADD_METHOD("remove-method" $dataObject.deleteMethod)   
+      #end
+      </class-mapping-descriptor>
+     #end
+
+    <class-mapping-descriptor>
+      <class>oracle.ateam.sample.mobile.persistence.service.DataSynchAction</class>
+      <table>DATA_SYNCH_ACTIONS</table>
+      <date-format>dd-MMM-yyyy</date-format>
+      <primary-key>
+        <column-name>SERVICE_CLASS_NAME</column-name>
+        <column-name>ID</column-name>
+      </primary-key>
+      <attribute-mappings>
+        <attribute-mapping type="direct-mapping">
+          <attribute-name>id</attribute-name>
+          <column name="ID" dataType="NUMERIC"/>
+          <required>true</required>
+        </attribute-mapping>
+        <attribute-mapping type="direct-mapping">
+          <attribute-name>serviceClass</attribute-name>
+          <column name="SERVICE_CLASS_NAME" dataType="VARCHAR"/>
+          <required>true</required>
+        </attribute-mapping>
+        <attribute-mapping type="direct-mapping">
+          <attribute-name>entityClassString</attribute-name>
+          <column name="ENTITY_CLASS_NAME" dataType="VARCHAR"/>
+          <required>true</required>
+        </attribute-mapping>
+        <attribute-mapping type="direct-mapping">
+          <attribute-name>entityAsJSONString</attribute-name>
+          <column name="JSON_PAYLOAD" dataType="VARCHAR"/>
+          <required>false</required>
+        </attribute-mapping>
+        <attribute-mapping type="direct-mapping">
+          <attribute-name>action</attribute-name>
+          <column name="ACTION" dataType="VARCHAR"/>
+          <required>true</required>
+        </attribute-mapping>
+        <attribute-mapping type="direct-mapping">
+          <attribute-name>dateCreated</attribute-name>
+          <column name="DATE_CREATED" dataType="DATE"/>
+          <required>true</required>
+        </attribute-mapping>
+        <attribute-mapping type="direct-mapping">
+          <attribute-name>lastSynchAttempt</attribute-name>
+          <column name="DATE_LAST_SYNCH" dataType="DATE"/>
+          <required>false</required>
+        </attribute-mapping>
+        <attribute-mapping type="direct-mapping">
+          <attribute-name>lastSynchError</attribute-name>
+          <column name="LAST_SYNCH_ERROR" dataType="VARCHAR"/>
+          <required>false</required>
+        </attribute-mapping>
+        <attribute-mapping type="direct-mapping">
+          <attribute-name>customMethodName</attribute-name>
+          <column name="CUSTOM_METHOD_NAME" dataType="VARCHAR"/>
+          <required>false</required>
+        </attribute-mapping>
+      </attribute-mappings>
+    </class-mapping-descriptor>
+
+   </class-mapping-descriptors>
+</mobile-object-persistence>
