@@ -23,7 +23,7 @@ public class VelocityInitializer
   {
     this.velocityEngine = new VelocityEngine();
     this.modelKey = modelKey;
-    String templatesBaseDir = Ide.getOracleHomeDirectory()+"/jdev/extensions/oracle.ateam.sample.mobile.persistence/templates";
+    String templatesBaseDir = Ide.getOracleHomeDirectory()+"/jdev/extensions/oracle.ateam.mobile.persistence/templates";
 
     velocityEngine.setProperty(VelocityEngine.FILE_RESOURCE_LOADER_PATH, templatesBaseDir);
     velocityEngine.setProperty(VelocityEngine.FILE_RESOURCE_LOADER_CACHE, "true");

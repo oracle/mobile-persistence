@@ -107,10 +107,10 @@
          <attribute name="Require-Bundle" value="oracle.icons,oracle.jdeveloper,oracle.ide,oracle.ide.library,oracle.ide.library.navigator,oracle.jdeveloper.java.core,oracle.javamodel-rt,oracle.javatools,oracle.javatools-nodeps,oracle.adfm,oracle.adf-common-dt,oracle.adfmcoredt,oracle.adfm.dc-adapters,oracle.adfm.dcpalette,oracle.ide.webupdate,oracle.jewt-core,oracle.idert,oracle.bc4jdt-dc,oracle.adf-model,oracle.ide.db,oracle.jdeveloper.db,oracle.jdeveloper.db.connection,oracle.db-api,oracle.toplink,oracle.adf.mobile,oracle.adf.pageflow.dt,oracle.adf.pageflow.mobile.dt,oracle.adf-controller-mobile,oracle.xmlef,oracle.xmlef-core,oracle.xmlef-swing,oracle.ide.xmlef,oracle.jdeveloper.xmlef,oracle.jdeveloper.common,oracle.controller.dt,oracle.adf-transactions-dt,oracle.jdeveloper.rescat2.model,oracle.rcsrt,oracle.adf-share-ca"/>
 -->
          <attribute name="Require-Bundle" value="oracle.jdeveloper,oracle.ide,oracle.ide.library,oracle.ide.library.navigator,oracle.jdeveloper.java.core,oracle.javamodel-rt,oracle.javatools,oracle.javatools-nodeps,oracle.adfm,oracle.adf.common.dt,oracle.adfmcoredt,oracle.adfm.dc-adapters,oracle.adfm.dcpalette,oracle.ide.webupdate,oracle.jewt-core,oracle.idert,oracle.bc4jdt-dc,oracle.adf-model,oracle.ide.db,oracle.jdeveloper.db,oracle.jdeveloper.db.connection,oracle.db-api,oracle.toplink,oracle.maf,oracle.adf.pageflow.dt,oracle.adf.pageflow.mobile.dt,oracle.adf-controller-mobile,oracle.xmlef,oracle.xmlef-core,oracle.xmlef-swing,oracle.ide.xmlef,oracle.jdeveloper.xmlef,oracle.jdeveloper.common,oracle.controller.dt,oracle.adf-transactions-dt,oracle.icons,oracle.jdeveloper.rescat2.model,oracle.rcsrt,oracle.adf-share-ca,oracle.j2ee-xml-flateditor,oracle.uic,oracle.adfm.dc-adapters,oracle.external.httpclient,oracle.ide.gallery,oracle.external.xmlparser"/>
-         <attribute name="Bundle-ClassPath" value=".,external:$ORACLE_HOME$/oracle_common/modules/velocity-dep-1.4.jar,external:$ORACLE_HOME$/jdeveloper/jdev/extensions/oracle.ateam.sample.mobile.persistence/lib/gson-2.2.2.jar"/>
+         <attribute name="Bundle-ClassPath" value=".,external:$ORACLE_HOME$/oracle_common/modules/velocity-dep-1.4.jar,external:$ORACLE_HOME$/jdeveloper/jdev/extensions/oracle.ateam.mobile.persistence/lib/gson-2.2.2.jar"/>
          <attribute name="Bundle-Version" value="12.1.3"/>
          <attribute name="Bundle-ManifestVersion" value="2"/>
-         <attribute name="Bundle-SymbolicName" value="oracle.ateam.sample.mobile.persistence"/>
+         <attribute name="Bundle-SymbolicName" value="oracle.ateam.mobile.persistence"/>
        </manifest>
        <fileset dir="${design.output.dir}" />
 <!--
@@ -139,7 +139,7 @@
                    replace="&lt;version&gt;${version.number}&lt;/version&gt;"/>
     <replaceregexp file="${design.build.dir}/center.xml"
                    match="&lt;bundle-url&gt;(\s*)(.*)&lt;/bundle-url&gt;"
-                   replace="&lt;bundle-url&gt;adf-mobile-persistence-sample-install.zip&lt;/bundle-url&gt;"/>
+                   replace="&lt;bundle-url&gt;ateam-mobile-persistence.${version.number}-install.zip&lt;/bundle-url&gt;"/>
     <replaceregexp file="${doc.dir}/index.html" 
                    match="&lt;h3&gt;Version(\s*)(.*)&lt;/h3&gt;"
                    replace="&lt;h3&gt;Version ${version.number} &lt;/h3&gt;"/>
@@ -148,7 +148,7 @@
                    replace='version="${version.number}"'/>
     <copy file="${design.build.dir}/bundle.xml" todir="${stage.dir}/META-INF"/>
     <copy file="${design.build.dir}/center.xml" todir="${stage.dir}"/>
-    <copy file="${design.deploy.dir}/oracle.ateam.sample.mobile.persistence.jar" todir="${stage.dir}"/>
+    <copy file="${design.deploy.dir}/oracle.ateam.mobile.persistence.jar" todir="${stage.dir}"/>
 
     <copy todir="${stage.extension.dir}">
       <fileset dir="${runtime.deploy.dir}">
@@ -187,7 +187,7 @@
       <fileset dir="${doc.dir}"/>
     </copy>
 
-     <zip destfile="${stage.dir}/adf-mobile-persistence-sample-install.zip" basedir="${stage.dir}">
+     <zip destfile="${stage.dir}/ateam-mobile-persistence.${version.number}-install.zip" basedir="${stage.dir}">
        <include name="**/*.*"/>
        <exclude name="*.zip"/>
        <exclude name="center.xml"/>

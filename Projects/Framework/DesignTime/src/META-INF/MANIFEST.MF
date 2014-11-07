@@ -19,4 +19,4 @@ Require-Bundle: oracle.jdeveloper,oracle.ide,oracle.ide.library,oracle
  t2.model,oracle.rcsrt,oracle.adf-share-ca,oracle.j2ee-xml-flateditor,
  oracle.uic,oracle.external.httpclient,oracle.external.xmlparser,
  oracle.ide.gallery
-Bundle-ClassPath: .,external:$ORACLE_HOME$/oracle_common/modules/velocity-dep-1.4.jar,external:$ORACLE_HOME$/jdeveloper/jdev/extensions/oracle.ateam.sample.mobile.persistence/lib/gson-2.2.2.jar
+Bundle-ClassPath: .,external:$ORACLE_HOME$/oracle_common/modules/velocity-dep-1.4.jar,external:$ORACLE_HOME$/jdeveloper/jdev/extensions/oracle.ateam.mobile.persistence/lib/gson-2.2.2.jar

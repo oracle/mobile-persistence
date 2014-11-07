@@ -75,11 +75,11 @@ public class BusinessObjectGenerator
     log.info(model.getLogTitle()+" started");
 
     // add extension libs
-    String[] libraries = new String[] { "MAF Persistence Sample Designtime", "MAF Persistence Sample Runtime"};
+    String[] libraries = new String[] { "A-Team Mobile Persistence Designtime", "A-Team Mobile Persistence Runtime"};
     JProjectUtil.addLibraries(project, libraries);
-    log.info("Added MAF Persistence Sample Libraries to "+project.getShortLabel());
+    log.info("Added A-Team Mobile Persistence Libraries to "+project.getShortLabel());
     JProjectUtil.addLibraries(appControllerProject, libraries);
-    log.info("Added MAF Persistence Sample Libraries to "+appControllerProject.getShortLabel());
+    log.info("Added A-Team Mobile Persistence Libraries to "+appControllerProject.getShortLabel());
     VelocityInitializer vi = new VelocityInitializer();
     // wsm = web service model
     vi.initVelocity("WSM");

@@ -1,6 +1,6 @@
-<extension id="oracle.ateam.sample.mobile.persistence" version="12.1.3.0.50" 
+<extension id="oracle.ateam.mobile.persistence" version="12.1.3.0.51" 
            xmlns="http://jcp.org/jsr/198/extension-manifest" esdk-version="1.0">
-  <name>MAF Persistence Sample</name>
+  <name>A-Team Mobile Persistence Accelerator</name>
   <required-bundles>
     <bundle>oracle.jdeveloper</bundle>
     <bundle>oracle.ide</bundle>
@@ -150,7 +150,7 @@
         </action>-->
         <action id="oracle.ateam.sample.mobile.OpenDoc">
             <properties>
-              <property name="Name">MAF Persistence Sample - Read Me</property>
+              <property name="Name">A-Team Mobile Persistence Accelerator - Read Me</property>
             </properties>
         </action>
       </actions> 
@@ -189,13 +189,13 @@
         </menus>
         </menu-hook>
       <libraries xmlns="http://xmlns.oracle.com/jdeveloper/1013/jdev-libraries" >
-      <library name="MAF Persistence Sample Designtime" deployed="false" forceExtensionInitialization="true"   >
-          <classpath>oracle.ateam.sample.mobile.persistence.jar</classpath>
+      <library name="A-Team Mobile Persistence Designtime" deployed="false" forceExtensionInitialization="true"   >
+          <classpath>oracle.ateam.mobile.persistence.jar</classpath>
       </library>    
-      <library name="MAF Persistence Sample Runtime" deployed="true"  forceExtensionInitialization="false"   >
-            <classpath>oracle.ateam.sample.mobile.persistence/Runtime.jar</classpath>
-            <srcpath>oracle.ateam.sample.mobile.persistence/Runtime-src.zip</srcpath>
-            <docpath>oracle.ateam.sample.mobile.persistence/Runtime-javadoc.zip</docpath>
+      <library name="A-Team Mobile Persistence Runtime" deployed="true"  forceExtensionInitialization="false"   >
+            <classpath>oracle.ateam.mobile.persistence/Runtime.jar</classpath>
+            <srcpath>oracle.ateam.mobile.persistence/Runtime-src.zip</srcpath>
+            <docpath>oracle.ateam.mobile.persistence/Runtime-javadoc.zip</docpath>
       </library>    
     </libraries>
       

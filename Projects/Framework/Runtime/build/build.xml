@@ -125,7 +125,7 @@
      <jar destfile="${runtime.deploy.jar}">
        <!-- put the version information in the manifest file as well -->
        <manifest>
-         <attribute name="ADF-Mobile-Persistence-Sample-Version" value="${version.number}"/>
+         <attribute name="ATeam-Mobile-Persistence-Accelerator-Version" value="${version.number}"/>
        </manifest>
        <fileset dir="${runtime.output.dir}" />
      </jar>

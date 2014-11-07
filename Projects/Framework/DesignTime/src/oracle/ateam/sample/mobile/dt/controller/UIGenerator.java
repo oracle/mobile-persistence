@@ -91,7 +91,7 @@ public class UIGenerator
     log.initialize();
     log.info("ADF Mobile User Interface Generator started");
 
-    String iconsZipFile = Ide.getOracleHomeDirectory()+"/jdev/extensions/oracle.ateam.sample.mobile.persistence/icons/icons.zip";
+    String iconsZipFile = Ide.getOracleHomeDirectory()+"/jdev/extensions/oracle.ateam.mobile.persistence/icons/icons.zip";
     URL publicHtmlDir = McAppUtils.getProjectPublicHtmlDir(project);
     String targetDir = publicHtmlDir.getFile()+"images";
     FileUtils.extractZipFile(iconsZipFile, targetDir);

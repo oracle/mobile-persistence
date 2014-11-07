@@ -11,7 +11,7 @@ import oracle.ide.extension.RegisteredByExtension;
 import oracle.ide.help.HelpSystem;
 import oracle.ide.webupdate.PostStartupHook;
 
-@RegisteredByExtension("oracle.ateam.sample.mobile.persistence")
+@RegisteredByExtension("oracle.ateam.mobile.persistence")
 public class MobileController
   implements Controller, PostStartupHook
 {
@@ -37,7 +37,7 @@ public class MobileController
      URL url = null;;
      try
      {
-       String path = Ide.getProductHomeDirectory()+"/extensions/oracle.ateam.sample.mobile.persistence/doc/index.html";
+       String path = Ide.getProductHomeDirectory()+"/extensions/oracle.ateam.mobile.persistence/doc/index.html";
        url = new URL("file:///"+path);
        HelpSystem.getHelpSystem().showHelp(url);
      }
