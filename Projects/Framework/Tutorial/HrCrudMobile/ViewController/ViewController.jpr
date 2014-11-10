@@ -285,14 +285,6 @@
    <hash n="oracle.jdevimpl.config.JProjectLibraries">
       <list n="exportedReferences">
          <hash>
-            <value n="id" v="MAF Persistence Sample Designtime"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="MAF Persistence Sample Runtime"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
             <value n="id" v="BC4J Runtime"/>
             <value n="isJDK" v="false"/>
          </hash>
@@ -318,6 +310,14 @@
          </hash>
          <hash>
             <value n="id" v="BC4J Oracle Domains"/>
+            <value n="isJDK" v="false"/>
+         </hash>
+         <hash>
+            <value n="id" v="A-Team Mobile Persistence Designtime"/>
+            <value n="isJDK" v="false"/>
+         </hash>
+         <hash>
+            <value n="id" v="A-Team Mobile Persistence Runtime"/>
             <value n="isJDK" v="false"/>
          </hash>
       </list>
@@ -328,14 +328,6 @@
       </hash>
       <list n="libraryReferences">
          <hash>
-            <value n="id" v="MAF Persistence Sample Designtime"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="MAF Persistence Sample Runtime"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
             <value n="id" v="BC4J Runtime"/>
             <value n="isJDK" v="false"/>
          </hash>
@@ -361,6 +353,14 @@
          </hash>
          <hash>
             <value n="id" v="BC4J Oracle Domains"/>
+            <value n="isJDK" v="false"/>
+         </hash>
+         <hash>
+            <value n="id" v="A-Team Mobile Persistence Designtime"/>
+            <value n="isJDK" v="false"/>
+         </hash>
+         <hash>
+            <value n="id" v="A-Team Mobile Persistence Runtime"/>
             <value n="isJDK" v="false"/>
          </hash>
       </list>
