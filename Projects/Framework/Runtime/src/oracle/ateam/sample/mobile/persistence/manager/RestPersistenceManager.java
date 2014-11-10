@@ -37,8 +37,6 @@ import oracle.adfmf.dc.ws.rest.RestServiceAdapter;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.api.Model;
 import oracle.adfmf.framework.exception.AdfException;
-import oracle.adfmf.framework.exception.AdfInvocationRuntimeException;
-import oracle.adfmf.util.GenericType;
 import oracle.adfmf.util.Utility;
 import oracle.adfmf.util.XmlAnyDefinition;
 
@@ -53,7 +51,6 @@ import oracle.ateam.sample.mobile.persistence.metadata.ObjectPersistenceMapping;
 import oracle.ateam.sample.mobile.persistence.model.Entity;
 import oracle.ateam.sample.mobile.security.OAuthTokenManager;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
-import oracle.ateam.sample.mobile.util.MessageUtils;
 import oracle.ateam.sample.mobile.util.StringUtils;
 
 /**
@@ -71,6 +68,7 @@ public abstract class RestPersistenceManager
   public RestPersistenceManager()
   {
   }
+
 
   /**
    * Convert object value to a string. If the value is a Date or TimeStamp the

@@ -2,6 +2,8 @@
  Copyright: see readme.txt
  
  $revision_history$
+ 10-nov-2014   Steven Davelaar
+ 1.1           Added getUsageTracker
  06-feb-2013   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -25,6 +27,7 @@ import oracle.ateam.sample.mobile.persistence.metadata.ClassMappingDescriptor;
 import oracle.ateam.sample.mobile.persistence.metadata.ObjectPersistenceMapping;
 import oracle.ateam.sample.mobile.persistence.model.Entity;
 import oracle.ateam.sample.mobile.persistence.util.EntityUtils;
+import oracle.ateam.sample.mobile.util.UsageTracker;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 
 /**
@@ -35,6 +38,7 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 public abstract class AbstractPersistenceManager implements PersistenceManager
 
 {
+  private static UsageTracker usageTracker = new UsageTracker();
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(AbstractPersistenceManager.class);
   private transient PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
   
@@ -291,5 +295,10 @@ public abstract class AbstractPersistenceManager implements PersistenceManager
       }
     }
     return OK;
+  }
+
+  protected UsageTracker getUsageTracker()
+  {
+    return usageTracker;
   }
 }

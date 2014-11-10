@@ -2,6 +2,8 @@
  Copyright: see readme.txt
  
  $revision_history$
+ 10-nov-2014   Steven Davelaar
+ 1.2           Register error with tracking service if set up
  26-sep-2013   Steven Davelaar
  1.1           Need to pass "info" instead of "INFO" returned by AdfException.INFO 
                when showing error in background thread
@@ -14,6 +16,7 @@ import oracle.adfmf.framework.api.AdfmfContainerUtilities;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
 
+
 /**
  * This class contains convenience methods for handling (unexpected) exceptions, and showing error
  * warning and information messages.
@@ -22,10 +25,11 @@ import oracle.adfmf.framework.exception.AdfException;
  * In case of a background thread, it makes no sense to throw an ADfException because it will not show in the UI. Instead,
  * the AdfmfContainerUtilities.invokeContainerJavaScriptFunction API is used to call the ADF Mobile JavaScript method
  * adf.mf.api.amx.addMessage which will render the message in the UI in the same way as is the case when throwing an ADFException
- * in the main thread. 
+ * in the main thread.
  */
 public class MessageUtils
 {
+  public static UsageTracker usageTracker = new UsageTracker();
 
   public static void handleError(AdfException ex)
   {
@@ -44,6 +48,12 @@ public class MessageUtils
 
   public static void handleMessage(String severity, String message)
   {
+    // register error message if tracking service is set up
+    if (AdfException.ERROR.equals(severity))
+    {
+      usageTracker.registerErrorMessage(message);      
+    }
+
     if (AdfmfJavaUtilities.isBackgroundThread())
     {
       String jsSeverity = severity.equalsIgnoreCase("INFO") ? "info" : (severity.equalsIgnoreCase("WARNING") ? "warning" : "error");

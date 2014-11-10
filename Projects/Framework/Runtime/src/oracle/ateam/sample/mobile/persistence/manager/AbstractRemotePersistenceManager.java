@@ -349,14 +349,17 @@ public abstract class AbstractRemotePersistenceManager
   {
     Throwable t = e.getCause()!=null ? e.getCause() : e;
     // always log the message so we can see it in error logs
-    sLog.severe(t.getLocalizedMessage());
+    String message = t.getLocalizedMessage();
+    sLog.severe(message);
     if (descriptor.isShowWebServiceInvocationErrors())
     {
-      // this will show message to user and rethrows the exception
-      MessageUtils.handleError(t.getLocalizedMessage());
+      // this will register error message, show message to user and rethrows the exception
+      MessageUtils.handleError(message);
     }
     else if (rethrow)
     {
+      // register error message if tracking service is set up
+      getUsageTracker().registerErrorMessage(message);
       // rethrow exception so a data sync action will be created      
       throw new AdfException(t);
     }
