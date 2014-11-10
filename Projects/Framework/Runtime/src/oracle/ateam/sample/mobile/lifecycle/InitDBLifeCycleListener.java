@@ -16,6 +16,7 @@ import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.ateam.sample.mobile.persistence.db.DBConnectionFactory;
 import oracle.ateam.sample.mobile.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.persistence.service.DataSynchManager;
+import oracle.ateam.sample.mobile.tracking.UsageTracker;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 
 
@@ -52,6 +53,7 @@ public class InitDBLifeCycleListener
   public void start()
   {
     sLog.fine("Excuting InitDBLifeCycleListener.start method");
+    new UsageTracker().sendStartAppMessage();
     DBPersistenceManager pm= new DBPersistenceManager();
     pm.initDBIfNeeded();
   }

@@ -74,7 +74,16 @@
     <mkdir dir="${runtime.output.dir}"/>
     <mkdir dir="${runtime.javadoc.dir}"/>
     <mkdir dir="${runtime.deploy.dir}"/>
+    
+     <!-- create the new version file -->
+     <touch file="${runtime.output.dir}/${version.number}"/>
+
+     <!-- Replace the version information in the Version.java file -->
+    <replaceregexp file="${runtime.source.dir}/oracle/ateam/sample/mobile/Version.java"
+                   match="VERSION(\s*)=(.*);"
+                   replace="VERSION = &quot;${version.number}&quot;;"/>
   </target>
+
 
   <target name="clean" description="Clean the project">
     <delete includeemptydirs="true" quiet="true">

@@ -53,6 +53,24 @@ public class PersistenceConfig
     }
 //    return true;
   }
+  
+  /**
+   * Returns value of property in persistence-config file. Returns null if property is not defined
+   * @param propertyName
+   * @return
+   */
+  public static String getPropertyValue(String propertyName)
+  {
+    try
+    {
+      String value = config.getString(propertyName);
+      return value;
+    }
+    catch (MissingResourceException e)
+    {
+      return null;
+    }
+  }
 
   public static String getEncryptionType()
   {
