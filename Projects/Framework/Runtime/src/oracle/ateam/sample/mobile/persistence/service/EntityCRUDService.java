@@ -2,6 +2,9 @@
  Copyright: see readme.txt
  
  $revision_history$
+ 12-nov-2014   Steven Davelaar
+ 1.5           Fire refresh events after data syncing in method writeEntityRemote so any server-side
+               changes show up immediately in UI
  26-sep-2014   Steven Davelaar
  1.4           Removed firstRead member and getter/setters. Instead created methods get/setRemoteFindAllExecuted
                which will check acroos features whether remoteFindAll for this data object has been executed already
@@ -305,11 +308,19 @@ public abstract class EntityCRUDService
     dataSynchAction.setLastSynchAttempt(new Date());
     dataSynchAction.setLastSynchError(isOnline()?
                                       (getDataSynchManager().isDataSynchRunning()?
-                                       "Previous data dynchronization still in progress": null): "Device offline");
+                                       "Previous data synchronization still in progress": null): "Device offline");
     getDataSynchManager().registerDataSynchAction(dataSynchAction);
     if (isOnline())
     {
+      Entity[] oldEntityArray = getEntityListAsCorrectlyTypedArray();
       getDataSynchManager().synchronize(isDoRemoteWriteInBackground());
+      // SDA 12-11-2014 call providerRefresh so any server-side changes are shown
+      // directly in UI
+      refreshEntityList(oldEntityArray);
+      if (isDoRemoteWriteInBackground())
+      {
+        AdfmfJavaUtilities.flushDataChangeEvent();
+      }
     }
   }
 
@@ -475,12 +486,9 @@ public abstract class EntityCRUDService
    */
   protected void refreshEntityList(Entity[] oldEntityArray)
   {
-    boolean wasEmpty = oldEntityArray.length == 0;
     Entity[] newEntityArray = getEntityListAsCorrectlyTypedArray();
     getPropertyChangeSupport().firePropertyChange(getEntityListName(), oldEntityArray, newEntityArray);
     getProviderChangeSupport().fireProviderRefresh(getEntityListName());
-    getPropertyChangeSupport().firePropertyChange("entityListIsEmpty", wasEmpty, getEntityListIsEmpty());
-    getProviderChangeSupport().fireProviderRefresh("entityListIsEmpty");
   }
 
   /**
