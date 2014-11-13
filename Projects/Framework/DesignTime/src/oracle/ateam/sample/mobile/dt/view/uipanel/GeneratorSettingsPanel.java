@@ -27,6 +27,8 @@ public class GeneratorSettingsPanel extends DefaultTraversablePanel {
   private JCheckBox overwriteDataObjectsField = new JCheckBox();
   private JLabel overwriteServiceObjectsLabel = new JLabel("Overwrite Service Object Classes?");
   private JCheckBox overwriteServiceObjectsField = new JCheckBox();
+  private JLabel usageTrackingLabel = new JLabel("Enable Usage Tracking?");
+  private JCheckBox usageTrackingField = new JCheckBox();
 
     public GeneratorSettingsPanel() {
       // GridBagConstraints(int gridx, int gridy, int gridwidth, int gridheight, double weightx, double weighty
@@ -55,8 +57,10 @@ public class GeneratorSettingsPanel extends DefaultTraversablePanel {
         contentPanel.add(servicePackageLabel, gbc);
       gbc.gridy++;
       contentPanel.add(overwriteDataObjectsLabel, gbc);
+      gbc.gridy++;
+      contentPanel.add(overwriteServiceObjectsLabel, gbc);
         gbc.gridy++;
-        contentPanel.add(overwriteServiceObjectsLabel, gbc);
+        contentPanel.add(usageTrackingLabel, gbc);
 //        gbc.gridy++;
 //        add(_lbAuthor, gbc);
 
@@ -70,8 +74,10 @@ public class GeneratorSettingsPanel extends DefaultTraversablePanel {
         contentPanel.add(servicePackageField, gbc);
       gbc.gridy++;
       contentPanel.add(overwriteDataObjectsField, gbc);
+      gbc.gridy++;
+      contentPanel.add(overwriteServiceObjectsField, gbc);
         gbc.gridy++;
-        contentPanel.add(overwriteServiceObjectsField, gbc);
+        contentPanel.add(usageTrackingField, gbc);
 //        gbc.gridy++;
 //        add(_tfAuthor, gbc);
     }
@@ -84,6 +90,7 @@ public class GeneratorSettingsPanel extends DefaultTraversablePanel {
       servicePackageField.setText(model.getServicePackageName());
       overwriteDataObjectsField.setSelected(model.isOverwriteDataObjectClasses());
       overwriteServiceObjectsField.setSelected(model.isOverwriteServiceObjectClasses());
+      usageTrackingField.setSelected(model.isEnableUsageTracking());
     }
 
     public void onExit(TraversableContext tc) {
@@ -94,5 +101,6 @@ public class GeneratorSettingsPanel extends DefaultTraversablePanel {
       model.setServicePackageName(servicePackageField.getText().trim());
       model.setOverwriteDataObjectClasses(overwriteDataObjectsField.isSelected());
       model.setOverwriteServiceObjectClasses(overwriteServiceObjectsField.isSelected());
+      model.setEnableUsageTracking(usageTrackingField.isSelected());
     }
 }

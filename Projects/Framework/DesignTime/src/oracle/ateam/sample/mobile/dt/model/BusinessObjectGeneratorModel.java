@@ -36,6 +36,17 @@ public class BusinessObjectGeneratorModel {
     private String logTitle;
   private boolean overwriteDataObjectClasses = true;
   private boolean overwriteServiceObjectClasses = false;
+  private boolean enableUsageTracking = true;
+
+  public void setEnableUsageTracking(boolean enableUsageTracking)
+  {
+    this.enableUsageTracking = enableUsageTracking;
+  }
+
+  public boolean isEnableUsageTracking()
+  {
+    return enableUsageTracking;
+  }
 
   public void setOverwriteServiceObjectClasses(boolean overwriteServiceObjectClasses)
   {
