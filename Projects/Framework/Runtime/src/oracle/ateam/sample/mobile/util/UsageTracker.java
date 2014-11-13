@@ -41,6 +41,9 @@ public class UsageTracker
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(UsageTracker.class);
   private static Location location;
   private boolean locationInit = true;
+  private final static String CONNECTION_END_POINT = "http://slc08yyi.us.oracle.com:3000/store";
+  private final static String START_URI = "/applications/starts";
+  private final static String ERROR_URI = "/applications/errors";
 
   public UsageTracker()
   {
@@ -57,6 +60,15 @@ public class UsageTracker
   protected String getCurrentDateTime()
   {
     String pattern = "yyyy-MM-dd HH:mm:ss Z";
+    Date now = new Date();
+    SimpleDateFormat sdf = new SimpleDateFormat(pattern);
+    String sdate = sdf.format(now);
+    return sdate;
+  }
+
+  protected String getCurrentTimeZone()
+  {
+    String pattern = "zzzz";
     Date now = new Date();
     SimpleDateFormat sdf = new SimpleDateFormat(pattern);
     String sdate = sdf.format(now);
@@ -86,6 +98,17 @@ public class UsageTracker
     return location;
   }
 
+  protected boolean isUseLocation()
+  {
+    String useLoc = PersistenceConfig.getPropertyValue("tracking.use.location");
+    return "true".equalsIgnoreCase(useLoc);     
+//    if (useLoc!=null)
+//    {
+//      return "true".equalsIgnoreCase(useLoc);     
+//    }
+//    return true;    
+  }
+
   protected Map getBasePayload()
   {
     // device info
@@ -113,8 +136,8 @@ public class UsageTracker
     payload.put("model", model);
     payload.put("network", networkStatus);
     payload.put("ampaVersion", Version.VERSION);
-    String useLoc = PersistenceConfig.getPropertyValue("tracking.use.location");
-    if ("true".equalsIgnoreCase(useLoc))
+    payload.put("timeZone", getCurrentTimeZone());
+    if (isUseLocation())
     {
       Location loc = getLocation();
       if (loc != null)
@@ -128,15 +151,14 @@ public class UsageTracker
     return payload;
   }
 
-  protected void sendMessage(String connection, String uri,Map payload)
+  protected void sendMessage(String connectionEndPoint, String uri,Map payload)
   {
     try
     {
       String json = JSONBeanSerializationHelper.toJSON(payload).toString();
-      RestServiceAdapter rsa = Model.createRestServiceAdapter();
+      RestServiceAdapter rsa = new NoConnRestServiceAdapterImpl(connectionEndPoint);
       rsa.clearRequestProperties();
       rsa.addRequestProperty("Content-Type", "application/json");
-      rsa.setConnectionName(connection);
       rsa.setRequestType(RestServiceAdapter.REQUEST_TYPE_POST);
       rsa.setRequestURI(uri);
       rsa.send(json);
@@ -148,11 +170,39 @@ public class UsageTracker
 
   }
 
+  protected String getConnectionEndPoint()
+  {
+    String trackingConnection = PersistenceConfig.getPropertyValue("tracking.connection.endpoint");
+    return trackingConnection!=null ? trackingConnection : CONNECTION_END_POINT;
+  }
+
+  protected String getStartUri()
+  {
+    String startUri = PersistenceConfig.getPropertyValue("tracking.start.uri");
+    return startUri!=null ? startUri : START_URI;
+  }
+
+  protected String getErrorUri()
+  {
+    String errorUri = PersistenceConfig.getPropertyValue("tracking.error.uri");
+    return errorUri!=null ? errorUri : ERROR_URI;
+  }
+
+  protected boolean isTrackingEnabled()
+  {
+    String trackingEnabled = PersistenceConfig.getPropertyValue("tracking.enabled");
+    return "true".equalsIgnoreCase(trackingEnabled);
+  }
+
   public void registerStartAppMessage()
   {
-    final String trackingConnection = PersistenceConfig.getPropertyValue("tracking.connection");
-    final String trackingStartUri = PersistenceConfig.getPropertyValue("tracking.start.uri");
-    if (trackingConnection == null || trackingStartUri == null || isOffline())
+    if (!isTrackingEnabled())
+    {
+      return;
+    }
+    final String connectionEndPoint = getConnectionEndPoint();
+    final String trackingStartUri = getStartUri();
+    if (connectionEndPoint == null || trackingStartUri == null || isOffline())
     {
       return;
     }
@@ -163,18 +213,23 @@ public class UsageTracker
       {
         Map payload = getBasePayload();
         payload.put("startTime", getCurrentDateTime());
-        sendMessage(trackingConnection, trackingStartUri,payload);
+        sendMessage(connectionEndPoint, trackingStartUri,payload);
       }
     };
     Thread thread = new Thread(runnable);
     thread.start();
   }
 
+
   public void registerErrorMessage(final String message)
   {
-    final String trackingConnection = PersistenceConfig.getPropertyValue("tracking.connection");
-    final String trackingErrorUri = PersistenceConfig.getPropertyValue("tracking.error.uri");
-    if (trackingConnection == null || trackingErrorUri == null || isOffline())
+    if (!isTrackingEnabled())
+    {
+      return;
+    }
+    final String connectionEndPoint = getConnectionEndPoint();
+    final String trackingErrorUri = getErrorUri();
+    if (connectionEndPoint == null || trackingErrorUri == null || isOffline())
     {
       return;
     }
@@ -186,7 +241,7 @@ public class UsageTracker
         Map payload = getBasePayload();
         payload.put("errorTime", getCurrentDateTime());
         payload.put("errorMessage", message);
-        sendMessage(trackingConnection, trackingErrorUri,payload);
+        sendMessage(connectionEndPoint, trackingErrorUri,payload);
       }
     };
     Thread thread = new Thread(runnable);
