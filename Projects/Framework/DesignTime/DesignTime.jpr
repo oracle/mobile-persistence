@@ -57,7 +57,7 @@
       <string v="oracle.adfdtinternal.model.ide.settings.ADFMSettings/adfmContentSet"/>
       <string v="oracle.toplink.workbench.addin/toplinkContentSet"/>
    </list>
-   <value n="defaultPackage" v="adfemgmobileaddin"/>
+   <value n="defaultPackage" v="oracle.ateam.sample.mobile.dt"/>
    <hash n="extensiondtProperties">
       <value n="extensiondt.deploymentdir" v="jdev/extensions/"/>
       <url n="extensiondt.manifest" path="src/META-INF/extension.xml"/>
@@ -106,13 +106,11 @@
       </list>
    </hash>
    <hash n="oracle.jdeveloper.compiler.ant.AntConfiguration">
-      <value n="makeTarget" v="all"/>
+      <value n="makeTarget" v="stage"/>
       <url n="projectBuildfile" path="build/build.xml"/>
       <list n="targetList">
-         <string v="all"/>
          <string v="clean"/>
          <string v="compile"/>
-         <string v="copy"/>
       </list>
    </hash>
    <hash n="oracle.jdeveloper.compiler.OjcConfiguration">

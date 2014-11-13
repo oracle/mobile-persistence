@@ -69,7 +69,7 @@
       <list n="dependencyList">
          <hash>
             <hash n="dependable">
-               <url n="sourceOwnerURL" path="../AdfEmgMobileAccelerator.jws"/>
+               <url n="sourceOwnerURL" path="../MobilePersistenceAccelerator.jws"/>
                <url n="sourceURL" path="../Runtime/Runtime.jpr"/>
             </hash>
             <value n="recognizerId" v="oracle.jdeveloper.library"/>
@@ -136,7 +136,7 @@
    </hash>
    <hash n="oracle.jdeveloper.deploy.dt.DeploymentProfiles">
       <hash n="profileDefinitions">
-         <hash n="AdfEmgDataSynchFeature">
+         <hash n="DataSynchFeature">
             <hash n="archiveOptions">
                <value n="hasManifest" v="true"/>
             </hash>
@@ -201,11 +201,11 @@
             <hash n="libraryDependencies"/>
             <hash n="LibraryDependencies"/>
             <value n="profileClass" v="oracle.adfmf.framework.dt.deploy.features.FeatureArchiveProfile"/>
-            <value n="profileName" v="AdfEmgDataSynchFeature"/>
+            <value n="profileName" v="DataSynchFeature"/>
          </hash>
       </hash>
       <list n="profileList">
-         <string v="AdfEmgDataSynchFeature"/>
+         <string v="DataSynchFeature"/>
       </list>
    </hash>
    <hash n="oracle.jdeveloper.model.J2eeSettings">

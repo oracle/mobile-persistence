@@ -141,42 +141,24 @@
       </gallery>
 
       <actions xmlns="http://xmlns.oracle.com/jdeveloper/1013/extension">
-        <!--<action id="oracle.ateam.sample.mobile.EntityClassModifier">
-          <properties>
-            <property name="Name">Enable Class for MAF Persistence</property>
-             <property name="LongDescription">Enable Class for MAF Persistence</property>          
-          </properties>
-         <command-class>oracle.ateam.sample.mobile.dt.EntityClassModifier</command-class>     
-        </action>-->
         <action id="oracle.ateam.sample.mobile.OpenDoc">
             <properties>
               <property name="Name">A-Team Mobile Persistence Accelerator - Read Me</property>
             </properties>
+            <controller-class>oracle.ateam.sample.mobile.dt.MobileController</controller-class>
         </action>
       </actions> 
     
       <controllers>
         <controller class="oracle.ateam.sample.mobile.dt.MobileController">
           <update-rules>
-            <!--<update-rule rule="always-enabled" >
-              <action id="oracle.ateam.sample.mobile.EntityClassModifier"/>
-            </update-rule>-->
             <update-rule rule="always-enabled">
               <action id="oracle.ateam.sample.mobile.OpenDoc"/>
             </update-rule>
           </update-rules>
         </controller>
       </controllers>
-<!--    
-      <context-menu-hook rule="java-node">      
-        <site idref="navigator"></site>
-          <menu>
-            <section xmlns="http://jcp.org/jsr/198/extension-manifest" id="MY_CUSTOM_MENU_SECTION_ONE" weight="9.1">
-             <item action-ref="oracle.ateam.sample.mobile.EntityClassModifier"></item>
-            </section>
-         </menu>
-      </context-menu-hook>
--->      
+
       <menu-hook xmlns="http://jcp.org/jsr/198/extension-manifest">
         <menus>
           <menubar id="javax.ide.view.MAIN_WINDOW_MENUBAR_ID">
@@ -206,7 +188,6 @@
   
     <jdeveloper-hook xmlns="http://xmlns.oracle.com/jdeveloper/1013/extension">
       <addins>
-        <addin>oracle.ateam.sample.mobile.dt.MobileAddin</addin>
       </addins>
     </jdeveloper-hook>
   </hooks>  
