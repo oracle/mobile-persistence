@@ -6,6 +6,6 @@ It eases the consumption of RESTful services, and provides a complete persistenc
 You can read and write data while not connected to the internet, and synchronize any pending data changes later when you are online again.
 The design-time wizards that are integrated with JDeveloper enable you to build a fully functional mobile application within minutes.
 
-The framework is distributed under the open source GPL license and hosted on github at https://github.com/oracle/mobile-persistence
+The accelerator is distributed as an open source framework and hosted on github at https://github.com/oracle/mobile-persistence
 
 See the github wiki for instructions on installing and getting started. 
