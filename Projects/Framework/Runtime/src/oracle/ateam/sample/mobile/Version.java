@@ -5,5 +5,5 @@ package oracle.ateam.sample.mobile;
  */
 public interface Version
 {
-  public static final String VERSION = "12.1.3.0.52";
+  public static final String VERSION = "12.1.3.0.53";
 }

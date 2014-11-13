@@ -111,6 +111,7 @@
       <list n="targetList">
          <string v="clean"/>
          <string v="compile"/>
+         <string v="stage"/>
       </list>
    </hash>
    <hash n="oracle.jdeveloper.compiler.OjcConfiguration">
