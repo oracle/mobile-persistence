@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright: see readme.txt
+ Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
  01-jul-2013   Steven Davelaar

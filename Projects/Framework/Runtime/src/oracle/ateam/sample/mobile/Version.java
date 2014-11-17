@@ -1,3 +1,10 @@
+/*******************************************************************************
+ Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
+ 
+ $revision_history$
+ 06-nov-2014   Steven Davelaar
+ 1.1           initial creation
+******************************************************************************/
 package oracle.ateam.sample.mobile;
 
 /**

@@ -1,3 +1,10 @@
+/*******************************************************************************
+ Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
+ 
+ $revision_history$
+ 10-nov-2014   Steven Davelaar
+ 1.0           initial creation
+******************************************************************************/
 package application;
 
 import oracle.adfmf.application.LifeCycleListener;

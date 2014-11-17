@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright: see readme.txt
+ Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
  10-nov-2014   Steven Davelaar
@@ -30,10 +30,11 @@ import oracle.ateam.sample.mobile.persistence.metadata.PersistenceConfig;
 import oracle.ateam.sample.mobile.persistence.service.EntityCRUDService;
 
 /**
- * Class used to track the mobiel app usage. In persistence-config, two endpoints can be configured: one to register
+ * Class used to track the mobile app usage. In mobile-persistence-config, two endpoints can be configured: one to register
  * the start of an application, and one to register when an error occurs while incoking some REST service.
  * A-Team uses this internally to track Oracle internal apps, but customers can use the same facility by simply
  * changing the endpoints in persistence config.
+ * Tracking is switched on/off through propety tracking.enabled=true/false in mobile-persistence-config.
  */
 public class UsageTracker
 {
