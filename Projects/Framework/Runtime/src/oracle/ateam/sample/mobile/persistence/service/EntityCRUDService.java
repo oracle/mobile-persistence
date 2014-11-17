@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
+ Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
  12-nov-2014   Steven Davelaar
@@ -312,18 +312,29 @@ public abstract class EntityCRUDService
     getDataSynchManager().registerDataSynchAction(dataSynchAction);
     if (isOnline())
     {
-      Entity[] oldEntityArray = getEntityListAsCorrectlyTypedArray();
       getDataSynchManager().synchronize(isDoRemoteWriteInBackground());
-      // SDA 12-11-2014 call providerRefresh so any server-side changes are shown
-      // directly in UI
-      refreshEntityList(oldEntityArray);
-      if (isDoRemoteWriteInBackground())
-      {
-        AdfmfJavaUtilities.flushDataChangeEvent();
-      }
     }
   }
 
+  /**
+   * Callback method called by DataSynchronizer when dataSychronization action is done
+   * @param succeededDataSynchActions
+   * @param failedDataSynchActions
+   */
+  protected void dataSynchFinished(List succeededDataSynchActions, List failedDataSynchActions)
+  {
+    Entity[] oldEntityArray = getEntityListAsCorrectlyTypedArray();
+    refreshEntityList(oldEntityArray);
+    if (isDoRemoteWriteInBackground())
+    {
+      AdfmfJavaUtilities.flushDataChangeEvent();
+    }
+  //    int ok = succeededDataSynchActions.size();
+  //    int fails = failedDataSynchActions.size();
+  //    int total = ok + fails;
+  //    MessageUtils.handleMessage(AdfException.INFO,
+  //                               total + " data synch actions completed. Successful: " + ok + ", Failed: " + fails);
+  }
 
   /**
    * Returns the value for which the current max key value needs to be

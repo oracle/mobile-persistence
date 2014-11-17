@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
+ Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
  06-nov-2014   Steven Davelaar
@@ -12,5 +12,5 @@ package oracle.ateam.sample.mobile;
  */
 public interface Version
 {
-  public static final String VERSION = "12.1.3.0.53";
+  public static final String VERSION = "12.1.3.0.54";
 }
