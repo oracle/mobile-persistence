@@ -978,6 +978,9 @@ public abstract class EntityCRUDService
   {
     if (isOnline() && getRemotePersistenceManager() != null && !entity.canonicalGetExecuted())
     {      
+      // immediately set flag to false, so we can call this method from some get Attribute method without
+      // causing endless loop
+      entity.setCanonicalGetExecuted(true);
       boolean oldValue = isDoRemoteReadInBackground();
       try
       {
