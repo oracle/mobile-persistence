@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
+ Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
  07-jan-2014   Steven Davelaar
@@ -297,6 +297,8 @@ public abstract class AbstractRemotePersistenceManager
    * with the new key pointing to the currentEntity instance.
    * @param entityClass
    * @param bindParamInfos
+   * @param currentEntity - the entity instantiated from DataSynchAction JSON created b serializing the original 
+   * entity. This is NOT the same instance as in the entity list!!!
    * @return
    */
   protected Entity createOrUpdateEntityInstance(Class entityClass, List bindParamInfos, Entity currentEntity)
@@ -323,7 +325,22 @@ public abstract class AbstractRemotePersistenceManager
       // changes are relected correctly in UI. Delete the row with the old PK from DB
       // a new row has already been added when processing the payload
       // update the cache with the new key pointing to the old instance
-      refreshEntityKeyValuesIfNeeded(currentEntity, newEntity);
+      
+      // first get the current entity instance from the cache, this is the instance used in the UI
+      // this is a DIFFERENT instance than the currentEntity which is the DataSyncAction instance
+      // created from the serialized origin entity that triggered the transaction.
+      existingEntity = EntityCache.getInstance().findByUID(entityClass, EntityUtils.getEntityKey(currentEntity));    
+//      refreshEntityKeyValuesIfNeeded(currentEntity, newEntity);
+      if (existingEntity!=null)
+      {
+        // existingEntity should never be null
+        refreshEntityKeyValuesIfNeeded(existingEntity, newEntity);
+        // also copy the new values to the DataSynch instance (currentEntity), so we can see the server-side
+        // derived values as well in callbacl method EntityCRUDService.dataSynchFinished
+        copyAttributeValues(currentEntity,existingEntity,true);
+        return existingEntity;
+      }
+      // should never end up here!
       return currentEntity;
     }
     else

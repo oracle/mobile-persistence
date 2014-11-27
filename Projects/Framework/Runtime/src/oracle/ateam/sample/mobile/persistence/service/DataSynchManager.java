@@ -1,7 +1,11 @@
 /*******************************************************************************
- Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
+ Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 17-nov-2014   Steven Davelaar
+ 1.1           Moved method dataSynchFinished to EntityCRUDService for easy override
+               and UI refresh
+               DataSynchronizer now calls this method directly on the crudService
  22-jun-2013   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -31,6 +35,7 @@ import oracle.adfmf.util.Utility;
 
 import oracle.ateam.sample.mobile.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.persistence.model.ChangeEventSupportable;
+import oracle.ateam.sample.mobile.persistence.model.Entity;
 import oracle.ateam.sample.mobile.persistence.util.EntityUtils;
 import oracle.ateam.sample.mobile.util.MessageUtils;
 
@@ -124,16 +129,6 @@ public class DataSynchManager
     {
       syncher.run();
     }
-  }
-
-  protected void dataSynchFinished(List succeededDataSynchActions, List failedDataSynchActions)
-  {
-    setDataSynchRunning(false);
-//    int ok = succeededDataSynchActions.size();
-//    int fails = failedDataSynchActions.size();
-//    int total = ok + fails;
-//    MessageUtils.handleMessage(AdfException.INFO,
-//                               total + " data synch actions completed. Successful: " + ok + ", Failed: " + fails);
   }
 
   protected String toJSON(DataSynchPayload payload)

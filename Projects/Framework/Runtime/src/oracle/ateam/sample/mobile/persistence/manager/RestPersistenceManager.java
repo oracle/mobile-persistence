@@ -1,7 +1,10 @@
 /*******************************************************************************
- Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
+ Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 19-nov-2014   Steven Davelaar
+ 1.7           Added support for EL expression in header param value
+               Improved error message when invoking REST service that throws exception
  03-nov-2014   Steven Davelaar
  1.6           Added method addOAuthHeaderParamsIfNeeded
  25-sep-2014   Steven Davelaar
@@ -301,8 +304,11 @@ public abstract class RestPersistenceManager
     }
     catch (Exception e)
     {
-      Throwable t = e.getCause() != null? e.getCause(): e;
-      String message = "Error invoking REST " + requestType + " service " + uri + " error: " + t.getLocalizedMessage();
+      String rootError = e.getLocalizedMessage();
+      String causeError = e.getCause() != null? e.getCause().getLocalizedMessage() : null;
+      // the cause exception can have a null or "" message, in that case we throw the root exception message
+      String error = (causeError==null || "".equals(causeError)) ? rootError : causeError;
+      String message = "Error invoking REST " + requestType + " service " + uri + " error: " + error;
       sLog.severe(message);
       // throw exception so any failed data synch actions can be registsred and processed later
       throw new AdfException(message, AdfException.ERROR);
@@ -460,7 +466,9 @@ public abstract class RestPersistenceManager
     for (int i = 0; i < headerParams.size(); i++)
     {
       MethodHeaderParameter param = (MethodHeaderParameter) headerParams.get(i);
-      headerParamMap.put(param.getName(), param.getValue());
+      // value might be EL expression
+      Object value = AdfmfJavaUtilities.evaluateELExpression(param.getValue());
+      headerParamMap.put(param.getName(), value);
     }
     return invokeRestService(method.getConnectionName(), method.getRequestType(), uri, queryStringOrPayload.toString(),
                              headerParamMap, 0, method.isSecured());
@@ -553,7 +561,6 @@ public abstract class RestPersistenceManager
     try
     {
       String restResponse = invokeRestService(getCanonicalMethod, paramValues);
-      entity.setCanonicalGetExecuted(true);
       if (restResponse != null)
       {
         handleReadResponse(restResponse, entityClass, getCanonicalMethod.getPayloadElementName(),

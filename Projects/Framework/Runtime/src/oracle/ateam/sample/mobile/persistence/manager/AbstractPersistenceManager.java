@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
+ Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
  10-nov-2014   Steven Davelaar
@@ -253,6 +253,10 @@ public abstract class AbstractPersistenceManager implements PersistenceManager
    */
   protected void copyAttributeValues(Entity toInstance, Entity fromInstance, boolean copyNullValues)
   {
+    // first set the value of canoncalGetExecuted of toInstance on fromInstance
+    // This is to prevent endless loop when we invoke getCanonical from a attribute getter
+    // method
+    fromInstance.setCanonicalGetExecuted(toInstance.canonicalGetExecuted());
     Map attrValues = EntityUtils.getEntityAttributeValues(fromInstance);
     Iterator attrNames = attrValues.keySet().iterator();
     while (attrNames.hasNext())

@@ -1,7 +1,9 @@
 /*******************************************************************************
- Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
+ Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 17-nov-2014   Steven Davelaar
+ 1.1           Call method dataSynchFinished directly on EntityCRUDService
  22-jun-2013   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -84,7 +86,8 @@ public class DataSynchronizer
         
       }
     }
-    synchManager.dataSynchFinished(getSucceededSynchActions(), getFailedSynchActions());
+    synchManager.setDataSynchRunning(false); 
+    crudService.dataSynchFinished(getSucceededSynchActions(), getFailedSynchActions());
   }
 
   public List getFailedSynchActions()
