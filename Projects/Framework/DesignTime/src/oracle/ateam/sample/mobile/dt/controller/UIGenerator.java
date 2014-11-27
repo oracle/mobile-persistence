@@ -2,6 +2,8 @@
  Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 27-nov-2014   Steven Davelaar
+ 1.1           Fixed path of DataSynchFeature.jar (changed after renaming to AMPA)
  06-feb-2013   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -154,7 +156,7 @@ public class UIGenerator
       JLibrary lib = applicationLibraryList.addLibrary(DATA_SYNCH_JAR_NAME);
       URLPath up = new URLPath();
       String directory = Ide.getOracleHomeDirectory();
-      String urlpath = directory+"/jdev/extensions/oracle.ateam.sample.mobile.persistence/"+DATA_SYNCH_JAR_NAME;
+      String urlpath = directory+"/jdev/extensions/oracle.ateam.mobile.persistence/"+DATA_SYNCH_JAR_NAME;
       up.add(URLFactory.newFileURL(urlpath));
       lib.setClassPath(up);
       lib.setName(DATA_SYNCH_JAR_NAME);    
