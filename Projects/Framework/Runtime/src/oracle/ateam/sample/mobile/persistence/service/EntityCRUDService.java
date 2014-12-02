@@ -2,6 +2,9 @@
  Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 27-nov-2014   Steven Davelaar
+ 1.6           Allow remote persistence manager to be null in persistenceMapping.xml. We might have
+               local-only data objects
  12-nov-2014   Steven Davelaar
  1.5           Fire refresh events after data syncing in method writeEntityRemote so any server-side
                changes show up immediately in UI
@@ -1027,16 +1030,19 @@ public abstract class EntityCRUDService
 
     }
     className = descriptor.getRemotePersistenceManagerClassName();
-    pm = getClassInstance(className);
-    if (pm instanceof RemotePersistenceManager)
+    if (className!=null && !"".equals(className))
     {
-      RemotePersistenceManager rpm = (RemotePersistenceManager) pm;
-      setRemotePersistenceManager(rpm);
-    }
-    else if (pm != null)
-    {
-      throw new AdfException("Local persistence manager class " + className +
-                             ": should implement RemotePersistenceManager interface", AdfException.ERROR);
+      pm = getClassInstance(className);
+      if (pm instanceof RemotePersistenceManager)
+      {
+        RemotePersistenceManager rpm = (RemotePersistenceManager) pm;
+        setRemotePersistenceManager(rpm);
+      }
+      else if (pm != null)
+      {
+        throw new AdfException("Remote persistence manager class " + className +
+                               ": should implement RemotePersistenceManager interface", AdfException.ERROR);
+      }      
     }
     setDoRemoteReadInBackground(descriptor.isRemoteReadInBackground());
     setDoRemoteWriteInBackground(descriptor.isRemoteWriteInBackground());
