@@ -2,6 +2,8 @@
  Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 27-dec-2014   Steven Davelaar
+ 1.7           Moved implementation of getEntityListAsCorrectlyTypedArray to EntityUtils class to enable reuse.
  27-nov-2014   Steven Davelaar
  1.6           Allow remote persistence manager to be null in persistenceMapping.xml. We might have
                local-only data objects
@@ -481,17 +483,7 @@ public abstract class EntityCRUDService
    */
   protected Entity[] getEntityListAsCorrectlyTypedArray()
   {
-      int size = getEntityList().size();
-      Entity[] value = (Entity[]) Array.newInstance(getEntityClass(), size);
-      for (int i = 0; i < size; i++)
-      {
-        Object e = getEntityList().get(i);
-        if (e instanceof Entity)
-        {
-          value[i] = (Entity)e;          
-        }
-      }
-      return value;
+    return EntityUtils.getEntityListAsCorrectlyTypedArray(getEntityList(), getEntityClass());
   }
 
   /**

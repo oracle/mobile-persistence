@@ -1,7 +1,9 @@
 /*******************************************************************************
- Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
+ Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 27-dec-2013   Steven Davelaar
+ 1.1           Added support for remotely calling findAllInParent in background
  06-feb-2013   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -33,6 +35,7 @@ import oracle.ateam.sample.mobile.persistence.model.Entity;
 import oracle.ateam.sample.mobile.persistence.util.EntityUtils;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.MessageUtils;
+import oracle.ateam.sample.mobile.util.StringUtils;
 
 
 /**
@@ -51,11 +54,24 @@ public class IndirectList
   Entity entity;
   List delegate;
   AttributeMappingOneToMany mapping;
+  private String arrayAttributeName;
 
   public IndirectList(Entity entity, AttributeMappingOneToMany mapping)
   {
+    this(entity,mapping,null);
+  }
+
+  public IndirectList(Entity entity, AttributeMappingOneToMany mapping, String arrayAttributeName)
+  {
     this.mapping = mapping;
     this.entity = entity;
+    this.arrayAttributeName = arrayAttributeName;
+    if (arrayAttributeName==null && mapping.getAttributeName().endsWith("List"))
+    {
+      // assume the array attribute is the mapping attr without List suffix
+      String attrName = mapping.getAttributeName();
+      this.arrayAttributeName = attrName.substring(0, attrName.length()-4);
+    }
   }
 
   public int size()
@@ -196,30 +212,50 @@ public class IndirectList
 
   protected List buildDelegate()
   {
-    ClassMappingDescriptor referenceDescriptor = mapping.getReferenceClassMappingDescriptor();
+    final ClassMappingDescriptor referenceDescriptor = mapping.getReferenceClassMappingDescriptor();
     String status = DeviceManagerFactory.getDeviceManager().getNetworkStatus();
     boolean offline = "NotReachable".equals(status) || "unknown".equals(status);
     if (mapping.getAccessorMethod() != null && !offline)
     {
       sLog.fine("Getter method for attribute " + this.mapping.getAttributeName() +
                 " called for the first time, calling find-all-in-parent web service method");
-      EntityCRUDService service = EntityUtils.getEntityCRUDService(referenceDescriptor);  
+      final EntityCRUDService service = EntityUtils.getEntityCRUDService(referenceDescriptor);  
       boolean inBackground = service.isDoRemoteReadInBackground();
-      // switch off read in background temporarily, so we can get the resut right away
-      // and return it.
-      service.setDoRemoteReadInBackground(false);        
-      service.doRemoteFindAllInParent(entity,mapping.getAttributeName());        
-      service.setDoRemoteReadInBackground(inBackground);
-      List result = service.getEntityList(); 
-      return result;
+      if (inBackground)
+      {
+        Runnable runnable = new Runnable()
+        {
+          public void run()
+          {
+            DBPersistenceManager pm = EntityUtils.getLocalPersistenceManager(referenceDescriptor);
+            List oldList = pm.findAllInParent(referenceDescriptor.getClazz(), entity, mapping);   
+            // we don't want the child service to start another backgrounf thread, so we temporarily switch
+            // off background read
+            service.setDoRemoteReadInBackground(false);        
+            service.doRemoteFindAllInParent(entity,mapping.getAttributeName());        
+            service.setDoRemoteReadInBackground(true);        
+            List newList = service.getEntityList(); 
+            delegate = newList;
+            entity.refreshChildEntityList(oldList, newList, referenceDescriptor.getClazz(), arrayAttributeName);
+            AdfmfJavaUtilities.flushDataChangeEvent();
+          }
+        };
+        Thread thread = new Thread(runnable);
+        thread.start();        
+      }
+      else
+      {
+//        service.setDoRemoteReadInBackground(false);        
+        service.doRemoteFindAllInParent(entity,mapping.getAttributeName());        
+//        service.setDoRemoteReadInBackground(inBackground);
+//        List result = service.getEntityList(); 
+//        return result;        
+      }
     }
-    else
-    {
-      sLog.fine("Getter method for attribute " + this.mapping.getAttributeName() +
+    sLog.fine("Getter method for attribute " + this.mapping.getAttributeName() +
                 " called for the first time, querying database to retrieve the content");
-      DBPersistenceManager pm = EntityUtils.getLocalPersistenceManager(referenceDescriptor);
-      List result = pm.findAllInParent(referenceDescriptor.getClazz(), entity, mapping);      
-      return result;
-    }
+    DBPersistenceManager pm = EntityUtils.getLocalPersistenceManager(referenceDescriptor);
+    List result = pm.findAllInParent(referenceDescriptor.getClazz(), entity, mapping);      
+    return result;
   }
 }

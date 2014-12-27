@@ -2,6 +2,8 @@
  Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 27-dec-2014   Steven Davelaar
+ 1.4           added method  getEntityListAsCorrectlyTypedArray
  15-sep-2014   Steven Davelaar
  1.3           Use Utility.loadClass rather than Class.forName, the latter can cause app
                to hang when used in feature lifecycle listener activate method
@@ -14,6 +16,7 @@
 ******************************************************************************/
 package oracle.ateam.sample.mobile.persistence.util;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -455,4 +458,20 @@ public class EntityUtils
       }      
     return pm;
   }
+  
+  public static Entity[] getEntityListAsCorrectlyTypedArray(List entities, Class entityClass)
+  {
+      int size = entities!=null ? entities.size() : 0;
+      Entity[] value = (Entity[]) Array.newInstance(entityClass, size);
+      for (int i = 0; i < size; i++)
+      {
+        Object e = entities.get(i);
+        if (e instanceof Entity)
+        {
+          value[i] = (Entity)e;          
+        }
+      }
+      return value;
+  }
+
 }

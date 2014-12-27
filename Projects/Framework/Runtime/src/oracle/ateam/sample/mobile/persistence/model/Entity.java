@@ -1,7 +1,10 @@
 /*******************************************************************************
- Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
+ Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 27-dec-2014   Steven Davelaar
+ 1.2           Overloaded method createIndirectList with additional array attr name argument
+               Added method refreshChildEntityList
  17-jan-2014   Steven Davelaar
  1.1           Added method createIndirectList
  06-feb-2013   Steven Davelaar
@@ -154,10 +157,22 @@ public abstract class Entity extends ChangeEventSupportable
    */
   protected List createIndirectList(String accessorAttribute)
   {
+    return createIndirectList(accessorAttribute,null);
+  }
+
+  /**
+   * Creates an IndirectList instance that encapsulates a AttributeMappingOneToMany
+   * mapping so we can lazily load the list from DB when child collection is requested for the first time
+   * @param accessorAttribute
+   * @param arrayAccessorAttribute used to refresh the child array when values are fetched remotely in background
+   * @return
+   */
+  protected List createIndirectList(String accessorAttribute, String arrayAccessorAttribute)
+  {
     AttributeMapping mapping = EntityUtils.findMapping(getClass(), accessorAttribute);
     if (mapping!=null && mapping instanceof AttributeMappingOneToMany)
     {
-      return new IndirectList(this, (AttributeMappingOneToMany)mapping);          
+      return new IndirectList(this, (AttributeMappingOneToMany)mapping,arrayAccessorAttribute);          
     }
     // fallback:  return simple array list
     return new ArrayList();
@@ -177,6 +192,22 @@ public abstract class Entity extends ChangeEventSupportable
       return new ValueHolder(this, (AttributeMappingOneToOne)mapping);          
     }
     return null;
+  }
+
+  /**
+   * This method is called from IndirectList.buildDelegate when child rows for an entity are retrieved
+   * through a remote server call executed in the background
+   * @param oldList
+   * @param newList
+   * @param childClass
+   * @param childAttribute
+   */
+  public void refreshChildEntityList(List oldList, List newList, Class childClass, String childAttribute)
+  {
+    Entity[] oldEntityArray = EntityUtils.getEntityListAsCorrectlyTypedArray(oldList, childClass);
+    Entity[] newEntityArray = EntityUtils.getEntityListAsCorrectlyTypedArray(newList, childClass);
+    getPropertyChangeSupport().firePropertyChange(childAttribute, oldEntityArray, newEntityArray);
+    getProviderChangeSupport().fireProviderRefresh(childAttribute);
   }
 
 }
