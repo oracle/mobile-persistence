@@ -24,7 +24,7 @@ public class ${WSM.currentDataObject.className} extends Entity
   #end
 
   #foreach($child in ${WSM.currentDataObject.children})
-    private List ${child.childAccessorListName} = createIndirectList("${child.childAccessorListName}");
+    private List ${child.childAccessorListName} = createIndirectList("${child.childAccessorListName}","${child.childAccessorName}");
   #end
 
   #foreach($parent in ${WSM.currentDataObject.parents})

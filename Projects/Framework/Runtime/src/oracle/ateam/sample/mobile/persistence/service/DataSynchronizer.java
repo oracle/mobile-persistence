@@ -2,6 +2,8 @@
  Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 01-jan-2015   Steven Davelaar
+ 1.2           Set data synch running flag to true at start of run method
  17-nov-2014   Steven Davelaar
  1.1           Call method dataSynchFinished directly on EntityCRUDService
  22-jun-2013   Steven Davelaar
@@ -45,6 +47,7 @@ public class DataSynchronizer
 
   public void run()
   {
+    synchManager.setDataSynchRunning(true); 
     DataSynchAction[] dataSynchActions = payload.getDataSynchActions();
     if (dataSynchActions != null)
     {

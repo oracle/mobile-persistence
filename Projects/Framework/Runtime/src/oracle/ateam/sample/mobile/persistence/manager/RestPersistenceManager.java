@@ -2,6 +2,14 @@
  Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 29-dec-2014   Steven Davelaar
+ 1.8           - Added method handleInvokeRestServiceError to make it easier to overwrite default
+               exception handling behavior when an exception is thrown by RestServiceAdapter.
+               - Changed implementation of invokeRestService(Method method, Map paramValues), the
+               query string is now appended to the URI befor calling the other invokeRestService 
+               because query string did not get appended when http method was not GET
+               - Store response headers of last rest call in property so it can be retrieved by calling
+               getLastResponseHeaders
  19-nov-2014   Steven Davelaar
  1.7           Added support for EL expression in header param value
                Improved error message when invoking REST service that throws exception
@@ -14,7 +22,7 @@
  1.4           - Numeric values should not be stored as string in key-value map in
                  method getPayloadKeyValuePairs
  29-may-2014   Steven Davelaar
- 1.3           - Added support for ested objects in getPayloadKeyValuePairs
+ 1.3           - Added support for nested objects in getPayloadKeyValuePairs
  05-feb-2014   Steven Davelaar
  1.2           - Removed all config info, now stored in persistenceMapping.xml
  23-dec-2013   Steven Davelaar
@@ -67,6 +75,7 @@ public abstract class RestPersistenceManager
 {
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(RestPersistenceManager.class);
   private static final String AUTH_HEADER_PARAM_NAME = "Authorization";
+  private Map lastResponseHeaders;
 
   public RestPersistenceManager()
   {
@@ -293,26 +302,44 @@ public abstract class RestPersistenceManager
     // if connection url end swith "/" and request uri also starts with "/" we need to remove this starting slash from
     // requestUri, otherwise the rest invocation will fail with an error
     String uri = connectionUrlEndsWithSlash(connectionName)? requestUri.substring(1): requestUri;
-    boolean payloadSet = payload != null && !"".equals(payload);
+    boolean payloadSet = payload != null && !"".equals(payload.trim());
     uri = isGET? uri + (payloadSet? "?" + payload: ""): uri;
     restService.setRequestURI(uri);
     String response = "";
     try
     {
       response = restService.send((isGET? null: payload));
+      setLastResponseHeaders(restService.getResponseHeaders());
       return response;
     }
     catch (Exception e)
     {
-      String rootError = e.getLocalizedMessage();
-      String causeError = e.getCause() != null? e.getCause().getLocalizedMessage() : null;
-      // the cause exception can have a null or "" message, in that case we throw the root exception message
-      String error = (causeError==null || "".equals(causeError)) ? rootError : causeError;
-      String message = "Error invoking REST " + requestType + " service " + uri + " error: " + error;
-      sLog.severe(message);
-      // throw exception so any failed data synch actions can be registsred and processed later
-      throw new AdfException(message, AdfException.ERROR);
+      setLastResponseHeaders(restService.getResponseHeaders());
+      return handleInvokeRestServiceError(requestType,uri,e);
     }
+  }
+  
+  /**
+   * This method is called when the REST service call returns a status other than 200. The default 
+   * implementation is to throw an exception so calling method can take appropriate action, for example
+   * registering a pending data sync action. However, in some situations the returned status code might
+   * indicate a succesfull call. To handle such a situation, you need to overwrite this method and handle
+   * the reponse as needed.
+   * @param requestType
+   * @param uri
+   * @param e
+   * @return
+   */
+  protected String handleInvokeRestServiceError(String requestType, String uri, Exception e)
+  {
+    String rootError = e.getLocalizedMessage();
+    String causeError = e.getCause() != null? e.getCause().getLocalizedMessage() : null;
+    // the cause exception can have a null or "" message, in that case we throw the root exception message
+    String error = (causeError==null || "".equals(causeError)) ? rootError : causeError;
+    String message = "Error invoking REST " + requestType + " service " + uri + " error: " + error;
+    sLog.severe(message);
+    // throw exception so any failed data synch actions can be registsred and processed later
+    throw new AdfException(message, AdfException.ERROR);    
   }
 
   //  /**
@@ -422,8 +449,8 @@ public abstract class RestPersistenceManager
     // Non-uri parameters are sent as queryString
     // buld the payload string
     String uri = method.getRequestUri();
-    StringBuffer queryStringOrPayload = new StringBuffer();
-    boolean firstParam = true;
+    StringBuffer payload = new StringBuffer("");
+    StringBuffer queryString = new StringBuffer("");
     Iterator paramIter = paramValues.keySet().iterator();
     while (paramIter.hasNext())
     {
@@ -438,23 +465,30 @@ public abstract class RestPersistenceManager
         uri = StringUtils.substitute(uri, oldValue, newValue);
       }
       else
-      {
-        if (firstParam)
-        {
-          firstParam = false;
-        }
-        else
-        {
-          queryStringOrPayload.append("&");
-        }
-        // with Non-GET requests, we can send a raw payload without param name
+      {        
         if (paramName != null && !"".equals(paramName.trim()))
         {
-          queryStringOrPayload.append(paramName + "=" + paramValues.get(param));
+          if (param.isSerializedDataObject())
+          {
+            if (!payload.toString().equals(""))
+            {
+              payload.append("&");              
+            }
+            payload.append(paramName + "=" + paramValues.get(param));            
+          }
+          else
+          {
+            if (!queryString.toString().equals(""))
+            {
+              queryString.append("&");              
+            }
+            queryString.append(paramName + "=" + paramValues.get(param));                        
+          }
         }
         else
         {
-          queryStringOrPayload.append(paramValues.get(param));
+          // with Non-GET requests, we can send a raw payload without param name
+          payload.append(paramValues.get(param));
         }
       }
     }
@@ -470,7 +504,11 @@ public abstract class RestPersistenceManager
       Object value = AdfmfJavaUtilities.evaluateELExpression(param.getValue());
       headerParamMap.put(param.getName(), value);
     }
-    return invokeRestService(method.getConnectionName(), method.getRequestType(), uri, queryStringOrPayload.toString(),
+    if (!queryString.toString().equals(""))
+    {
+      uri = uri+"?"+queryString.toString();
+    }
+    return invokeRestService(method.getConnectionName(), method.getRequestType(), uri, payload.toString(),
                              headerParamMap, 0, method.isSecured());
   }
 
@@ -773,6 +811,16 @@ public abstract class RestPersistenceManager
       handleWebServiceInvocationError(descriptor, e, false);
     }
     return null;
+  }
+
+  public void setLastResponseHeaders(Map lastResponseHeaders)
+  {
+    this.lastResponseHeaders = lastResponseHeaders;
+  }
+
+  public Map getLastResponseHeaders()
+  {
+    return lastResponseHeaders;
   }
 
   protected abstract String getSerializedDataObject(Entity entity, String collectionElementName, String rowElementName,
