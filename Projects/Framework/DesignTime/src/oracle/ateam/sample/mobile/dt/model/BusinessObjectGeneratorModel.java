@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
+ Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
  06-feb-2013   Steven Davelaar
@@ -43,7 +43,7 @@ public class BusinessObjectGeneratorModel {
     private String logTitle;
   private boolean overwriteDataObjectClasses = true;
   private boolean overwriteServiceObjectClasses = false;
-  private boolean enableUsageTracking = true;
+  private boolean enableUsageTracking = false;
 
   public void setEnableUsageTracking(boolean enableUsageTracking)
   {
