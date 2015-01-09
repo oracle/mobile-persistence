@@ -215,58 +215,58 @@ public class UIGenerator
 
     private void addNetworkStatusAccessPermission()
     {
-//        <adfmf:deviceFeatureAccess>
-//          <adfmf:deviceNetwork allowAccess="true" id="dn1"/>
-//        </adfmf:deviceFeatureAccess>        
-        FrameworkXmlSourceNode applicationXml = McAppUtils.findOrCreateApplicationXml(project.getWorkspace());
-        JDevXmlContext jdevXmlContext = JDevXmlContext.getXmlContext(new Context(applicationXml));
-        XmlView view = jdevXmlContext.getView(FrameworkXmlEditorConstants.APPLICATION_USAGE);
-        XmlPanelGui panelGui = new XmlPanelGui(view);
-        XmlComponentModel deviceFeatureAccessXmlModel =
-          XmlComponentModel.createXmlComponentModel(FrameworkXmlKeys.XMLKEY_DEVICE_FEATURE_ACCESS, FrameworkXmlKeys.PANEL_ROOT_XMLKEY,
-                                                    panelGui);
-//        XmlComponentModel deviceNetworkXmlModel =
-//          XmlComponentModel.createXmlComponentModel(FrameworkXmlKeys.XMLKEY_DEVICE_NETWORK_ACCESS, FrameworkXmlKeys.PANEL_ROOT_XMLKEY,
-//                                                    panelGui);
-//        deviceNetworkXmlModel.setParentXmlComponentModel(deviceFeatureAccessXmlModel);
-//        XmlComponentModel deviceNetworkAllowAccessXmlModel =
-//          XmlComponentModel.createXmlComponentModel(FrameworkXmlKeys.XMLKEY_DEVICE_NETWORK_ALLOW_ACCESS_ATTR, FrameworkXmlKeys.PANEL_ROOT_XMLKEY,
-//                                                    panelGui);
-//        deviceNetworkXmlModel.setParentXmlComponentModel(deviceNetworkAllowAccessXmlModel);
-//        deviceNetworkAllowAccessXmlModel.updateModelValue("true");        
-
-        org.w3c.dom.Node deviceFeatureAccessNode = deviceFeatureAccessXmlModel.getNode();
-        final Document doc = view.getDocument();
-        if (deviceFeatureAccessNode == null)
-        {
-//          final XmlComponentModel xmlComponentModel = getXmlComponentModel();
-          final XmlComponentModel parentXmlComponentModel = deviceFeatureAccessXmlModel.getParentXmlComponentModel();
-          org.w3c.dom.Node deviceAccessElemParentNode = null;
-
-          if (parentXmlComponentModel != null)
-          {
-            deviceAccessElemParentNode = parentXmlComponentModel.getNode();
-          }
-          else
-          {
-            deviceAccessElemParentNode = doc.getFirstChild();
-          }
-
-          final DomPosition parentNodePosition =
-            DomPositionFactory.createInsideOrAfterPosition((org.w3c.dom.Node) deviceAccessElemParentNode);
-          final Element deviceFeatureAccessElement =
-            doc.createElementNS(FeatureXmlConstants.NAMESPACE,
-                                McAppUtils.getQualifiedName(FrameworkXmlEditorConstants.DEVICE_FEATURE_ACCESS_ELEMENT));
-
-            try {
-                deviceFeatureAccessNode = view.insertNode(deviceFeatureAccessElement, parentNodePosition);
-            } catch (XmlCommitException e) {
-            }
-
-        }
-//        DeviceAccessUtils.setDeviceFeatureAccess(deviceFeatureAccessNode, doc, FrameworkXmlEditorConstants.DEVICE_NETWORK_ELEMENT, FrameworkXmlEditorConstants.ACCESS_ATTR, "true");
-        
-
+////        <adfmf:deviceFeatureAccess>
+////          <adfmf:deviceNetwork allowAccess="true" id="dn1"/>
+////        </adfmf:deviceFeatureAccess>        
+//        FrameworkXmlSourceNode applicationXml = McAppUtils.findOrCreateApplicationXml(project.getWorkspace());
+//        JDevXmlContext jdevXmlContext = JDevXmlContext.getXmlContext(new Context(applicationXml));
+//        XmlView view = jdevXmlContext.getView(FrameworkXmlEditorConstants.APPLICATION_USAGE);
+//        XmlPanelGui panelGui = new XmlPanelGui(view);
+////        XmlComponentModel deviceFeatureAccessXmlModel =
+////          XmlComponentModel.createXmlComponentModel(FrameworkXmlKeys.XMLKEY_DEVICE_FEATURE_ACCESS, FrameworkXmlKeys.PANEL_ROOT_XMLKEY,
+////                                                    panelGui);
+////        XmlComponentModel deviceNetworkXmlModel =
+////          XmlComponentModel.createXmlComponentModel(FrameworkXmlKeys.XMLKEY_DEVICE_NETWORK_ACCESS, FrameworkXmlKeys.PANEL_ROOT_XMLKEY,
+////                                                    panelGui);
+////        deviceNetworkXmlModel.setParentXmlComponentModel(deviceFeatureAccessXmlModel);
+////        XmlComponentModel deviceNetworkAllowAccessXmlModel =
+////          XmlComponentModel.createXmlComponentModel(FrameworkXmlKeys.XMLKEY_DEVICE_NETWORK_ALLOW_ACCESS_ATTR, FrameworkXmlKeys.PANEL_ROOT_XMLKEY,
+////                                                    panelGui);
+////        deviceNetworkXmlModel.setParentXmlComponentModel(deviceNetworkAllowAccessXmlModel);
+////        deviceNetworkAllowAccessXmlModel.updateModelValue("true");        
+//
+//        org.w3c.dom.Node deviceFeatureAccessNode = deviceFeatureAccessXmlModel.getNode();
+//        final Document doc = view.getDocument();
+//        if (deviceFeatureAccessNode == null)
+//        {
+////          final XmlComponentModel xmlComponentModel = getXmlComponentModel();
+//          final XmlComponentModel parentXmlComponentModel = deviceFeatureAccessXmlModel.getParentXmlComponentModel();
+//          org.w3c.dom.Node deviceAccessElemParentNode = null;
+//
+//          if (parentXmlComponentModel != null)
+//          {
+//            deviceAccessElemParentNode = parentXmlComponentModel.getNode();
+//          }
+//          else
+//          {
+//            deviceAccessElemParentNode = doc.getFirstChild();
+//          }
+//
+//          final DomPosition parentNodePosition =
+//            DomPositionFactory.createInsideOrAfterPosition((org.w3c.dom.Node) deviceAccessElemParentNode);
+//          final Element deviceFeatureAccessElement =
+//            doc.createElementNS(FeatureXmlConstants.NAMESPACE,
+//                                McAppUtils.getQualifiedName(FrameworkXmlEditorConstants.DEVICE_FEATURE_ACCESS_ELEMENT));
+//
+//            try {
+//                deviceFeatureAccessNode = view.insertNode(deviceFeatureAccessElement, parentNodePosition);
+//            } catch (XmlCommitException e) {
+//            }
+//
+//        }
+////        DeviceAccessUtils.setDeviceFeatureAccess(deviceFeatureAccessNode, doc, FrameworkXmlEditorConstants.DEVICE_NETWORK_ELEMENT, FrameworkXmlEditorConstants.ACCESS_ATTR, "true");
+//        
+//
     }    
 
   /**
@@ -502,6 +502,9 @@ public class UIGenerator
     // TODO add datasunchfeature to app xml
     //    <adfmf:featureReference id="oracle.ateam.sample.mobile.datasynch" showOnNavigationBar="false"
     //                            showOnSpringboard="false"/>
+    // MAF 2.1 id is now refId  
+    //    <adfmf:featureReference id="oracle.ateam.sample.mobile.datasynch" showOnNavigationBar="false"
+    //                            showOnSpringboard="false"/>
     // we cannot use MCAppUtils.addFeatureReference because we also need to set "show on nav bar" and
     // "show on spring board" to false
     final String featureId = "oracle.ateam.sample.mobile.datasynch";
@@ -541,7 +544,9 @@ public class UIGenerator
               // creates feature reference
               final Element featureRef =
                 doc.createElementNS(FrameworkXmlEditorConstants.NAMESPACE, McAppUtils.getQualifiedName(FrameworkXmlEditorConstants.FEATUREREF_ELEMENT));
-              featureRef.setAttributeNS(null, FrameworkXmlEditorConstants.ID_ATTR, featureId);
+                featureRef.setAttributeNS(null, FrameworkXmlEditorConstants.REFID_ATTR, featureId);
+                // MAF 2.1 also set id attr with same value as refId
+                featureRef.setAttributeNS(null, FrameworkXmlEditorConstants.ID_ATTR, featureId);
               featureRef.setAttributeNS(null, FrameworkXmlEditorConstants.SHOW_ON_NB_ATTR, "false");
               featureRef.setAttributeNS(null, FrameworkXmlEditorConstants.SHOW_ON_SB_ATTR, "false");
               model.insertNode(featureRef, DomPositionFactory.inside(root), false);

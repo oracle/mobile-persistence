@@ -1,15 +1,11 @@
-/*******************************************************************************
- Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
- 
- $revision_history$
- 05-apr-2014   Steven Davelaar
- 1.3           Removed test connection
- 06-jun-2013   Steven Davelaar
- 1.1           Added method closeConnectionIfNeeded, set password when encryption is needed
- 06-feb-2013   Steven Davelaar
- 1.0           initial creation
-******************************************************************************/
-package oracle.ateam.sample.mobile.persistence.db;
+ /*******************************************************************************
+  Copyright © 2015, Oracle and/or its affiliates. All rights reserved.
+  
+  $revision_history$
+  08-jan-2015   Steven Davelaar
+  1.0           initial creation
+ ******************************************************************************/
+package oracle.ateam.sample.mobile.v2.persistence.db;
 
 
 import SQLite.JDBCDataSource;
@@ -20,7 +16,7 @@ import java.sql.SQLException;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
 
-import oracle.ateam.sample.mobile.persistence.metadata.PersistenceConfig;
+import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.MessageUtils;
 
