@@ -7,7 +7,8 @@
 ******************************************************************************/
 package oracle.ateam.sample.mobile.util;
 
-import com.sun.util.logging.Level;
+
+import java.util.logging.Level;
 
 import oracle.adfmf.util.Utility;
 import oracle.adfmf.util.logging.Trace;

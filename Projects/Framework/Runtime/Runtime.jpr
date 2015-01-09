@@ -92,13 +92,13 @@
    </hash>
    <hash n="oracle.ide.model.TechnologyScopeConfiguration">
       <list n="technologyScope">
-         <string v="ADFMobile"/>
          <string v="ADFm"/>
          <string v="Ant"/>
          <string v="Database"/>
          <string v="HTML"/>
          <string v="JAVASCRIPT"/>
          <string v="Java"/>
+         <string v="MAF"/>
          <string v="RESTWebServices"/>
          <string v="TopLink"/>
          <string v="WSDL"/>
@@ -107,18 +107,11 @@
          <string v="XML"/>
       </list>
    </hash>
-   <hash n="oracle.jdeveloper.ant.AntRunConfiguration">
-      <hash n="jdkVersion">
-         <value n="id" v="1.6.0_45 (Default)"/>
-         <value n="isJDK" v="true"/>
-         <value n="jdkVersion" v="1.6.0_45"/>
-      </hash>
-   </hash>
+   <hash n="oracle.jdeveloper.ant.AntRunConfiguration"/>
    <hash n="oracle.jdeveloper.compiler.ant.AntConfiguration">
-      <value n="makeTarget" v="all"/>
+      <value n="makeTarget" v="clean"/>
       <url n="projectBuildfile" path="build/build.xml"/>
       <list n="targetList">
-         <string v="all"/>
          <string v="clean"/>
          <string v="compile"/>
          <string v="copy"/>
@@ -151,17 +144,23 @@
       <value n="internalEncoding" v="Cp1252"/>
       <list n="Javac.commandline.optionlist">
          <string v="-g"/>
+         <string v="-profile"/>
+         <string v="compact2"/>
          <string v="-Xlint:all"/>
          <string v="-Xlint:-cast"/>
+         <string v="-Xlint:-classfile"/>
+         <string v="-Xlint:-dep-ann"/>
          <string v="-Xlint:-empty"/>
          <string v="-Xlint:-fallthrough"/>
          <string v="-Xlint:-path"/>
          <string v="-Xlint:-processing"/>
+         <string v="-Xlint:-rawtypes"/>
          <string v="-Xlint:-serial"/>
          <string v="-Xlint:-unchecked"/>
       </list>
-      <value n="source" v="1.4"/>
-      <value n="target" v="1.4"/>
+      <value n="Javac.-profile" v="truecompact2"/>
+      <value n="source" v="1.8"/>
+      <value n="target" v="1.8"/>
       <value n="webIANAEncoding" v="windows-1252"/>
    </hash>
    <hash n="oracle.jdeveloper.model.J2eeSettings">
@@ -182,349 +181,16 @@
       </hash>
    </hash>
    <hash n="oracle.jdevimpl.config.JProjectLibraries">
-      <list n="exportedReferences">
-         <hash>
-            <value n="id" v="Oracle JDBC"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Oracle XML Parser v2"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Btclasses.zip"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Converters.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Jaas.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="JavaFramework.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="JavaFramework_src.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Jce.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Jdbc.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Jsse-cdc.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Jsse_unsigned.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Juel-api-2.2.4-SNAPSHOT.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Juel-impl-2.2.4-SNAPSHOT.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Ksoap2-j2me-core-2.1.2.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Kxml2-2.3.0.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Logging.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Secop_cmn.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Sqlite.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Src.zip"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Vmchannel.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="ADF Common Web Runtime"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-      </list>
+      <list n="exportedReferences"/>
       <hash n="internalDefinitions">
-         <list n="libraryDefinitions">
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/btclasses.zip" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="Btclasses.zip"/>
-               <value n="id" v="Btclasses.zip"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/converters.jar" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="Converters.jar"/>
-               <value n="id" v="Converters.jar"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/jaas.jar" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="Jaas.jar"/>
-               <value n="id" v="Jaas.jar"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/JavaFramework.jar" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="JavaFramework.jar"/>
-               <value n="id" v="JavaFramework.jar"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/JavaFramework_src.jar" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="JavaFramework_src.jar"/>
-               <value n="id" v="JavaFramework_src.jar"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/jce.jar" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="Jce.jar"/>
-               <value n="id" v="Jce.jar"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/jdbc.jar" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="Jdbc.jar"/>
-               <value n="id" v="Jdbc.jar"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/jsse-cdc.jar" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="Jsse-cdc.jar"/>
-               <value n="id" v="Jsse-cdc.jar"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/jsse_unsigned.jar" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="Jsse_unsigned.jar"/>
-               <value n="id" v="Jsse_unsigned.jar"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/juel-api-2.2.4-SNAPSHOT.jar" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="Juel-api-2.2.4-SNAPSHOT.jar"/>
-               <value n="id" v="Juel-api-2.2.4-SNAPSHOT.jar"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/juel-impl-2.2.4-SNAPSHOT.jar" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="Juel-impl-2.2.4-SNAPSHOT.jar"/>
-               <value n="id" v="Juel-impl-2.2.4-SNAPSHOT.jar"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/ksoap2-j2me-core-2.1.2.jar" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="Ksoap2-j2me-core-2.1.2.jar"/>
-               <value n="id" v="Ksoap2-j2me-core-2.1.2.jar"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/kxml2-2.3.0.jar" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="Kxml2-2.3.0.jar"/>
-               <value n="id" v="Kxml2-2.3.0.jar"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/logging.jar" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="Logging.jar"/>
-               <value n="id" v="Logging.jar"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/secop_cmn.jar" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="Secop_cmn.jar"/>
-               <value n="id" v="Secop_cmn.jar"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/sqlite.jar" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="Sqlite.jar"/>
-               <value n="id" v="Sqlite.jar"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/src.zip" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="Src.zip"/>
-               <value n="id" v="Src.zip"/>
-               <value n="locked" v="true"/>
-            </hash>
-            <hash>
-               <list n="classPath">
-                  <url path="../../jdev11124/jdeveloper/jdev/extensions/oracle.adf.mobile/lib/vmchannel.jar" jar-entry=""/>
-               </list>
-               <value n="deployedByDefault" v="true"/>
-               <value n="description" v="Vmchannel.jar"/>
-               <value n="id" v="Vmchannel.jar"/>
-               <value n="locked" v="true"/>
-            </hash>
-         </list>
+         <list n="libraryDefinitions"/>
       </hash>
       <hash n="jdkReference">
-         <value n="id" v="CVM_JDK"/>
+         <value n="id" v="MAF JDK 1.8 Compact 2 Profile"/>
          <value n="isJDK" v="true"/>
-         <value n="jdkVersion" v="1.4"/>
+         <value n="jdkVersion" v="1.8.0_25"/>
       </hash>
-      <list n="libraryReferences">
-         <hash>
-            <value n="id" v="Oracle JDBC"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Oracle XML Parser v2"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Btclasses.zip"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Converters.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Jaas.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="JavaFramework.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="JavaFramework_src.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Jce.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Jdbc.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Jsse-cdc.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Jsse_unsigned.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Juel-api-2.2.4-SNAPSHOT.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Juel-impl-2.2.4-SNAPSHOT.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Ksoap2-j2me-core-2.1.2.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Kxml2-2.3.0.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Logging.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Secop_cmn.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Sqlite.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Src.zip"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Vmchannel.jar"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="ADF Common Web Runtime"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-      </list>
+      <list n="libraryReferences"/>
    </hash>
    <hash n="oracle.jdevimpl.config.JProjectPaths">
       <url n="outputDirectory" path="classes/"/>
@@ -534,5 +200,8 @@
          <string v=".xlf"/>
       </list>
       <value n="DefaultBundleTypeId" v="xliffResourceBundleId"/>
+   </hash>
+   <hash n="use-workspace-shared-properties">
+      <value n="oracle.jdeveloper.runner.RunConfigurations" v="true"/>
    </hash>
 </jpr:project>

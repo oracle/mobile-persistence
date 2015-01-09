@@ -128,8 +128,11 @@
 
   <target name="stage" depends="clean, createjar">
 
-    <!-- Build runtime Jar first -->
+    <!-- Build runtime Jar first 
+can't do that anymore because runtime uses Java 8 ....
     <ant antfile="build.xml" dir="${runtime.build.dir}" target="stage"  inheritall="false"/>
+    
+    -->
 
     <replaceregexp file="${design.build.dir}/bundle.xml"
                    match="&lt;u:version&gt;(\s*)(.*)&lt;/u:version&gt;"
