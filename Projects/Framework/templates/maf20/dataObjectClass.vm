@@ -4,13 +4,13 @@ package ${WSM.packageName};
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
-import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
+import oracle.ateam.sample.mobile.persistence.util.EntityUtils;
 #end
 #if (${WSM.currentDataObject.parents.size()}>0)
-import oracle.ateam.sample.mobile.v2.persistence.service.ValueHolder;
-import oracle.ateam.sample.mobile.v2.persistence.service.ValueHolderInterface;
+import oracle.ateam.sample.mobile.persistence.service.ValueHolder;
+import oracle.ateam.sample.mobile.persistence.service.ValueHolderInterface;
 #end
-import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
+import oracle.ateam.sample.mobile.persistence.model.Entity;
 
   #foreach($type in ${WSM.currentDataObject.attributeImportTypes})
      import ${type};
@@ -24,7 +24,7 @@ public class ${WSM.currentDataObject.className} extends Entity
   #end
 
   #foreach($child in ${WSM.currentDataObject.children})
-    private List<${child.childDataObject.className}> ${child.childAccessorName} = createIndirectList("${child.childAccessorName}");
+    private List ${child.childAccessorListName} = createIndirectList("${child.childAccessorListName}","${child.childAccessorName}");
   #end
 
   #foreach($parent in ${WSM.currentDataObject.parents})
@@ -46,25 +46,30 @@ public class ${WSM.currentDataObject.className} extends Entity
   #end
   #foreach($child in ${WSM.currentDataObject.children})
 
-    public void ${child.childAccessorSetterMethodName}(List<${child.childDataObject.className}> ${child.childAccessorName})
+    public void ${child.childAccessorListSetterMethodName}(List ${child.childAccessorListName})
     {
-      this.${child.childAccessorName}.clear();
-      this.${child.childAccessorName}.addAll(${child.childAccessorName});
+      this.${child.childAccessorListName}=${child.childAccessorListName};
     }
 
     /**
      * This method is called when entity instance is recreated from persisted JSON string in DataSynchAction
      */
-    public void ${child.childAccessorSetterMethodName}(${child.childDataObject.className}[] ${child.childAccessorName})
+    public void ${child.childAccessorListSetterMethodName}(${child.childDataObject.className}[] ${child.childAccessorListName})
     {
-      ${child.childAccessorSetterMethodName}(Arrays.asList(${child.childAccessorName}));
+     this.${child.childAccessorListName} = Arrays.asList(${child.childAccessorListName});
     }
 
-    public List<${child.childDataObject.className}> ${child.childAccessorGetterMethodName}()
+    public List ${child.childAccessorListGetterMethodName}()
     {
-      return this.${child.childAccessorName};
+      return this.${child.childAccessorListName};
     }
 
+    public ${child.childDataObject.className}[] ${child.childAccessorGetterMethodName}()
+    {
+      List dataObjectList = ${child.childAccessorListGetterMethodName}();
+      
+return (${child.childDataObject.className}[]) dataObjectList.toArray(new ${child.childDataObject.className}[dataObjectList.size()]);
+    }
 
   public void add${child.childDataObject.className}(int index, ${child.childDataObject.className} ${child.childDataObject.classVariableName})
   {
@@ -73,11 +78,12 @@ public class ${WSM.currentDataObject.className} extends Entity
     #foreach($mapping in $child.attributeMappings) 
      ${child.childDataObject.classVariableName}.${mapping.childAttrSetterMethod}(${mapping.parentAttrGetterMethod}());
     #end
+    ${child.childAccessorListGetterMethodName}().add(index, ${child.childDataObject.classVariableName});
   }
 
   public void remove${child.childDataObject.className}(${child.childDataObject.className} ${child.childDataObject.classVariableName})
   {
-
+    ${child.childAccessorListGetterMethodName}().remove(${child.childDataObject.classVariableName});
   }
 
 

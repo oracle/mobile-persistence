@@ -5,14 +5,14 @@ import java.util.ArrayList;
 
 import java.util.List;
 
-import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
-import oracle.ateam.sample.mobile.v2.persistence.service.EntityCRUDService;
+import oracle.ateam.sample.mobile.persistence.util.EntityUtils;
+import oracle.ateam.sample.mobile.persistence.service.EntityCRUDService;
 
 import ${WSM.packageName}.${WSM.currentDataObject.className};
 
 
 public class ${WSM.currentDataObject.className}Service
-  extends EntityCRUDService<${WSM.currentDataObject.className}>
+  extends EntityCRUDService
 {
 
   public ${WSM.currentDataObject.className}Service()
@@ -29,9 +29,12 @@ public class ${WSM.currentDataObject.className}Service
     return "${WSM.currentDataObject.classVariableName}";
   }
 
-  public List<${WSM.currentDataObject.className}> get${WSM.currentDataObject.className}()
+  public ${WSM.currentDataObject.className}[] get${WSM.currentDataObject.className}()
   {
-    return getEntityList();
+    List dataObjectList = getEntityList();
+    
+       ${WSM.currentDataObject.className}[] dataObjects= (${WSM.currentDataObject.className}[]) dataObjectList.toArray(new ${WSM.currentDataObject.className}[dataObjectList.size()]);
+    return dataObjects;
   }
 
    /**

@@ -30,6 +30,7 @@ import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.MessageUtils;
 import oracle.ateam.sample.mobile.util.StringUtils;
+import oracle.ateam.sample.mobile.v2.persistence.model.EntityList;
 
 
 /**
@@ -38,8 +39,8 @@ import oracle.ateam.sample.mobile.util.StringUtils;
  * per entity in the persistenceMapping.xml file.
  * When both a local and remote persistence manager are configured,
  * then when the findAll method is called for the first time, it wll synchronize the local database with the
- * remote data source. In persistenceMapping.xml, you can also specify whether the remote CRUD actions are performed 
- * in the background so the user can continue to work with his mobile app, or whether he needs to wait until 
+ * remote data source. In persistenceMapping.xml, you can also specify whether the remote CRUD actions are performed
+ * in the background so the user can continue to work with his mobile app, or whether he needs to wait until
  * the remote action has completed.
  *
  */
@@ -66,7 +67,7 @@ public abstract class EntityCRUDService<E extends Entity>
    * The current list of entities. All operations that filter, add or remove
    * entityList will change the content of this list.
    */
-  private List entityList = new ArrayList();
+  private EntityList<E> entityList = new EntityList<E>(this);
 
   /**
    * Default constructor, initializes properties based on settings in persistenceMapping.xml and also initializes the 
@@ -133,7 +134,7 @@ public abstract class EntityCRUDService<E extends Entity>
   {
     if (getLocalPersistenceManager() != null)
     {
-      entityList = executeLocalFindAll();
+      setEntityList(executeLocalFindAll());
     }
     if ((!isRemoteFindAllExecuted() || localPersistenceManager == null) && remotePersistenceManager != null && isOnline())
     {
@@ -201,9 +202,7 @@ public abstract class EntityCRUDService<E extends Entity>
   {
     if (getLocalPersistenceManager() != null)
     {
-      List<E> oldEntityList = getEntityList();
-      entityList = getLocalPersistenceManager().find(getEntityClass(), searchValue, getQuickSearchAttributeNames());
-      refreshEntityList(oldEntityList);
+      setEntityList(getLocalPersistenceManager().find(getEntityClass(), searchValue, getQuickSearchAttributeNames()));
       setLastNewEntityIndex(-1);
     }
     doRemoteFind(searchValue);
@@ -327,7 +326,8 @@ public abstract class EntityCRUDService<E extends Entity>
   }
 
   /**
-   * Adds new entity to the list at the given index and sets entity status to new.
+   * Adds new entity and sets entity status to new. Note that the entity is ALREADY added to the entity list
+   * because this method is (indirectly) called through overridden add method in EntityList
    * If autogeneratePrimaryKey is true, the key value is set based on the current max
    * key value in the underlying table and the value returned by getKeyValueIncrement
    * @param index
@@ -337,10 +337,6 @@ public abstract class EntityCRUDService<E extends Entity>
   {
     setLastNewEntityIndex(index);
     entity.setIsNewEntity(true);
-    //    Object oldEntityArray = getEntityListAsCorrectlyTypedArray();
-    getEntityList().add(index, entity);
-    // no longer need to fire change event, because we now create new instance through Create operation
-    //    refreshEntityList(oldEntityArray);
     if (isAutoGeneratePrimaryKey())
     {
       generatePrimaryKeyValue(entity);
@@ -406,10 +402,9 @@ public abstract class EntityCRUDService<E extends Entity>
   }
 
   /**
-   * Removes an entity using the configured persistence managers if the entity state is not new.
-   * If the remove is succesfull, the entity is removed from the entity list if found.
-   * If the entity is not found in the list, this mmight be caused by the fact that the entity is new
-   * (getIsNewEntity returns true) and no attributes have been set yet.
+   * Removes an entity using the configured local and remote persistence managers.
+   * Note that the entity is ALREADY removed from the entity list
+   * because this method is (indirectly) called through overridden remove method in EntityList
    * @param entity
    */
   protected void removeEntity(Entity entity)
@@ -426,29 +421,6 @@ public abstract class EntityCRUDService<E extends Entity>
         writeEntityRemote(new DataSynchAction(DataSynchAction.REMOVE_ACTION, entity,this.getClass().getName()));
       }
     }
-    // no longer need to refresh the list, ADF Mobile framework takes care of this as long
-    // as we use Delete operation from dc palette
-    //   Object oldEntityArray = getEntityListAsCorrectlyTypedArray();
-    boolean ok = getEntityList().remove(entity);
-    if (!ok && entity.getIsNewEntity())
-    {
-      // if new entity does not have attrs filled in, it might not be found
-      // in that case see whether lastNewEntityIndex is still pointing to new
-      // entity, if so, remove it.
-      if (getLastNewEntityIndex() > -1 && getEntityList().size() > getLastNewEntityIndex())
-      {
-        Entity entityToRemove = (Entity) getEntityList().get(getLastNewEntityIndex());
-        if (entityToRemove.getIsNewEntity())
-        {
-          getEntityList().remove(0);
-          ok = true;
-        }
-      }
-    }
-    //   if (ok)
-    //   {
-    //     refreshEntityList(oldEntityArray);
-    //   }
   }
 
   /**
@@ -597,7 +569,9 @@ public abstract class EntityCRUDService<E extends Entity>
   protected void setEntityList(List<E> entityList)
   {
     List<E> oldEntityList = getEntityList();
-    this.entityList = entityList;
+    // we need to use EntityList subclass to ensure add/removeEntity methods are called when using Create/Delete operations from DC
+    this.entityList = new EntityList<E>(this);
+    this.entityList.addAll(entityList);
     refreshEntityList(oldEntityList);
   }
 

@@ -93,6 +93,11 @@
                   <url path="icons/"/>
                </list>
             </hash>
+            <hash>
+               <list n="url-path">
+                  <url path="xsd/"/>
+               </list>
+            </hash>
          </list>
          <list n="url-path"/>
       </hash>
@@ -100,9 +105,12 @@
    <hash n="oracle.ide.model.TechnologyScopeConfiguration">
       <list n="technologyScope">
          <string v="Ant"/>
+         <string v="Database"/>
          <string v="ExtensionDT"/>
          <string v="Java"/>
+         <string v="TopLink"/>
          <string v="XML"/>
+         <string v="XML_SCHEMA"/>
       </list>
    </hash>
    <hash n="oracle.jdeveloper.compiler.ant.AntConfiguration">
@@ -250,6 +258,10 @@
             <value n="id" v="Velocity-dep-1.4.jar1"/>
             <value n="isJDK" v="false"/>
          </hash>
+         <hash>
+            <value n="id" v="TopLink"/>
+            <value n="isJDK" v="false"/>
+         </hash>
       </list>
       <hash n="internalDefinitions">
          <list n="libraryDefinitions">
@@ -301,6 +313,10 @@
          </hash>
          <hash>
             <value n="id" v="Velocity-dep-1.4.jar1"/>
+            <value n="isJDK" v="false"/>
+         </hash>
+         <hash>
+            <value n="id" v="TopLink"/>
             <value n="isJDK" v="false"/>
          </hash>
       </list>

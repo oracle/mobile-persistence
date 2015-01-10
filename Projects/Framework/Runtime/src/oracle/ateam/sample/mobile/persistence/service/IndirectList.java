@@ -129,8 +129,17 @@ public class IndirectList
     return getDelegate().containsAll(c);
   }
 
+  /**
+   * Calling this method will poplate the list with collection passed in, the DB will not be queried
+   * @param c
+   * @return
+   */
   public boolean addAll(Collection c)
   {
+    if (delegate==null)
+    {
+      delegate = new ArrayList();
+    }
     return getDelegate().addAll(c);
   }
 

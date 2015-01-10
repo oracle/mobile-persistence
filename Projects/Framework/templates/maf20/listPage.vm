@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<amx:view xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amx="http://xmlns.oracle.com/adf/mf/amx"
+          xmlns:dvtm="http://xmlns.oracle.com/adf/mf/amx/dvt">
+#set ($pageDef = ${MPS.pageDef})
+#set ($taskFlow = ${MPS.taskFlowModel})
+#set ($dataObject = ${MPS.currentDataObject})
+#set ($dataObjectName = ${MPS.currentDataObject.name})
+#set ($accessorName = ${MPS.currentDataObject.accessorName})
+#set ($iteratorName = "${dataObject.accessorName}Iterator")
+$pageDef.createListPageDef($taskFlow.name)
+$pageDef.createIteratorBindings($dataObject)
+$pageDef.createDataSynchBindings()
+  <amx:panelPage id="firstPage">
+    <amx:facet name="header">
+      <amx:outputText value="${dataObject.displayTitlePlural}" id="ot1"/>
+    </amx:facet>
+    <amx:facet name="primary">
+      #if ($dataObject.parent)
+        <amx:commandButton action="__back" id="cbbck" text="Back"/>
+      #end
+    </amx:facet>
+    <amx:facet name="secondary">
+      <amx:panelGroupLayout id="pglsec" layout="horizontal" valign="middle">
+      #if (${dataObject.create})  
+      <amx:commandLink actionListener="#{bindings.${pageDef.createCreateBinding($dataObject)}.execute}"  action="${taskFlow.addListToFormPageControlFlowRule($dataObject)}"
+                         id="cb4">
+          <amx:image id="inew" source="/images/ic_action_new.png" inlineStyle="height:32px; width:32px;"/>
+      </amx:commandLink>
+      #end
+          <amx:commandLink  id="clmenu">
+            <amx:image id="imenu" source="/images/ic_action_overflow.png" inlineStyle="height:32px; width:32px;"/>
+            <amx:showPopupBehavior align="bottomCenter" decoration="anchor" alignId="clmenu" type="action" popupId="p1"/>
+          </amx:commandLink>
+      </amx:panelGroupLayout>
+    </amx:facet>
+    <amx:panelStretchLayout id="psl1" scrollPolicy="scroll">
+      <amx:facet name="top">
+        #if (${dataObject.hasQuickSearch})  
+        $pageDef.createQuickSearchBindings(${dataObjectName})
+        <amx:panelGroupLayout id="pgl1" layout="horizontal">
+          <amx:inputText value="#{bindings.searchValue.inputValue}" hintText="Search ${dataObject.displayTitlePlural}" label="" id="it1"/>
+          <amx:commandLink actionListener="#{bindings.find${dataObjectName}.execute}" 
+                             id="cb3">
+            <amx:image id="ifind" source="/images/ic_action_search.png" inlineStyle="height:32px; width:32px;"/>
+          </amx:commandLink>
+        </amx:panelGroupLayout>
+        #end
+      </amx:facet>
+      <amx:facet name="center">
+        <amx:listView var="row" value="#{bindings.${pageDef.createTreeBinding($dataObject)}.collectionModel}"
+                    fetchSize="#{bindings.${accessorName}.rangeSize}" id="lv1" 
+                   selectedRowKeys="#{bindings.${accessorName}.collectionModel.selectedRow}"
+ 
+                   selectionListener="#{bindings.${accessorName}.collectionModel.makeCurrent}" 
+                  
+                   showMoreStrategy="autoScroll"
+ bufferStrategy="viewport"
+            #if ($dataObject.dividerAttribute) dividerAttribute="${dataObject.dividerAttribute}" dividerMode="${dataObject.dividerMode}"#end >
+        <amx:listItem id="li2" action="${taskFlow.addListToFormPageControlFlowRule($dataObject)}">
+
+         #LIST_ITEM_CONTENT($dataObject)
+ 
+        </amx:listItem>
+        </amx:listView>
+      </amx:facet>
+    </amx:panelStretchLayout>
+  </amx:panelPage>
+  <amx:popup id="p1" animation="slideDown" autoDismiss="true" inlineStyle="width:50%;">
+    <amx:panelGroupLayout id="pglpu" layout="vertical">
+      <amx:spacer height="10" id="ms1"/>
+ 
+      #if (!$dataObject.parent)
+      <amx:commandLink  text="Refresh" actionListener="#{bindings.${pageDef.createDoRemoteFindAllBinding(${dataObjectName})}.execute}" disabled="#{deviceScope.hardware.networkStatus=='NotReachable' or deviceScope.hardware.networkStatus=='unknown'}"  id="menRefr">
+        <amx:closePopupBehavior id="mencRefr" popupId="p1" type="action"/>                         
+      </amx:commandLink>
+      <amx:spacer height="20" id="ms2"/>
+      #end
+      #SYNCHRONIZE_LINK($dataObject)
+      <amx:spacer height="20" id="ms3"/>
+      #PENDING_SYNCH_ACTIONS_LINK($dataObject)
+      <amx:spacer height="10" id="ms4"/>
+    </amx:panelGroupLayout>
+  </amx:popup>
+</amx:view>

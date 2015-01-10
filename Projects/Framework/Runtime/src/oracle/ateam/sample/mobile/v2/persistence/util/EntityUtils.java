@@ -307,6 +307,22 @@ public class EntityUtils
     generatePrimaryKeyValue(pm,entity,increment);
   }
   
+  public static boolean primaryKeyIsNull(Entity entity)
+  {
+    boolean pknull = true;
+    ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entity.getClass());
+    AttributeMapping[] keyMappings = descriptor.getPrimaryKeyAttributeMappings();
+    for (int i = 0; i < keyMappings.length; i++)
+    {
+      String attrName = keyMappings[i].getAttributeName();      
+      if (entity.getAttributeValue(attrName)!=null)
+      {
+        pknull = false;
+      }
+    }
+    return pknull;
+  }
+  
   public static void generatePrimaryKeyValue(PersistenceManager pm,Entity entity, int increment)
   {
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entity.getClass());

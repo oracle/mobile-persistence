@@ -34,10 +34,12 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableColumn;
 
+import oracle.ateam.sample.mobile.dt.controller.parser.PersistenceMappingLoader;
 import oracle.ateam.sample.mobile.dt.controller.parser.RESTResourceDataObjectParser;
 import oracle.ateam.sample.mobile.dt.model.BusinessObjectGeneratorModel;
 import oracle.ateam.sample.mobile.dt.model.DCMethod;
 import oracle.ateam.sample.mobile.dt.model.DCMethodParameter;
+import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
 import oracle.ateam.sample.mobile.dt.model.HeaderParam;
 import oracle.ateam.sample.mobile.dt.view.editor.PayloadButtonCellEditor;
 import oracle.ateam.sample.mobile.dt.view.uimodel.HeaderParamTableModel;
@@ -277,6 +279,9 @@ public class RESTResourcesPanel
     RESTResourceDataObjectParser dataObjectParser =
       new RESTResourceDataObjectParser(resources, connectionName, connectionUri, headerParams, pathParams,flattenNestedObjects.isSelected());
     model.setDataObjectInfos(dataObjectParser.run());
+    PersistenceMappingLoader loader = new PersistenceMappingLoader();
+    List<DataObjectInfo> existingDataObjects =  loader.run();
+    model.getDataObjectInfos().addAll(existingDataObjects);
     model.setRestfulWebService(true);
   }
 
