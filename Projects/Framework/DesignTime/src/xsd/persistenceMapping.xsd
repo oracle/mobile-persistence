@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="windows-1252" ?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.oracle.com/ateam/mobile/persistenceMapping"
-           targetNamespace="http://www.oracle.com/ateam/mobile/persistenceMapping" elementFormDefault="qualified">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+xmlns="http://www.oracle.com/ateam/mobile/persistenceMapping"
+xmlns:ampa="http://www.oracle.com/ateam/mobile/persistenceMapping"
+           targetNamespace="http://www.oracle.com/ateam/mobile/persistenceMapping" 
+           elementFormDefault="qualified">
     <xs:element name="mobileObjectPersistence">
         <xs:complexType>
             <xs:sequence>
@@ -13,22 +16,11 @@
             <xs:sequence>
                 <xs:element ref="crudServiceClass" minOccurs="0" maxOccurs="1"/>
                 <xs:element ref="table" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="directMapping" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:element ref="oneToManyMapping" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:element ref="oneToOneMapping" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:element ref="findAllMethod" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="findAllInParentMethod" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="findMethod" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="getAsParentMethod" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="getCanonicalMethod" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="createMethod" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="updateMethod" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="removeMethod" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="mergeMethod" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="customMethod" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="attributeMappings" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="methods" minOccurs="0" maxOccurs="1"/>
             </xs:sequence>
             <xs:attribute type="xs:string" name="className"/>
-            <xs:attribute type="xs:string" name="persisted"/>
+            <xs:attribute type="xs:boolean" name="persisted"/>
             <xs:attribute type="xs:string" name="dateFormat"/>
             <xs:attribute type="xs:string" name="dateTimeFormat"/>
             <xs:attribute type="xs:string" name="orderBy"/>
@@ -37,13 +29,13 @@
     <xs:element name="crudServiceClass">
         <xs:complexType>
             <xs:attribute type="xs:string" name="className"/>
-            <xs:attribute type="xs:string" name="autoIncrementPrimaryKey"/>
+            <xs:attribute type="xs:boolean" name="autoIncrementPrimaryKey"/>
             <xs:attribute type="xs:string" name="localPersistenceManager"/>
             <xs:attribute type="xs:string" name="remotePersistenceManager"/>
-            <xs:attribute type="xs:string" name="remoteReadInBackground"/>
-            <xs:attribute type="xs:string" name="remoteWriteInBackground"/>
-            <xs:attribute type="xs:string" name="showWebServiceInvocationErrors"/>
-            <xs:attribute type="xs:string" name="autoQuery"/>
+            <xs:attribute type="xs:boolean" name="remoteReadInBackground"/>
+            <xs:attribute type="xs:boolean" name="remoteWriteInBackground"/>
+            <xs:attribute type="xs:boolean" name="showWebServiceInvocationErrors"/>
+            <xs:attribute type="xs:boolean" name="autoQuery"/>
         </xs:complexType>
     </xs:element>
     <xs:element name="table">
@@ -59,6 +51,33 @@
             <xs:attribute type="xs:string" name="name"/>
         </xs:complexType>
     </xs:element>
+
+    <xs:element name="attributeMappings">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="directMapping" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="oneToManyMapping" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="oneToOneMapping" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="methods">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="findAllMethod" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="findAllInParentMethod" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="findMethod" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="getAsParentMethod" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="getCanonicalMethod" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="createMethod" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="updateMethod" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="removeMethod" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="mergeMethod" minOccurs="0" maxOccurs="1"/>
+                <xs:element ref="customMethod" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
     <xs:complexType name="attributeMapping">
         <xs:attribute type="xs:string" name="attributeName"/>
         <xs:attribute type="xs:string" name="payloadAttributeName"/>
@@ -69,8 +88,8 @@
                 <xs:extension base="attributeMapping">
                     <xs:attribute type="xs:string" name="columnName"/>
                     <xs:attribute type="xs:string" name="columnDataType"/>
-                    <xs:attribute type="xs:string" name="required"/>
-                    <xs:attribute type="xs:string" name="persisted"/>
+                    <xs:attribute type="xs:boolean" name="required"/>
+                    <xs:attribute type="xs:boolean" name="persisted"/>
                     <xs:attribute type="xs:string" name="parentAttributeName"/>
                 </xs:extension>
             </xs:complexContent>
@@ -85,7 +104,7 @@
                     </xs:sequence>
                     <xs:attribute type="xs:string" name="accessorMethod"/>
                     <xs:attribute type="xs:string" name="referenceClassName"/>
-                    <xs:attribute type="xs:string" name="sendAsArrayIfOnlyOneEntry"/>
+                    <xs:attribute type="xs:boolean" name="sendAsArrayIfOnlyOneEntry"/>
                 </xs:extension>
             </xs:complexContent>
         </xs:complexType>
@@ -123,7 +142,7 @@
             <xs:attribute type="xs:string" name="value"/>
             <xs:attribute type="xs:string" name="valueProvider"/>
             <xs:attribute type="xs:string" name="dataObjectAttribute"/>
-            <xs:attribute type="xs:string" name="pathParam"/>
+            <xs:attribute type="xs:boolean" name="pathParam"/>
             <xs:attribute type="xs:string" name="javaType"/>
         </xs:complexType>
     </xs:element>
@@ -137,10 +156,10 @@
         <xs:attribute type="xs:string" name="connectionName"/>
         <xs:attribute type="xs:string" name="dataControlName"/>
         <xs:attribute type="xs:string" name="requestType"/>
-        <xs:attribute type="xs:string" name="secured"/>
+        <xs:attribute type="xs:boolean" name="secured"/>
         <xs:attribute type="xs:string" name="payloadRowElementName"/>
-        <xs:attribute type="xs:string" name="sendDataObjectAsPayload"/>
-        <xs:attribute type="xs:string" name="deleteLocalRows"/>
+        <xs:attribute type="xs:boolean" name="sendDataObjectAsPayload"/>
+        <xs:attribute type="xs:boolean" name="deleteLocalRows"/>
         <xs:attribute type="xs:string" name="payloadElementName"/>
         <xs:attribute type="xs:string" name="attributesToExclude"/>
         <xs:attribute type="xs:string" name="oauthConfig"/>

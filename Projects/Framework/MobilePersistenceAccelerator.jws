@@ -41,4 +41,9 @@
          </list>
       </hash>
    </hash>
+   <hash n="shared-project-properties">
+      <hash n="oracle.jdeveloper.runner.RunConfigurations">
+         <value n="activeName" v="Shared"/>
+      </hash>
+   </hash>
 </jws:workspace>

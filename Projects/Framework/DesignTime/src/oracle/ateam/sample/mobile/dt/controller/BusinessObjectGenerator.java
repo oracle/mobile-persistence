@@ -141,18 +141,38 @@ public class BusinessObjectGenerator
     {
       Map<String,String> mappings = getExistingMappings(content);
       model.setExistingDescriptorMappings(new ArrayList<String>(mappings.values()));            
-    }
-    output = processor.processTemplate(model, "persistenceMapping.vm");
-    if (output!=null)
-    {
-      FileUtils.addFileToProject(sourceURL, output, null);      
-      verb = content!=null ? " updated " : " created ";
-      log.info("Object-relational mapping file "+fileName+verb+" in src/META-INF folder in "+appControllerProject.getShortLabel());
+      output = processor.processTemplate(model, "persistenceMapping.vm");
+      if (output!=null)
+      {
+        FileUtils.addFileToProject(sourceURL, output, null);      
+        verb = content!=null ? " updated " : " created ";
+        log.info("Object-relational mapping file "+fileName+verb+" in src/META-INF folder in "+appControllerProject.getShortLabel());
+      }
+      else
+      {
+        log.error("Error creating object-relational mapping file "+fileName+verb+" in src/META-INF folder in "+appControllerProject.getShortLabel());
+      //      throw new RuntimeException("Error parsing persistenceMapping.vm");
+      }
     }
     else
     {
-      log.error("Error creating object-relational mapping file "+fileName+verb+" in src/META-INF folder in "+appControllerProject.getShortLabel());
-//      throw new RuntimeException("Error parsing persistenceMapping.vm");
+      // generate new persistence-mapping.xml using jaxb model
+      fileName = "persistence-mapping.xml";
+      sourceURL = FileUtils.getSourceURL(appControllerProject, "META-INF", fileName);
+      InputStream is =FileUtils.getInputStream(sourceURL);
+      PersistenceMappingGenerator pmg = new PersistenceMappingGenerator(model);
+      output = pmg.run();
+      if (output!=null)
+      {
+        FileUtils.addFileToProject(sourceURL, output, null);      
+        verb = is!=null ? " updated " : " created ";
+        log.info("Object-relational mapping file "+fileName+verb+" in src/META-INF folder in "+appControllerProject.getShortLabel());
+      }
+      else
+      {
+        log.error("Error creating object-relational mapping file "+fileName+verb+" in src/META-INF folder in "+appControllerProject.getShortLabel());
+      //      throw new RuntimeException("Error parsing persistenceMapping.vm");
+      }
     }
 
     // generate config properties file

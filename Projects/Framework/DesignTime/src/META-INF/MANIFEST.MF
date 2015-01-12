@@ -5,7 +5,7 @@ Export-Package: oracle.ateam.sample.mobile.dt.view.wizard,oracle.ateam
  bile.dt.util,oracle.ateam.sample.mobile.dt.model,oracle.ateam.sample.
  mobile.dt,oracle.ateam.sample.mobile.dt.controller.velocity,oracle.at
  eam.sample.mobile.dt.controller
-Require-Bundle: oracle.jdeveloper,oracle.ide,oracle.ide.library,oracle
+Require-Bundle: oracle.mds.ide.base,oracle.jdeveloper,oracle.ide,oracle.ide.library,oracle
  .ide.library.navigator,oracle.jdeveloper.java.core,oracle.javamodel-r
  t,oracle.javatools,oracle.javatools-nodeps,oracle.adfm,oracle.adf.com
  mon.dt,oracle.adfmcoredt,oracle.adfm.dc-adapters,oracle.adfm.dcpalett

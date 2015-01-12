@@ -31,111 +31,120 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "")
 @XmlRootElement(name = "foreignKeyColumnReference")
-public class ForeignKeyColumnReference {
+public class ForeignKeyColumnReference
+{
 
-    @XmlAttribute(name = "sourceTable")
-    protected String sourceTable;
-    @XmlAttribute(name = "sourceColumn")
-    protected String sourceColumn;
-    @XmlAttribute(name = "targetTable")
-    protected String targetTable;
-    @XmlAttribute(name = "targetColumn")
-    protected String targetColumn;
+  @XmlAttribute(name = "sourceTable")
+  protected String sourceTable;
+  @XmlAttribute(name = "sourceColumn")
+  protected String sourceColumn;
+  @XmlAttribute(name = "targetTable")
+  protected String targetTable;
+  @XmlAttribute(name = "targetColumn")
+  protected String targetColumn;
 
-    /**
-     * Gets the value of the sourceTable property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getSourceTable() {
-        return sourceTable;
-    }
+  /**
+   * Gets the value of the sourceTable property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getSourceTable()
+  {
+    return sourceTable;
+  }
 
-    /**
-     * Sets the value of the sourceTable property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setSourceTable(String value) {
-        this.sourceTable = value;
-    }
+  /**
+   * Sets the value of the sourceTable property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setSourceTable(String value)
+  {
+    this.sourceTable = value;
+  }
 
-    /**
-     * Gets the value of the sourceColumn property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getSourceColumn() {
-        return sourceColumn;
-    }
+  /**
+   * Gets the value of the sourceColumn property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getSourceColumn()
+  {
+    return sourceColumn;
+  }
 
-    /**
-     * Sets the value of the sourceColumn property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setSourceColumn(String value) {
-        this.sourceColumn = value;
-    }
+  /**
+   * Sets the value of the sourceColumn property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setSourceColumn(String value)
+  {
+    this.sourceColumn = value;
+  }
 
-    /**
-     * Gets the value of the targetTable property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getTargetTable() {
-        return targetTable;
-    }
+  /**
+   * Gets the value of the targetTable property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getTargetTable()
+  {
+    return targetTable;
+  }
 
-    /**
-     * Sets the value of the targetTable property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setTargetTable(String value) {
-        this.targetTable = value;
-    }
+  /**
+   * Sets the value of the targetTable property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setTargetTable(String value)
+  {
+    this.targetTable = value;
+  }
 
-    /**
-     * Gets the value of the targetColumn property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getTargetColumn() {
-        return targetColumn;
-    }
+  /**
+   * Gets the value of the targetColumn property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getTargetColumn()
+  {
+    return targetColumn;
+  }
 
-    /**
-     * Sets the value of the targetColumn property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setTargetColumn(String value) {
-        this.targetColumn = value;
-    }
+  /**
+   * Sets the value of the targetColumn property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setTargetColumn(String value)
+  {
+    this.targetColumn = value;
+  }
 
 }

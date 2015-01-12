@@ -19,8 +19,8 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;extension base="{http://www.oracle.com/ateam/mobile/persistenceMapping}attributeMapping">
  *       &lt;attribute name="columnName" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="columnDataType" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="required" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="persisted" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="required" type="{http://www.w3.org/2001/XMLSchema}boolean" />
+ *       &lt;attribute name="persisted" type="{http://www.w3.org/2001/XMLSchema}boolean" />
  *       &lt;attribute name="parentAttributeName" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/extension>
  *   &lt;/complexContent>
@@ -32,137 +32,149 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "")
 @XmlRootElement(name = "directMapping")
-public class DirectMapping extends AttributeMapping {
+public class DirectMapping
+  extends AttributeMapping
+{
 
-    @XmlAttribute(name = "columnName")
-    protected String columnName;
-    @XmlAttribute(name = "columnDataType")
-    protected String columnDataType;
-    @XmlAttribute(name = "required")
-    protected String required;
-    @XmlAttribute(name = "persisted")
-    protected String persisted;
-    @XmlAttribute(name = "parentAttributeName")
-    protected String parentAttributeName;
+  @XmlAttribute(name = "columnName")
+  protected String columnName;
+  @XmlAttribute(name = "columnDataType")
+  protected String columnDataType;
+  @XmlAttribute(name = "required")
+  protected Boolean required;
+  @XmlAttribute(name = "persisted")
+  protected Boolean persisted;
+  @XmlAttribute(name = "parentAttributeName")
+  protected String parentAttributeName;
 
-    /**
-     * Gets the value of the columnName property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getColumnName() {
-        return columnName;
-    }
+  /**
+   * Gets the value of the columnName property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getColumnName()
+  {
+    return columnName;
+  }
 
-    /**
-     * Sets the value of the columnName property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setColumnName(String value) {
-        this.columnName = value;
-    }
+  /**
+   * Sets the value of the columnName property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setColumnName(String value)
+  {
+    this.columnName = value;
+  }
 
-    /**
-     * Gets the value of the columnDataType property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getColumnDataType() {
-        return columnDataType;
-    }
+  /**
+   * Gets the value of the columnDataType property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getColumnDataType()
+  {
+    return columnDataType;
+  }
 
-    /**
-     * Sets the value of the columnDataType property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setColumnDataType(String value) {
-        this.columnDataType = value;
-    }
+  /**
+   * Sets the value of the columnDataType property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setColumnDataType(String value)
+  {
+    this.columnDataType = value;
+  }
 
-    /**
-     * Gets the value of the required property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getRequired() {
-        return required;
-    }
+  /**
+   * Gets the value of the required property.
+   *
+   * @return
+   *     possible object is
+   *     {@link Boolean }
+   *
+   */
+  public Boolean isRequired()
+  {
+    return required;
+  }
 
-    /**
-     * Sets the value of the required property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setRequired(String value) {
-        this.required = value;
-    }
+  /**
+   * Sets the value of the required property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link Boolean }
+   *
+   */
+  public void setRequired(Boolean value)
+  {
+    this.required = value;
+  }
 
-    /**
-     * Gets the value of the persisted property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getPersisted() {
-        return persisted;
-    }
+  /**
+   * Gets the value of the persisted property.
+   *
+   * @return
+   *     possible object is
+   *     {@link Boolean }
+   *
+   */
+  public Boolean isPersisted()
+  {
+    return persisted;
+  }
 
-    /**
-     * Sets the value of the persisted property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setPersisted(String value) {
-        this.persisted = value;
-    }
+  /**
+   * Sets the value of the persisted property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link Boolean }
+   *
+   */
+  public void setPersisted(Boolean value)
+  {
+    this.persisted = value;
+  }
 
-    /**
-     * Gets the value of the parentAttributeName property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getParentAttributeName() {
-        return parentAttributeName;
-    }
+  /**
+   * Gets the value of the parentAttributeName property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getParentAttributeName()
+  {
+    return parentAttributeName;
+  }
 
-    /**
-     * Sets the value of the parentAttributeName property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setParentAttributeName(String value) {
-        this.parentAttributeName = value;
-    }
+  /**
+   * Sets the value of the parentAttributeName property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setParentAttributeName(String value)
+  {
+    this.parentAttributeName = value;
+  }
 
 }

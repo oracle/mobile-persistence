@@ -78,6 +78,8 @@
 </required-bundles>
 
   <trigger-hooks xmlns="http://xmlns.oracle.com/ide/extension">
+
+
     <rules>
       <rule id="project-has-adfmf-techscope" type="project-has-techscope">
         <parameters>
@@ -95,6 +97,16 @@
       </composite-rule>
     </rules>
     <triggers>
+
+     <node-recognizers-hook xmlns="http://xmlns.oracle.com/ide/extension">
+          <xml-recognizer>
+              <namespace>
+                <uri>http://www.oracle.com/ateam/mobile/persistenceMapping</uri>
+                <elem-name>mobileObjectPersistence</elem-name>
+            <node-type>oracle.ateam.sample.mobile.dt.editor.PersistenceMappingNode</node-type>
+              </namespace>              
+          </xml-recognizer>
+      </node-recognizers-hook>
 
       <gallery xmlns="http://xmlns.oracle.com/jdeveloper/1013/extension">
 
@@ -186,6 +198,14 @@
   
   <hooks>
   
+  <mds-configuration-hook xmlns="http://xmlns.oracle.com/ide/extension/mds">
+      <contributes-resources>
+        <type-documents   exists="true">
+          <resource name="xsd/persistenceMapping.xsd"/>
+        </type-documents>
+      </contributes-resources>
+    </mds-configuration-hook>
+    
     <jdeveloper-hook xmlns="http://xmlns.oracle.com/jdeveloper/1013/extension">
       <addins>
       </addins>

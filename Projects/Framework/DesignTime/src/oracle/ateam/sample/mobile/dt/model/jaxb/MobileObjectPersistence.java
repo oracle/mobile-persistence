@@ -30,39 +30,45 @@ import javax.xml.bind.annotation.XmlType;
  *
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "", propOrder = { "classMappingDescriptor" })
+@XmlType(name = "", propOrder =
+  {
+    "classMappingDescriptor"
+  })
 @XmlRootElement(name = "mobileObjectPersistence")
-public class MobileObjectPersistence {
+public class MobileObjectPersistence
+{
 
-    protected List<ClassMappingDescriptor> classMappingDescriptor;
+  protected List<ClassMappingDescriptor> classMappingDescriptor;
 
-    /**
-     * Gets the value of the classMappingDescriptor property.
-     *
-     * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the classMappingDescriptor property.
-     *
-     * <p>
-     * For example, to add a new item, do as follows:
-     * <pre>
-     *    getClassMappingDescriptor().add(newItem);
-     * </pre>
-     *
-     *
-     * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link ClassMappingDescriptor }
-     *
-     *
-     */
-    public List<ClassMappingDescriptor> getClassMappingDescriptor() {
-        if (classMappingDescriptor == null) {
-            classMappingDescriptor = new ArrayList<ClassMappingDescriptor>();
-        }
-        return this.classMappingDescriptor;
+  /**
+   * Gets the value of the classMappingDescriptor property.
+   *
+   * <p>
+   * This accessor method returns a reference to the live list,
+   * not a snapshot. Therefore any modification you make to the
+   * returned list will be present inside the JAXB object.
+   * This is why there is not a <CODE>set</CODE> method for the classMappingDescriptor property.
+   *
+   * <p>
+   * For example, to add a new item, do as follows:
+   * <pre>
+   *    getClassMappingDescriptor().add(newItem);
+   * </pre>
+   *
+   *
+   * <p>
+   * Objects of the following type(s) are allowed in the list
+   * {@link ClassMappingDescriptor }
+   *
+   *
+   */
+  public List<ClassMappingDescriptor> getClassMappingDescriptor()
+  {
+    if (classMappingDescriptor == null)
+    {
+      classMappingDescriptor = new ArrayList<ClassMappingDescriptor>();
     }
+    return this.classMappingDescriptor;
+  }
 
 }

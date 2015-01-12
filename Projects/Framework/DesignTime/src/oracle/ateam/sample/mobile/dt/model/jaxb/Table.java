@@ -33,66 +33,74 @@ import javax.xml.bind.annotation.XmlType;
  *
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "", propOrder = { "primaryKeyColumn" })
+@XmlType(name = "", propOrder =
+  {
+    "primaryKeyColumn"
+  })
 @XmlRootElement(name = "table")
-public class Table {
+public class Table
+{
 
-    @XmlElement(required = true)
-    protected List<PrimaryKeyColumn> primaryKeyColumn;
-    @XmlAttribute(name = "name")
-    protected String name;
+  @XmlElement(required = true)
+  protected List<PrimaryKeyColumn> primaryKeyColumn;
+  @XmlAttribute(name = "name")
+  protected String name;
 
-    /**
-     * Gets the value of the primaryKeyColumn property.
-     *
-     * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the primaryKeyColumn property.
-     *
-     * <p>
-     * For example, to add a new item, do as follows:
-     * <pre>
-     *    getPrimaryKeyColumn().add(newItem);
-     * </pre>
-     *
-     *
-     * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link PrimaryKeyColumn }
-     *
-     *
-     */
-    public List<PrimaryKeyColumn> getPrimaryKeyColumn() {
-        if (primaryKeyColumn == null) {
-            primaryKeyColumn = new ArrayList<PrimaryKeyColumn>();
-        }
-        return this.primaryKeyColumn;
+  /**
+   * Gets the value of the primaryKeyColumn property.
+   *
+   * <p>
+   * This accessor method returns a reference to the live list,
+   * not a snapshot. Therefore any modification you make to the
+   * returned list will be present inside the JAXB object.
+   * This is why there is not a <CODE>set</CODE> method for the primaryKeyColumn property.
+   *
+   * <p>
+   * For example, to add a new item, do as follows:
+   * <pre>
+   *    getPrimaryKeyColumn().add(newItem);
+   * </pre>
+   *
+   *
+   * <p>
+   * Objects of the following type(s) are allowed in the list
+   * {@link PrimaryKeyColumn }
+   *
+   *
+   */
+  public List<PrimaryKeyColumn> getPrimaryKeyColumn()
+  {
+    if (primaryKeyColumn == null)
+    {
+      primaryKeyColumn = new ArrayList<PrimaryKeyColumn>();
     }
+    return this.primaryKeyColumn;
+  }
 
-    /**
-     * Gets the value of the name property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getName() {
-        return name;
-    }
+  /**
+   * Gets the value of the name property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getName()
+  {
+    return name;
+  }
 
-    /**
-     * Sets the value of the name property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setName(String value) {
-        this.name = value;
-    }
+  /**
+   * Sets the value of the name property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setName(String value)
+  {
+    this.name = value;
+  }
 
 }
