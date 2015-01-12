@@ -48,8 +48,8 @@ secured="${method.isSecured}"
   #end 
 #end
 
-        <local-persistence-manager>oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager</local-persistence-manager>
-        <remote-persistence-manager>oracle.ateam.sample.mobile.v2.persistence.manager.${rpmClassName}</remote-persistence-manager>
+        <local-persistence-manager>oracle.ateam.sample.mobile.persistence.manager.DBPersistenceManager</local-persistence-manager>
+        <remote-persistence-manager>oracle.ateam.sample.mobile.persistence.manager.${rpmClassName}</remote-persistence-manager>
         <remote-read-in-background>true</remote-read-in-background>
         <remote-write-in-background>true</remote-write-in-background>
         <show-web-service-invocation-errors>true</show-web-service-invocation-errors>
@@ -80,7 +80,7 @@ secured="${method.isSecured}"
            #end
            #foreach($child in ${dataObject.children})
             <attribute-mapping type="one-to-many-mapping">
-               <attribute-name>${child.childAccessorName}</attribute-name>
+               <attribute-name>${child.childAccessorListName}</attribute-name>
                 #if ($child.childAccessorMethod)
                <accessor-method>${child.childAccessorMethod.name}</accessor-method>
                 #end 
@@ -148,7 +148,7 @@ secured="${method.isSecured}"
      #end
 
     <class-mapping-descriptor>
-      <class>oracle.ateam.sample.mobile.v2.persistence.service.DataSynchAction</class>
+      <class>oracle.ateam.sample.mobile.persistence.service.DataSynchAction</class>
       <table>DATA_SYNCH_ACTIONS</table>
       <date-format>dd-MMM-yyyy</date-format>
       <primary-key>

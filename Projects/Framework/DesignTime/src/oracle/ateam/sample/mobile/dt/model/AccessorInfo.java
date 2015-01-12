@@ -124,6 +124,11 @@ public class AccessorInfo
     return StringUtils.getGetterMethodName(getChildAccessorName());
   }
 
+  public String getChildAccessorSetterMethodName()
+  {
+    return StringUtils.getSetterMethodName(getChildAccessorName());
+  }
+
   public String getParentAccessorGetterMethodName()
   {
     return StringUtils.getGetterMethodName(getParentAccessorName());

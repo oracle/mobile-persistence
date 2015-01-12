@@ -16,12 +16,15 @@ import oracle.adf.model.datacontrols.device.DeviceManagerFactory;
 
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 
+import oracle.adfmf.util.Utility;
+
 import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingOneToMany;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.v2.persistence.model.EntityList;
 
 
 /**
@@ -32,19 +35,19 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
  * If the child collection is not returned with the parent payload, the find-all-in-parent method as
  * defined in persistenceMapping.xml is executed.
  */
-public class IndirectList<E extends Entity> 
-  implements java.util.List
+public class IndirectList<E extends Entity>
+  implements List<E>
 {
 
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(IndirectList.class);
   Entity entity;
-  List delegate;
+  List<E> delegate;
   AttributeMappingOneToMany mapping;
 
   public IndirectList(Entity entity, AttributeMappingOneToMany mapping)
   {
-      this.mapping = mapping;
-      this.entity = entity;
+    this.mapping = mapping;
+    this.entity = entity;
   }
 
 
@@ -63,7 +66,7 @@ public class IndirectList<E extends Entity>
     return getDelegate().contains(o);
   }
 
-  public Iterator iterator()
+  public Iterator<E> iterator()
   {
     return getDelegate().iterator();
   }
@@ -73,19 +76,29 @@ public class IndirectList<E extends Entity>
     return getDelegate().toArray();
   }
 
-  public Object[] toArray(Object[] a)
+  public E[] toArray(E[] a)
   {
     return getDelegate().toArray(a);
   }
 
-  public boolean add(Object o)
+  public boolean add(E entity)
   {
-    return getDelegate().add(o);
+    return getDelegate().add(entity);
   }
 
-  public void add(int index, Object element)
+  public void add(int index, E childEntity)
   {
-    getDelegate().add(index, element);
+    // if this is a new entity, then call the add[EntityName] method on the service class or parent entity
+    if (EntityUtils.primaryKeyIsNull(childEntity))
+    {
+      Class beanClass = childEntity.getClass();
+      String typeName = childEntity.getClass().getName();
+      String addMethodName = "add" + typeName.substring(typeName.lastIndexOf(".") + 1);
+      Class[] paramTypes = new Class[] { int.class, beanClass };
+      Object[] params = new Object[] { new Integer(index), childEntity};
+      Utility.invokeIfPossible(this.entity, addMethodName, paramTypes, params);        
+    }
+    getDelegate().add(index, childEntity);
   }
 
   public boolean remove(Object o)
@@ -93,9 +106,20 @@ public class IndirectList<E extends Entity>
     return getDelegate().remove(o);
   }
 
-  public Object remove(int index)
+  public E remove(int index)
   {
-    return getDelegate().remove(index);
+    E element = getDelegate().remove(index);
+    if (element!=null)
+    {
+      // call the remove[EntityName] method on the service class or parent entity
+      Class beanClass = element.getClass();
+      String typeName = element.getClass().getName();
+      String removeMethodName = "remove" + typeName.substring(typeName.lastIndexOf(".") + 1);
+      Class[] paramTypes = new Class[] { beanClass };
+      Object[] params = new Object[] { element};
+      Utility.invokeIfPossible(entity, removeMethodName, paramTypes, params);        
+    }
+    return element;
   }
 
   public boolean containsAll(Collection c)
@@ -105,6 +129,10 @@ public class IndirectList<E extends Entity>
 
   public boolean addAll(Collection c)
   {
+    if (delegate==null)
+    {
+      delegate = new ArrayList<E>();
+    }
     return getDelegate().addAll(c);
   }
 
@@ -132,12 +160,12 @@ public class IndirectList<E extends Entity>
     delegate = null;
   }
 
-  public Object get(int index)
+  public E get(int index)
   {
     return getDelegate().get(index);
   }
 
-  public Object set(int index, Object element)
+  public E set(int index, E element)
   {
     return getDelegate().set(index, element);
   }
@@ -168,13 +196,13 @@ public class IndirectList<E extends Entity>
   }
 
 
-  protected List getDelegate()
+  protected List<E> getDelegate()
   {
     if (delegate == null)
     {
       if (entity.getIsNewEntity())
       {
-        delegate = new ArrayList();
+        delegate = new ArrayList<E>();
       }
       else
       {
@@ -184,7 +212,7 @@ public class IndirectList<E extends Entity>
     return delegate;
   }
 
-  protected List buildDelegate()
+  protected List<E> buildDelegate()
   {
     final ClassMappingDescriptor referenceDescriptor = mapping.getReferenceClassMappingDescriptor();
     String status = DeviceManagerFactory.getDeviceManager().getNetworkStatus();
@@ -231,5 +259,24 @@ public class IndirectList<E extends Entity>
     DBPersistenceManager pm = EntityUtils.getLocalPersistenceManager(referenceDescriptor);
     List result = pm.findAllInParent(referenceDescriptor.getClazz(), entity, mapping);      
     return result;
+  }
+
+  @Override
+  public <T extends Object> T[] toArray(T[] a)
+  {
+    return getDelegate().toArray(a);
+  }
+
+  @Override
+  public boolean equals(Object o)
+  {
+    return false;
+  }
+
+  @Override
+  public int hashCode()
+  {
+    // TODO Implement this method
+    return 0;
   }
 }

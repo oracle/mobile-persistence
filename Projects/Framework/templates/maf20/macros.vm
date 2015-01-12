@@ -1,0 +1,91 @@
+## revision_history
+## 14-feb-2014   Steven Davelaar
+## 1.0           Initial creation
+
+
+#macro (SYNCHRONIZE_LINK $dataObject)
+      <amx:commandLink id="menSync" disabled="#{!bindings.has${dataObject.name}DataSynchActions.inputValue or deviceScope.hardware.networkStatus=='NotReachable' or deviceScope.hardware.networkStatus=='unknown'}" 
+       actionListener="#{bindings.${pageDef.createSynchronizeBinding()}.execute}" text="Synchronize">
+        <amx:closePopupBehavior id="mencSync" popupId="p1" type="action"/>                                                 
+      </amx:commandLink>
+#end
+
+#macro (PENDING_SYNCH_ACTIONS_LINK $dataObject)
+      <amx:commandLink id="menPsa" disabled="#{!bindings.has${dataObject.name}DataSynchActions.inputValue}" text="Pending Sync Actions"
+                         actionListener="#{GoToFeature.goToDataSynchFeature}">
+        <amx:setPropertyListener id="menspaspl" from="${dataObject.fullyQualifiedClassName}"
+                                 to="#{applicationScope.dataSynchEntity}"/>
+        <amx:closePopupBehavior id="mencPsa" popupId="p1" type="action"/>                         
+      </amx:commandLink>
+#end
+
+#macro (LIST_ITEM_CONTENT $dataObject)
+          #if ($dataObject.simpleList)  
+
+            <amx:outputText value="#{row.${dataObject.listAttribute1}}" id="ot2${dataObject.name}"/>
+
+          #elseif ($dataObject.startEndList) 
+
+          <amx:tableLayout width="100%" id="tl1${dataObject.name}">
+            <amx:rowLayout id="rl1${dataObject.name}">
+              <amx:cellFormat width="10px" id="cf3${dataObject.name}"/>
+              <amx:cellFormat width="60%" height="43px" id="cf2${dataObject.name}">
+                <amx:outputText value="#{row.${dataObject.listAttribute1}}" id="ot2${dataObject.name}"/>
+              </amx:cellFormat>
+              <amx:cellFormat width="10px" id="cf1${dataObject.name}"/>
+              <amx:cellFormat width="40%" halign="end" id="cf4${dataObject.name}">
+                <amx:outputText value="#{row.${dataObject.listAttribute2}}" styleClass="adfmf-listItem-highlightText" id="ot3${dataObject.name}"/>
+              </amx:cellFormat>
+            </amx:rowLayout>
+          </amx:tableLayout>
+
+          #elseif ($dataObject.mainSubList) 
+
+          <amx:tableLayout width="100%" id="tl1${dataObject.name}">
+            <amx:rowLayout id="rl2${dataObject.name}">
+              <amx:cellFormat width="10px" rowSpan="2" id="cf2${dataObject.name}"/>
+              <amx:cellFormat width="100%" height="28px" id="cf3${dataObject.name}">
+                <amx:outputText value="#{row.${dataObject.listAttribute1}}" id="ot3${dataObject.name}"/>
+              </amx:cellFormat>
+            </amx:rowLayout>
+            <amx:rowLayout id="rl1${dataObject.name}">
+              <amx:cellFormat width="100%" height="12px" id="cf1${dataObject.name}">
+                <amx:outputText value="#{row.${dataObject.listAttribute3}}" styleClass="adfmf-listItem-captionText" id="ot2${dataObject.name}"/>
+              </amx:cellFormat>
+            </amx:rowLayout>
+          </amx:tableLayout>
+
+          #else
+            ##quadrant list, but need to check attributes 2-4 are not null before adding 
+    
+          <amx:tableLayout width="100%" id="tl1${dataObject.name}">
+            <amx:rowLayout id="rl1${dataObject.name}">
+              <amx:cellFormat width="10px" rowSpan="2" id="cf2${dataObject.name}"/>
+              <amx:cellFormat  #if (${dataObject.listAttribute2}) width="60%" #else width="100%" columnSpan="2" #end height="28px" id="cf3${dataObject.name}">
+                <amx:outputText value="#{row.${dataObject.listAttribute1}}" id="ot2${dataObject.name}"/>
+              </amx:cellFormat>
+              <amx:cellFormat width="10px" rowSpan="2" id="cf1${dataObject.name}"/>
+#if (${dataObject.listAttribute2})
+              <amx:cellFormat width="40%" halign="end" id="cf4${dataObject.name}">
+                #if (${dataObject.listAttribute2})
+                <amx:outputText value="#{row.${dataObject.listAttribute2}}" styleClass="adfmf-listItem-highlightText" id="ot3${dataObject.name}"/>
+                #end
+              </amx:cellFormat>
+#end
+            </amx:rowLayout>
+            <amx:rowLayout id="rl2${dataObject.name}">
+              <amx:cellFormat width="60%" height="12px" id="cf5${dataObject.name}">
+                #if (${dataObject.listAttribute3})
+                <amx:outputText value="#{row.${dataObject.listAttribute3}}" styleClass="adfmf-listItem-captionText" id="ot4${dataObject.name}"/>
+                #end
+              </amx:cellFormat>
+              <amx:cellFormat width="40%" halign="end" id="cf6${dataObject.name}">
+                #if (${dataObject.listAttribute4})
+                <amx:outputText value="#{row.${dataObject.listAttribute4}}" styleClass="adfmf-listItem-captionText" id="ot5${dataObject.name}"/>
+                #end
+              </amx:cellFormat>
+            </amx:rowLayout>
+          </amx:tableLayout>
+
+          #end
+#end
