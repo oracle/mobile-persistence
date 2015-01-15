@@ -1,177 +1,197 @@
 <?xml version="1.0" encoding="windows-1252" ?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-xmlns="http://www.oracle.com/ateam/mobile/persistenceMapping"
-xmlns:ampa="http://www.oracle.com/ateam/mobile/persistenceMapping"
-           targetNamespace="http://www.oracle.com/ateam/mobile/persistenceMapping" 
-           elementFormDefault="qualified">
-    <xs:element name="mobileObjectPersistence">
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element ref="classMappingDescriptor" minOccurs="0" maxOccurs="unbounded"/>
-            </xs:sequence>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="classMappingDescriptor">
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element ref="crudServiceClass" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="table" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="attributeMappings" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="methods" minOccurs="0" maxOccurs="1"/>
-            </xs:sequence>
-            <xs:attribute type="xs:string" name="className"/>
-            <xs:attribute type="xs:boolean" name="persisted"/>
-            <xs:attribute type="xs:string" name="dateFormat"/>
-            <xs:attribute type="xs:string" name="dateTimeFormat"/>
-            <xs:attribute type="xs:string" name="orderBy"/>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="crudServiceClass">
-        <xs:complexType>
-            <xs:attribute type="xs:string" name="className"/>
-            <xs:attribute type="xs:boolean" name="autoIncrementPrimaryKey"/>
-            <xs:attribute type="xs:string" name="localPersistenceManager"/>
-            <xs:attribute type="xs:string" name="remotePersistenceManager"/>
-            <xs:attribute type="xs:boolean" name="remoteReadInBackground"/>
-            <xs:attribute type="xs:boolean" name="remoteWriteInBackground"/>
-            <xs:attribute type="xs:boolean" name="showWebServiceInvocationErrors"/>
-            <xs:attribute type="xs:boolean" name="autoQuery"/>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="table">
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element ref="primaryKeyColumn" minOccurs="1" maxOccurs="unbounded"/>
-            </xs:sequence>
-            <xs:attribute type="xs:string" name="name"/>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="primaryKeyColumn">
-        <xs:complexType>
-            <xs:attribute type="xs:string" name="name"/>
-        </xs:complexType>
-    </xs:element>
-
-    <xs:element name="attributeMappings">
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element ref="directMapping" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:element ref="oneToManyMapping" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:element ref="oneToOneMapping" minOccurs="0" maxOccurs="unbounded"/>
-            </xs:sequence>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="methods">
-        <xs:complexType>
-            <xs:sequence>
-                <xs:element ref="findAllMethod" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="findAllInParentMethod" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:element ref="findMethod" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="getAsParentMethod" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:element ref="getCanonicalMethod" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="createMethod" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="updateMethod" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="removeMethod" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="mergeMethod" minOccurs="0" maxOccurs="1"/>
-                <xs:element ref="customMethod" minOccurs="0" maxOccurs="unbounded"/>
-            </xs:sequence>
-        </xs:complexType>
-    </xs:element>
-
-    <xs:complexType name="attributeMapping">
-        <xs:attribute type="xs:string" name="attributeName"/>
-        <xs:attribute type="xs:string" name="payloadAttributeName"/>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.oracle.com/ateam/mobile/persistenceMapping"
+           xmlns:ampa="http://www.oracle.com/ateam/mobile/persistenceMapping"
+           targetNamespace="http://www.oracle.com/ateam/mobile/persistenceMapping" elementFormDefault="qualified">
+  <xs:element name="mobileObjectPersistence">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="classMappingDescriptor" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
     </xs:complexType>
-    <xs:element name="directMapping">
-        <xs:complexType>
-            <xs:complexContent>
-                <xs:extension base="attributeMapping">
-                    <xs:attribute type="xs:string" name="columnName"/>
-                    <xs:attribute type="xs:string" name="columnDataType"/>
-                    <xs:attribute type="xs:boolean" name="required"/>
-                    <xs:attribute type="xs:boolean" name="persisted"/>
-                    <xs:attribute type="xs:string" name="parentAttributeName"/>
-                </xs:extension>
-            </xs:complexContent>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="oneToManyMapping">
-        <xs:complexType>
-            <xs:complexContent>
-                <xs:extension base="attributeMapping">
-                    <xs:sequence>
-                        <xs:element ref="foreignKeyColumnReference" minOccurs="1" maxOccurs="unbounded"/>
-                    </xs:sequence>
-                    <xs:attribute type="xs:string" name="accessorMethod"/>
-                    <xs:attribute type="xs:string" name="referenceClassName"/>
-                    <xs:attribute type="xs:boolean" name="sendAsArrayIfOnlyOneEntry"/>
-                </xs:extension>
-            </xs:complexContent>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="oneToOneMapping">
-        <xs:complexType>
-            <xs:complexContent>
-                <xs:extension base="attributeMapping">
-                    <xs:sequence>
-                        <xs:element ref="foreignKeyColumnReference" minOccurs="1" maxOccurs="unbounded"/>
-                    </xs:sequence>
-                    <xs:attribute type="xs:string" name="accessorMethod"/>
-                    <xs:attribute type="xs:string" name="referenceClassName"/>
-                </xs:extension>
-            </xs:complexContent>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="foreignKeyColumnReference">
-        <xs:complexType>
-            <xs:attribute type="xs:string" name="sourceTable"/>
-            <xs:attribute type="xs:string" name="sourceColumn"/>
-            <xs:attribute type="xs:string" name="targetTable"/>
-            <xs:attribute type="xs:string" name="targetColumn"/>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="headerParameter">
-        <xs:complexType>
-            <xs:attribute type="xs:string" name="name"/>
-            <xs:attribute type="xs:string" name="value"/>
-        </xs:complexType>
-    </xs:element>
-    <xs:element name="parameter">
-        <xs:complexType>
-            <xs:attribute type="xs:string" name="name"/>
-            <xs:attribute type="xs:string" name="value"/>
-            <xs:attribute type="xs:string" name="valueProvider"/>
-            <xs:attribute type="xs:string" name="dataObjectAttribute"/>
-            <xs:attribute type="xs:boolean" name="pathParam"/>
-            <xs:attribute type="xs:string" name="javaType"/>
-        </xs:complexType>
-    </xs:element>
-    <xs:complexType name="method">
-        <xs:sequence>
-            <xs:element ref="headerParameter" minOccurs="1" maxOccurs="unbounded"/>
-            <xs:element ref="parameter" minOccurs="1" maxOccurs="unbounded"/>
-        </xs:sequence>
-        <xs:attribute type="xs:string" name="name"/>
-        <xs:attribute type="xs:string" name="uri"/>
-        <xs:attribute type="xs:string" name="connectionName"/>
-        <xs:attribute type="xs:string" name="dataControlName"/>
-        <xs:attribute type="xs:string" name="requestType"/>
-        <xs:attribute type="xs:boolean" name="secured"/>
-        <xs:attribute type="xs:string" name="payloadRowElementName"/>
-        <xs:attribute type="xs:boolean" name="sendDataObjectAsPayload"/>
-        <xs:attribute type="xs:boolean" name="deleteLocalRows"/>
-        <xs:attribute type="xs:string" name="payloadElementName"/>
-        <xs:attribute type="xs:string" name="attributesToExclude"/>
-        <xs:attribute type="xs:string" name="oauthConfig"/>
+  </xs:element>
+  <xs:element name="classMappingDescriptor">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="crudServiceClass" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="table" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="attributeMappings" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="methods" minOccurs="0" maxOccurs="1"/>
+      </xs:sequence>
+      <xs:attribute type="xs:string" name="className" use="required">
+        <xs:annotation>
+          <xs:documentation>The Java class that maps to this descriptor</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute type="xs:boolean" name="persisted" default="true"/>
+      <xs:attribute type="xs:string" name="dateFormat"/>
+      <xs:attribute type="xs:string" name="dateTimeFormat"/>
+      <xs:attribute type="xs:string" name="orderBy"/>
     </xs:complexType>
-    <xs:element name="findAllMethod" type="method"/>
-    <xs:element name="findAllInParentMethod" type="method"/>
-    <xs:element name="findMethod" type="method"/>
-    <xs:element name="getAsParentMethod" type="method"/>
-    <xs:element name="getCanonicalMethod" type="method"/>
-    <xs:element name="createMethod" type="method"/>
-    <xs:element name="updateMethod" type="method"/>
-    <xs:element name="removeMethod" type="method"/>
-    <xs:element name="mergeMethod" type="method"/>
-    <xs:element name="customMethod" type="method"/>
+  </xs:element>
+  <xs:element name="crudServiceClass">
+    <xs:annotation>
+      <xs:documentation>Configuration info for the Java service class that performs CRUD operations for the Java class mapped to this descriptor</xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:attribute type="xs:string" name="className" use="required"/>
+      <xs:attribute type="xs:boolean" name="autoIncrementPrimaryKey" default="true"/>
+      <xs:attribute type="xs:string" name="localPersistenceManager"/>
+      <xs:attribute type="xs:string" name="remotePersistenceManager"/>
+      <xs:attribute type="xs:boolean" name="remoteReadInBackground" default="true"/>
+      <xs:attribute type="xs:boolean" name="remoteWriteInBackground" default="true"/>
+      <xs:attribute type="xs:boolean" name="showWebServiceInvocationErrors" default="true"/>
+      <xs:attribute type="xs:boolean" name="autoQuery" default="true"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="table">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="primaryKeyColumn" minOccurs="1" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute type="xs:string" name="name"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="primaryKeyColumn">
+    <xs:complexType>
+      <xs:attribute type="xs:string" name="name" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="attributeMappings">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="directMapping" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="oneToManyMapping" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="oneToOneMapping" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="methods">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="findAllMethod" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="findAllInParentMethod" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="findMethod" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="getAsParentMethod" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="getCanonicalMethod" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="createMethod" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="updateMethod" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="removeMethod" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="mergeMethod" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="customMethod" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:complexType name="attributeMapping">
+    <xs:attribute type="xs:string" name="attributeName" use="required"/>
+    <xs:attribute type="xs:string" name="payloadAttributeName"/>
+  </xs:complexType>
+  <xs:element name="directMapping">
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="attributeMapping">
+          <xs:attribute type="xs:string" name="columnName" use="required"/>
+          <xs:attribute type="xs:string" name="columnDataType" use="required"/>
+          <xs:attribute type="xs:boolean" name="required" default="false"/>
+          <xs:attribute type="xs:boolean" name="persisted" default="true"/>
+          <xs:attribute type="xs:string" name="parentClass"/>
+          <xs:attribute type="xs:string" name="parentAttributeName"/>
+          <xs:attribute type="xs:string" name="javaType"/>
+          <xs:attribute type="xs:boolean" name="keyAttribute" default="false"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="oneToManyMapping">
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="attributeMapping">
+          <xs:sequence>
+            <xs:element ref="foreignKeyColumnReference" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+          <xs:attribute type="xs:string" name="accessorMethod"/>
+          <xs:attribute type="xs:string" name="referenceClassName" use="required"/>
+          <xs:attribute type="xs:boolean" name="sendAsArrayIfOnlyOneEntry" default="true"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="oneToOneMapping">
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="attributeMapping">
+          <xs:sequence>
+            <xs:element ref="foreignKeyColumnReference" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+          <xs:attribute type="xs:string" name="accessorMethod" use="required"/>
+          <xs:attribute type="xs:string" name="referenceClassName" use="required"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="foreignKeyColumnReference">
+    <xs:complexType>
+      <xs:attribute type="xs:string" name="sourceTable" use="required"/>
+      <xs:attribute type="xs:string" name="sourceColumn" use="required"/>
+      <xs:attribute type="xs:string" name="targetTable" use="required"/>
+      <xs:attribute type="xs:string" name="targetColumn" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="headerParameter">
+    <xs:complexType>
+      <xs:attribute type="xs:string" name="name" use="required"/>
+      <xs:attribute type="xs:string" name="value" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="parameter">
+    <xs:complexType>
+      <xs:attribute type="xs:string" name="name" use="required"/>
+      <xs:attribute type="xs:string" name="value"/>
+      <xs:attribute type="xs:string" name="valueProvider" use="required"/>
+      <xs:attribute type="xs:string" name="dataObjectAttribute"/>
+      <xs:attribute type="xs:boolean" name="pathParam" use="required"/>
+      <xs:attribute type="xs:string" name="javaType"/>
+    </xs:complexType>
+  </xs:element>
+<xs:simpleType name="requestType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="GET" />
+    <xs:enumeration value="POST" />
+    <xs:enumeration value="PUT" />
+    <xs:enumeration value="DELETE" />
+    <xs:enumeration value="PATCH" />
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:complexType name="method">
+    <xs:sequence>
+      <xs:element ref="headerParameter" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element ref="parameter" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="name"/>
+    <xs:attribute type="xs:string" name="uri"/>
+    <xs:attribute type="xs:string" name="connectionName" use="required"/>
+    <xs:attribute type="xs:string" name="dataControlName"/>
+    <!--
+    using enumeration causes ClassNotFoundError when running the wizrad
+    on class org.eclipse.persistence.internal.jaxb, need to figure out why
+    <xs:attribute type="requestType" name="requestType"/>-->
+    <xs:attribute type="xs:string" name="requestType"/>
+    <xs:attribute type="xs:boolean" name="secured" default="false"/>
+    <xs:attribute type="xs:string" name="payloadRowElementName"/>
+    <xs:attribute type="xs:boolean" name="sendDataObjectAsPayload" default="false"/>
+    <xs:attribute type="xs:boolean" name="deleteLocalRows" default="false"/>
+    <xs:attribute type="xs:string" name="payloadElementName" use="required"/>
+    <xs:attribute type="xs:string" name="attributesToExclude"/>
+    <xs:attribute type="xs:string" name="oauthConfig"/>
+  </xs:complexType>
+  <xs:element name="findAllMethod" type="method"/>
+  <xs:element name="findAllInParentMethod" type="method"/>
+  <xs:element name="findMethod" type="method"/>
+  <xs:element name="getAsParentMethod" type="method"/>
+  <xs:element name="getCanonicalMethod" type="method"/>
+  <xs:element name="createMethod" type="method"/>
+  <xs:element name="updateMethod" type="method"/>
+  <xs:element name="removeMethod" type="method"/>
+  <xs:element name="mergeMethod" type="method"/>
+  <xs:element name="customMethod" type="method"/>
 </xs:schema>

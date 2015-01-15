@@ -24,8 +24,8 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;sequence>
  *         &lt;element ref="{http://www.oracle.com/ateam/mobile/persistenceMapping}foreignKeyColumnReference" maxOccurs="unbounded"/>
  *       &lt;/sequence>
- *       &lt;attribute name="accessorMethod" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="referenceClassName" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="accessorMethod" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="referenceClassName" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/extension>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -45,9 +45,9 @@ public class OneToOneMapping
 
   @XmlElement(required = true)
   protected List<ForeignKeyColumnReference> foreignKeyColumnReference;
-  @XmlAttribute(name = "accessorMethod")
+  @XmlAttribute(name = "accessorMethod", required = true)
   protected String accessorMethod;
-  @XmlAttribute(name = "referenceClassName")
+  @XmlAttribute(name = "referenceClassName", required = true)
   protected String referenceClassName;
 
   /**

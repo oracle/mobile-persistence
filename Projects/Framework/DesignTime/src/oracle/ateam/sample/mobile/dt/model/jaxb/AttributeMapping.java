@@ -17,7 +17,7 @@ import javax.xml.bind.annotation.XmlType;
  * &lt;complexType name="attributeMapping">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;attribute name="attributeName" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="attributeName" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="payloadAttributeName" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -35,7 +35,7 @@ import javax.xml.bind.annotation.XmlType;
 public class AttributeMapping
 {
 
-  @XmlAttribute(name = "attributeName")
+  @XmlAttribute(name = "attributeName", required = true)
   protected String attributeName;
   @XmlAttribute(name = "payloadAttributeName")
   protected String payloadAttributeName;

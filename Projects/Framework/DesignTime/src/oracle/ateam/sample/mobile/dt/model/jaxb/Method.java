@@ -7,7 +7,6 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 
@@ -21,19 +20,19 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element ref="{http://www.oracle.com/ateam/mobile/persistenceMapping}headerParameter" maxOccurs="unbounded"/>
- *         &lt;element ref="{http://www.oracle.com/ateam/mobile/persistenceMapping}parameter" maxOccurs="unbounded"/>
+ *         &lt;element ref="{http://www.oracle.com/ateam/mobile/persistenceMapping}headerParameter" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element ref="{http://www.oracle.com/ateam/mobile/persistenceMapping}parameter" maxOccurs="unbounded" minOccurs="0"/>
  *       &lt;/sequence>
  *       &lt;attribute name="name" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="uri" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="connectionName" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="connectionName" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="dataControlName" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="requestType" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="secured" type="{http://www.w3.org/2001/XMLSchema}boolean" />
+ *       &lt;attribute name="secured" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
  *       &lt;attribute name="payloadRowElementName" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="sendDataObjectAsPayload" type="{http://www.w3.org/2001/XMLSchema}boolean" />
- *       &lt;attribute name="deleteLocalRows" type="{http://www.w3.org/2001/XMLSchema}boolean" />
- *       &lt;attribute name="payloadElementName" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="sendDataObjectAsPayload" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
+ *       &lt;attribute name="deleteLocalRows" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
+ *       &lt;attribute name="payloadElementName" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="attributesToExclude" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="oauthConfig" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/restriction>
@@ -51,15 +50,13 @@ import javax.xml.bind.annotation.XmlType;
 public class Method
 {
 
-  @XmlElement(required = true)
   protected List<HeaderParameter> headerParameter;
-  @XmlElement(required = true)
   protected List<Parameter> parameter;
   @XmlAttribute(name = "name")
   protected String name;
   @XmlAttribute(name = "uri")
   protected String uri;
-  @XmlAttribute(name = "connectionName")
+  @XmlAttribute(name = "connectionName", required = true)
   protected String connectionName;
   @XmlAttribute(name = "dataControlName")
   protected String dataControlName;
@@ -73,7 +70,7 @@ public class Method
   protected Boolean sendDataObjectAsPayload;
   @XmlAttribute(name = "deleteLocalRows")
   protected Boolean deleteLocalRows;
-  @XmlAttribute(name = "payloadElementName")
+  @XmlAttribute(name = "payloadElementName", required = true)
   protected String payloadElementName;
   @XmlAttribute(name = "attributesToExclude")
   protected String attributesToExclude;
@@ -280,9 +277,16 @@ public class Method
    *     {@link Boolean }
    *
    */
-  public Boolean isSecured()
+  public boolean isSecured()
   {
-    return secured;
+    if (secured == null)
+    {
+      return false;
+    }
+    else
+    {
+      return secured;
+    }
   }
 
   /**
@@ -332,9 +336,16 @@ public class Method
    *     {@link Boolean }
    *
    */
-  public Boolean isSendDataObjectAsPayload()
+  public boolean isSendDataObjectAsPayload()
   {
-    return sendDataObjectAsPayload;
+    if (sendDataObjectAsPayload == null)
+    {
+      return false;
+    }
+    else
+    {
+      return sendDataObjectAsPayload;
+    }
   }
 
   /**
@@ -358,9 +369,16 @@ public class Method
    *     {@link Boolean }
    *
    */
-  public Boolean isDeleteLocalRows()
+  public boolean isDeleteLocalRows()
   {
-    return deleteLocalRows;
+    if (deleteLocalRows == null)
+    {
+      return false;
+    }
+    else
+    {
+      return deleteLocalRows;
+    }
   }
 
   /**

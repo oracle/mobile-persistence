@@ -17,11 +17,11 @@ import javax.xml.bind.annotation.XmlType;
  * &lt;complexType>
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;attribute name="name" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="name" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="value" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="valueProvider" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="valueProvider" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="dataObjectAttribute" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="pathParam" type="{http://www.w3.org/2001/XMLSchema}boolean" />
+ *       &lt;attribute name="pathParam" use="required" type="{http://www.w3.org/2001/XMLSchema}boolean" />
  *       &lt;attribute name="javaType" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -36,16 +36,16 @@ import javax.xml.bind.annotation.XmlType;
 public class Parameter
 {
 
-  @XmlAttribute(name = "name")
+  @XmlAttribute(name = "name", required = true)
   protected String name;
   @XmlAttribute(name = "value")
   protected String value;
-  @XmlAttribute(name = "valueProvider")
+  @XmlAttribute(name = "valueProvider", required = true)
   protected String valueProvider;
   @XmlAttribute(name = "dataObjectAttribute")
   protected String dataObjectAttribute;
-  @XmlAttribute(name = "pathParam")
-  protected Boolean pathParam;
+  @XmlAttribute(name = "pathParam", required = true)
+  protected boolean pathParam;
   @XmlAttribute(name = "javaType")
   protected String javaType;
 
@@ -156,12 +156,8 @@ public class Parameter
   /**
    * Gets the value of the pathParam property.
    *
-   * @return
-   *     possible object is
-   *     {@link Boolean }
-   *
    */
-  public Boolean isPathParam()
+  public boolean isPathParam()
   {
     return pathParam;
   }
@@ -169,12 +165,8 @@ public class Parameter
   /**
    * Sets the value of the pathParam property.
    *
-   * @param value
-   *     allowed object is
-   *     {@link Boolean }
-   *
    */
-  public void setPathParam(Boolean value)
+  public void setPathParam(boolean value)
   {
     this.pathParam = value;
   }

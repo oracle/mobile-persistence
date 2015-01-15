@@ -17,10 +17,10 @@ import javax.xml.bind.annotation.XmlType;
  * &lt;complexType>
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;attribute name="sourceTable" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="sourceColumn" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="targetTable" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="targetColumn" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="sourceTable" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="sourceColumn" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="targetTable" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="targetColumn" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -34,13 +34,13 @@ import javax.xml.bind.annotation.XmlType;
 public class ForeignKeyColumnReference
 {
 
-  @XmlAttribute(name = "sourceTable")
+  @XmlAttribute(name = "sourceTable", required = true)
   protected String sourceTable;
-  @XmlAttribute(name = "sourceColumn")
+  @XmlAttribute(name = "sourceColumn", required = true)
   protected String sourceColumn;
-  @XmlAttribute(name = "targetTable")
+  @XmlAttribute(name = "targetTable", required = true)
   protected String targetTable;
-  @XmlAttribute(name = "targetColumn")
+  @XmlAttribute(name = "targetColumn", required = true)
   protected String targetColumn;
 
   /**

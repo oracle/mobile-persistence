@@ -17,8 +17,8 @@ import javax.xml.bind.annotation.XmlType;
  * &lt;complexType>
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;attribute name="name" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="value" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="name" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="value" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -32,9 +32,9 @@ import javax.xml.bind.annotation.XmlType;
 public class HeaderParameter
 {
 
-  @XmlAttribute(name = "name")
+  @XmlAttribute(name = "name", required = true)
   protected String name;
-  @XmlAttribute(name = "value")
+  @XmlAttribute(name = "value", required = true)
   protected String value;
 
   /**

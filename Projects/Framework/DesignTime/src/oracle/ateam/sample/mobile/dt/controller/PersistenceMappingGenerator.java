@@ -13,7 +13,6 @@ import javax.xml.bind.Unmarshaller;
 
 import oracle.adfmf.common.util.McAppUtils;
 
-import oracle.ateam.sample.mobile.dt.controller.parser.PersistenceMappingLoader;
 import oracle.ateam.sample.mobile.dt.model.AccessorInfo;
 import oracle.ateam.sample.mobile.dt.model.AttributeInfo;
 import oracle.ateam.sample.mobile.dt.model.BusinessObjectGeneratorModel;
@@ -35,11 +34,13 @@ import oracle.ateam.sample.mobile.dt.model.jaxb.OneToManyMapping;
 import oracle.ateam.sample.mobile.dt.model.jaxb.OneToOneMapping;
 import oracle.ateam.sample.mobile.dt.model.jaxb.Parameter;
 import oracle.ateam.sample.mobile.dt.model.jaxb.PrimaryKeyColumn;
+import oracle.ateam.sample.mobile.dt.model.jaxb.RequestType;
 import oracle.ateam.sample.mobile.dt.model.jaxb.Table;
 import oracle.ateam.sample.mobile.dt.util.FileUtils;
 
 import oracle.ide.Ide;
 import oracle.ide.model.Project;
+import oracle.ide.net.URLFactory;
 
 public class PersistenceMappingGenerator
 {
@@ -57,10 +58,13 @@ public class PersistenceMappingGenerator
 
   public String run()
   {
-    mop = new PersistenceMappingLoader().loadJaxbModel();
+    mop = model.getExistingPersistenceMappingModel();
     if (mop==null)
     {
-      mop = objectFactory.createMobileObjectPersistence();
+      // create default model with dataSyncAction classmappingDescriptor using xml file in teplates dir
+      String newPersistenceMappingFile = Ide.getOracleHomeDirectory()+"/jdev/extensions/oracle.ateam.mobile.persistence/templates/new-persistence-mapping.xml";
+      final URL url = URLFactory.newFileURL(newPersistenceMappingFile);
+      mop = new PersistenceMappingLoader().loadJaxbModel(url);
     }
 
     for (DataObjectInfo dataObject: dataObjects)
@@ -101,12 +105,15 @@ public class PersistenceMappingGenerator
 
   private void createDescriptor(DataObjectInfo dataObject)
   {
-    ClassMappingDescriptor classMappingDescriptor = findDescriptor(dataObject.getClassName());
+    String fullyQualifiedClassName = dataObject.getFullyQualifiedClassName();
+    ClassMappingDescriptor classMappingDescriptor = findDescriptor(fullyQualifiedClassName);
     if (classMappingDescriptor == null)
     {
       classMappingDescriptor = objectFactory.createClassMappingDescriptor();
-      mop.getClassMappingDescriptor().add(classMappingDescriptor);
-      classMappingDescriptor.setClassName(dataObject.getClassName());
+      // add as last but one, so we keep data synch action desc at the bottom
+      int pos = mop.getClassMappingDescriptor().size()==0 ? 0 : mop.getClassMappingDescriptor().size()-1;
+      mop.getClassMappingDescriptor().add(pos,classMappingDescriptor);
+      classMappingDescriptor.setClassName(fullyQualifiedClassName);
     }
     classMappingDescriptor.setDateFormat(dataObject.getPayloadDateFormat());
     classMappingDescriptor.setDateTimeFormat(dataObject.getPayloadDateTimeFormat());
@@ -118,7 +125,7 @@ public class PersistenceMappingGenerator
     {
       service = objectFactory.createCrudServiceClass();
       classMappingDescriptor.setCrudServiceClass(service);
-      service.setClassName(model.getServicePackageName() + "." + dataObject.getRootDataObject().getClassName());
+      service.setClassName(dataObject.getRootDataObject().getFullyQualifiedServiceClassName());
       service.setAutoIncrementPrimaryKey(true);
       if (dataObject.getParent() == null)
       {
@@ -187,6 +194,7 @@ public class PersistenceMappingGenerator
         setHeaderParams(jaxbMethod);
       }
       setMethodPropertiesAndParams(jaxbMethod, dataObject.getFindAllMethod());
+      jaxbMethod.setDeleteLocalRows(dataObject.isDeleteLocalRows());
     }
     if (dataObject.getFindMethod() != null)
     {
@@ -202,7 +210,7 @@ public class PersistenceMappingGenerator
     }
     for (DCMethod findAllInParentMethod: dataObject.getFindAllInParentMethods())
     {
-      Method jaxbMethod = findMethod(methods, findAllInParentMethod.getAccessorAttribute());
+      Method jaxbMethod = findMethod(methods.getFindAllInParentMethod(), findAllInParentMethod.getAccessorAttribute());
       if (jaxbMethod == null)
       {
         jaxbMethod = objectFactory.createMethod();
@@ -214,7 +222,7 @@ public class PersistenceMappingGenerator
     }
     for (DCMethod getAsParentMethod: dataObject.getGetAsParentMethods())
     {
-      Method jaxbMethod = findMethod(methods, getAsParentMethod.getAccessorAttribute());
+      Method jaxbMethod = findMethod(methods.getGetAsParentMethod(), getAsParentMethod.getAccessorAttribute());
       if (jaxbMethod == null)
       {
         jaxbMethod = objectFactory.createMethod();
@@ -299,6 +307,7 @@ public class PersistenceMappingGenerator
       }
       jaxbMethod.setUri(wizardMethod.getName());
       jaxbMethod.setConnectionName(wizardMethod.getConnectionName());
+//      jaxbMethod.setRequestType(RequestType.fromValue(wizardMethod.getRequestType()));
       jaxbMethod.setRequestType(wizardMethod.getRequestType());
       jaxbMethod.setSendDataObjectAsPayload(wizardMethod.isSendSerializedDataObjectAsPayload());
     }
@@ -334,10 +343,13 @@ public class PersistenceMappingGenerator
     DirectMapping mapping = objectFactory.createDirectMapping();
     attributeMappings.getDirectMapping().add(mapping);
     mapping.setAttributeName(attr.getAttrName());
+    mapping.setKeyAttribute(attr.isKeyAttribute());
+    mapping.setJavaType(attr.getJavaTypeFullName());
     mapping.setColumnName(attr.getColumnName());
     mapping.setColumnDataType(attr.getColumnType());
     if (attr.getParentReferenceAttribute()!=null)
     {
+      mapping.setParentClass(attr.getParentDataObject().getFullyQualifiedClassName());      
       mapping.setParentAttributeName(attr.getParentReferenceAttribute().getAttrName());      
     }
     mapping.setPayloadAttributeName(attr.getPayloadName());
@@ -352,7 +364,7 @@ public class PersistenceMappingGenerator
     mapping.setAccessorMethod(acc.getChildAccessorMethod().getName());
     mapping.setAttributeName(acc.getChildAccessorName());
     mapping.setPayloadAttributeName(acc.getChildAccessorPayloadName());
-    mapping.setReferenceClassName(acc.getChildDataObject().getClassName());
+    mapping.setReferenceClassName(acc.getChildDataObject().getFullyQualifiedClassName());
     mapping.setSendAsArrayIfOnlyOneEntry(true);
     for (AccessorInfo.AttributeMapping attrMapping: acc.getAttributeMappings())
     {
@@ -371,7 +383,7 @@ public class PersistenceMappingGenerator
     attributeMappings.getOneToOneMapping().add(mapping);
     mapping.setAccessorMethod(acc.getParentAccessorMethod().getName());
     mapping.setAttributeName(acc.getParentAccessorName());
-    mapping.setReferenceClassName(acc.getParentDataObject().getClassName());
+    mapping.setReferenceClassName(acc.getParentDataObject().getFullyQualifiedClassName());
     for (AccessorInfo.AttributeMapping attrMapping: acc.getAttributeMappings())
     {
       ForeignKeyColumnReference columnReference = objectFactory.createForeignKeyColumnReference();
@@ -398,10 +410,10 @@ public class PersistenceMappingGenerator
     }
   }
 
-  private Method findMethod(Methods methods, String name)
+  private Method findMethod(List<Method> methods, String name)
   {
     Method found = null;
-    for (Method method: methods.getFindAllInParentMethod())
+    for (Method method: methods)
     {
       if (method.getName().equals(name))
       {

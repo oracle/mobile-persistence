@@ -7,6 +7,10 @@ import java.util.logging.Level;
 
 import oracle.adfmf.framework.dt.editor.FrameworkXmlEditorConstants;
 
+import oracle.ateam.sample.mobile.dt.model.jaxb.MobileObjectPersistence;
+
+import oracle.bali.xml.addin.SchemaRegistryAddin;
+import oracle.bali.xml.addin.XMLEditorAddin;
 import oracle.bali.xml.addin.XMLSourceNode;
 import oracle.bali.xml.grammar.GrammarException;
 import oracle.bali.xml.grammar.GrammarProvider;
@@ -14,6 +18,7 @@ import oracle.bali.xml.grammar.schema.SchemaGrammarProvider;
 import oracle.bali.xml.gui.jdev.JDevXmlContext;
 
 import oracle.ide.model.Element;
+import oracle.ide.xml.XMLRecognizer;
 
 /**
  * PersistenceMappingNode class is derived from XMLSourceNode. The XMLSourceNode
@@ -38,11 +43,17 @@ public class PersistenceMappingNode
   @Override
   public GrammarProvider createGrammarProvider(JDevXmlContext context)
   {
-    System.err.println("********************* SDX *************");
+    System.err.println("************* PersistenceMappingNode Class Registered **************");
+    System.out.println("************* PersistenceMappingNode Class Registered **************");
     final GrammarProvider superGP = super.createGrammarProvider(context);
     final SchemaGrammarProvider sgp = new SchemaGrammarProvider(superGP);
-    final URL url = getClass().getClassLoader().getResource("xsd/PersistenceMapping.xsd");
-    System.err.println("XSD URL:  "+url);
+    final URL url = Thread.currentThread().getContextClassLoader().getResource("xsd/persistenceMapping.xsd");
+    SchemaRegistryAddin.registerSchema(url,".xml");
+    XMLEditorAddin.register(PersistenceMappingNode.class,".xml",true,false);
+    XMLRecognizer.mapNamespaceElemToClass("http://www.oracle.com/ateam/mobile/persistenceMapping", "mobileObjectPersistence", PersistenceMappingNode.class);
+//    XMLRecognizer.mapRootElementToClass("mobileObjectPersistence", PersistenceMappingNode.class);
+//    XMLRecognizer.mapSchemaInstanceToClass("xsd/persistenceMapping.xsd","mobileObjectPersistence", PersistenceMappingNode.class);
+
 
     try
     {

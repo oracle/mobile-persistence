@@ -23,8 +23,8 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element ref="{http://www.oracle.com/ateam/mobile/persistenceMapping}attributeMappings" minOccurs="0"/>
  *         &lt;element ref="{http://www.oracle.com/ateam/mobile/persistenceMapping}methods" minOccurs="0"/>
  *       &lt;/sequence>
- *       &lt;attribute name="className" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="persisted" type="{http://www.w3.org/2001/XMLSchema}boolean" />
+ *       &lt;attribute name="className" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="persisted" type="{http://www.w3.org/2001/XMLSchema}boolean" default="true" />
  *       &lt;attribute name="dateFormat" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="dateTimeFormat" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="orderBy" type="{http://www.w3.org/2001/XMLSchema}string" />
@@ -48,7 +48,7 @@ public class ClassMappingDescriptor
   protected Table table;
   protected AttributeMappings attributeMappings;
   protected Methods methods;
-  @XmlAttribute(name = "className")
+  @XmlAttribute(name = "className", required = true)
   protected String className;
   @XmlAttribute(name = "persisted")
   protected Boolean persisted;
@@ -197,9 +197,16 @@ public class ClassMappingDescriptor
    *     {@link Boolean }
    *
    */
-  public Boolean isPersisted()
+  public boolean isPersisted()
   {
-    return persisted;
+    if (persisted == null)
+    {
+      return true;
+    }
+    else
+    {
+      return persisted;
+    }
   }
 
   /**

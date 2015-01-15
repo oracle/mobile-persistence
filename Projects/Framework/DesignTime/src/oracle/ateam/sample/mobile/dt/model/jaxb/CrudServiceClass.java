@@ -17,14 +17,14 @@ import javax.xml.bind.annotation.XmlType;
  * &lt;complexType>
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;attribute name="className" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="autoIncrementPrimaryKey" type="{http://www.w3.org/2001/XMLSchema}boolean" />
+ *       &lt;attribute name="className" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="autoIncrementPrimaryKey" type="{http://www.w3.org/2001/XMLSchema}boolean" default="true" />
  *       &lt;attribute name="localPersistenceManager" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="remotePersistenceManager" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="remoteReadInBackground" type="{http://www.w3.org/2001/XMLSchema}boolean" />
- *       &lt;attribute name="remoteWriteInBackground" type="{http://www.w3.org/2001/XMLSchema}boolean" />
- *       &lt;attribute name="showWebServiceInvocationErrors" type="{http://www.w3.org/2001/XMLSchema}boolean" />
- *       &lt;attribute name="autoQuery" type="{http://www.w3.org/2001/XMLSchema}boolean" />
+ *       &lt;attribute name="remoteReadInBackground" type="{http://www.w3.org/2001/XMLSchema}boolean" default="true" />
+ *       &lt;attribute name="remoteWriteInBackground" type="{http://www.w3.org/2001/XMLSchema}boolean" default="true" />
+ *       &lt;attribute name="showWebServiceInvocationErrors" type="{http://www.w3.org/2001/XMLSchema}boolean" default="true" />
+ *       &lt;attribute name="autoQuery" type="{http://www.w3.org/2001/XMLSchema}boolean" default="true" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -38,7 +38,7 @@ import javax.xml.bind.annotation.XmlType;
 public class CrudServiceClass
 {
 
-  @XmlAttribute(name = "className")
+  @XmlAttribute(name = "className", required = true)
   protected String className;
   @XmlAttribute(name = "autoIncrementPrimaryKey")
   protected Boolean autoIncrementPrimaryKey;
@@ -89,9 +89,16 @@ public class CrudServiceClass
    *     {@link Boolean }
    *
    */
-  public Boolean isAutoIncrementPrimaryKey()
+  public boolean isAutoIncrementPrimaryKey()
   {
-    return autoIncrementPrimaryKey;
+    if (autoIncrementPrimaryKey == null)
+    {
+      return true;
+    }
+    else
+    {
+      return autoIncrementPrimaryKey;
+    }
   }
 
   /**
@@ -167,9 +174,16 @@ public class CrudServiceClass
    *     {@link Boolean }
    *
    */
-  public Boolean isRemoteReadInBackground()
+  public boolean isRemoteReadInBackground()
   {
-    return remoteReadInBackground;
+    if (remoteReadInBackground == null)
+    {
+      return true;
+    }
+    else
+    {
+      return remoteReadInBackground;
+    }
   }
 
   /**
@@ -193,9 +207,16 @@ public class CrudServiceClass
    *     {@link Boolean }
    *
    */
-  public Boolean isRemoteWriteInBackground()
+  public boolean isRemoteWriteInBackground()
   {
-    return remoteWriteInBackground;
+    if (remoteWriteInBackground == null)
+    {
+      return true;
+    }
+    else
+    {
+      return remoteWriteInBackground;
+    }
   }
 
   /**
@@ -219,9 +240,16 @@ public class CrudServiceClass
    *     {@link Boolean }
    *
    */
-  public Boolean isShowWebServiceInvocationErrors()
+  public boolean isShowWebServiceInvocationErrors()
   {
-    return showWebServiceInvocationErrors;
+    if (showWebServiceInvocationErrors == null)
+    {
+      return true;
+    }
+    else
+    {
+      return showWebServiceInvocationErrors;
+    }
   }
 
   /**
@@ -245,9 +273,16 @@ public class CrudServiceClass
    *     {@link Boolean }
    *
    */
-  public Boolean isAutoQuery()
+  public boolean isAutoQuery()
   {
-    return autoQuery;
+    if (autoQuery == null)
+    {
+      return true;
+    }
+    else
+    {
+      return autoQuery;
+    }
   }
 
   /**

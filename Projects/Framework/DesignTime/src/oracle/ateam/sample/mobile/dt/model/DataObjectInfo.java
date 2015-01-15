@@ -46,6 +46,9 @@ public class DataObjectInfo
   private String payloadListElementName;
   private String payloadRowElementName;
   private String className;
+  private String serviceClassName;
+  private String packageName;
+  private String servicePackageName;
   private String accessorPath;
   private boolean collection;
   private DataObjectInfo parent = null;
@@ -71,8 +74,9 @@ public class DataObjectInfo
   private String orderBy;
   private boolean xmlPayload = true;
   private boolean persisted = false;
+  private boolean existing = false;
 
-  Map<AttributeInfo,AttributeInfo> parentAttrMappings = new HashMap<AttributeInfo,AttributeInfo>();
+//  Map<AttributeInfo,AttributeInfo> parentAttrMappings = new HashMap<AttributeInfo,AttributeInfo>();
     
   public DataObjectInfo(NamedDefinition accessorDef, StructureDefinition beanDef, boolean isCollection,DataObjectInfo parent)
   {
@@ -155,6 +159,60 @@ public class DataObjectInfo
     }
     name = name.substring(0,1).toUpperCase()+name.substring(1);
     return name;
+  }
+
+  public void setServiceClassName(String serviceClassName)
+  {
+    this.serviceClassName = serviceClassName;
+  }
+
+  public String getServiceClassName()
+  {
+    if (serviceClassName==null)
+    {
+      return getClassName()+"Service";
+    }
+    return serviceClassName;
+  }
+
+  public String getFullyQualifiedClassName()
+  {
+    return getPackageName()+"."+getClassName();
+  }
+
+  public String getFullyQualifiedServiceClassName()
+  {
+    return getServicePackageName()+"."+getServiceClassName();
+  }
+
+  public void setPackageName(String packageName)
+  {
+    this.packageName = packageName;
+  }
+
+  public String getPackageName()
+  {
+    return packageName;
+  }
+
+  public void setServicePackageName(String servicePackageName)
+  {
+    this.servicePackageName = servicePackageName;
+  }
+
+  public String getServicePackageName()
+  {
+    return servicePackageName;
+  }
+
+  public void setExisting(boolean existing)
+  {
+    this.existing = existing;
+  }
+
+  public boolean isExisting()
+  {
+    return existing;
   }
 
   public void setGenerate(Boolean generate)
@@ -395,15 +453,15 @@ public class DataObjectInfo
     return parent;
   }
 
-  public void addParentAttrMapping(AttributeInfo childAttr, AttributeInfo parentAttr)
-  {
-    parentAttrMappings.put(childAttr, parentAttr);
-  }
-
-  public Map<AttributeInfo, AttributeInfo> getParentAttrMappings()
-  {
-    return parentAttrMappings;
-  }
+//  public void addParentAttrMapping(AttributeInfo childAttr, AttributeInfo parentAttr)
+//  {
+//    parentAttrMappings.put(childAttr, parentAttr);
+//  }
+//
+//  public Map<AttributeInfo, AttributeInfo> getParentAttrMappings()
+//  {
+//    return parentAttrMappings;
+//  }
 
   public void setAccessorMethodInParent(String accessorMethodInParent)
   {

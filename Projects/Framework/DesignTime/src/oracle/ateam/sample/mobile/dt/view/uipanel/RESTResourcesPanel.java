@@ -14,6 +14,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -34,13 +35,14 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableColumn;
 
-import oracle.ateam.sample.mobile.dt.controller.parser.PersistenceMappingLoader;
+import oracle.ateam.sample.mobile.dt.controller.PersistenceMappingLoader;
 import oracle.ateam.sample.mobile.dt.controller.parser.RESTResourceDataObjectParser;
 import oracle.ateam.sample.mobile.dt.model.BusinessObjectGeneratorModel;
 import oracle.ateam.sample.mobile.dt.model.DCMethod;
 import oracle.ateam.sample.mobile.dt.model.DCMethodParameter;
 import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
 import oracle.ateam.sample.mobile.dt.model.HeaderParam;
+import oracle.ateam.sample.mobile.dt.model.jaxb.MobileObjectPersistence;
 import oracle.ateam.sample.mobile.dt.view.editor.PayloadButtonCellEditor;
 import oracle.ateam.sample.mobile.dt.view.uimodel.HeaderParamTableModel;
 import oracle.ateam.sample.mobile.dt.view.uimodel.RestResourcesTableModel;
@@ -280,8 +282,13 @@ public class RESTResourcesPanel
       new RESTResourceDataObjectParser(resources, connectionName, connectionUri, headerParams, pathParams,flattenNestedObjects.isSelected());
     model.setDataObjectInfos(dataObjectParser.run());
     PersistenceMappingLoader loader = new PersistenceMappingLoader();
-    List<DataObjectInfo> existingDataObjects =  loader.run();
-    model.getDataObjectInfos().addAll(existingDataObjects);
+    MobileObjectPersistence jaxbModel = loader.loadJaxbModel();
+    model.setExistingPersistenceMappingModel(jaxbModel);
+    if (jaxbModel!=null)
+    {
+      Collection<DataObjectInfo> existingDataObjects =  loader.run(jaxbModel);
+      model.getDataObjectInfos().addAll(existingDataObjects);      
+    }
     model.setRestfulWebService(true);
   }
 

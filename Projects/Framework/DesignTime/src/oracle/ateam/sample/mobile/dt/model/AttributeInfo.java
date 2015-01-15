@@ -32,6 +32,8 @@ public class AttributeInfo
   private String attrName;
   private String payloadName;
   private AttributeInfo parentReferenceAttribute;
+  private DataObjectInfo parentDataObject;
+
 
   static
   {
@@ -85,11 +87,12 @@ public class AttributeInfo
     }
   }
 
-  public AttributeInfo(String name, AttributeInfo referenceAttribute)
+  public AttributeInfo(String name, DataObjectInfo parentDataObject, AttributeInfo referenceAttribute)
   {
     this.attrName = StringUtils.startWithLowerCase(StringUtils.toCamelCase(name));
     this.javaTypeFullName = referenceAttribute.getJavaTypeFullName();
     this.columnType = referenceAttribute.getColumnType();
+    this.parentDataObject = parentDataObject;
     this.parentReferenceAttribute = referenceAttribute;
   }
 
@@ -165,6 +168,16 @@ public class AttributeInfo
       return javaTypeFullName.substring(lastDotPos + 1);
     }
     return javaTypeFullName;
+  }
+
+  public void setParentDataObject(DataObjectInfo parentDataObject)
+  {
+    this.parentDataObject = parentDataObject;
+  }
+
+  public DataObjectInfo getParentDataObject()
+  {
+    return parentDataObject;
   }
 
   public String getColumnName()

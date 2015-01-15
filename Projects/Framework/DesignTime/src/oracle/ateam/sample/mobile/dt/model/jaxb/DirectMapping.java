@@ -17,11 +17,14 @@ import javax.xml.bind.annotation.XmlType;
  * &lt;complexType>
  *   &lt;complexContent>
  *     &lt;extension base="{http://www.oracle.com/ateam/mobile/persistenceMapping}attributeMapping">
- *       &lt;attribute name="columnName" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="columnDataType" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="required" type="{http://www.w3.org/2001/XMLSchema}boolean" />
- *       &lt;attribute name="persisted" type="{http://www.w3.org/2001/XMLSchema}boolean" />
+ *       &lt;attribute name="columnName" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="columnDataType" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="required" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
+ *       &lt;attribute name="persisted" type="{http://www.w3.org/2001/XMLSchema}boolean" default="true" />
+ *       &lt;attribute name="parentClass" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="parentAttributeName" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="javaType" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="keyAttribute" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
  *     &lt;/extension>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -36,16 +39,22 @@ public class DirectMapping
   extends AttributeMapping
 {
 
-  @XmlAttribute(name = "columnName")
+  @XmlAttribute(name = "columnName", required = true)
   protected String columnName;
-  @XmlAttribute(name = "columnDataType")
+  @XmlAttribute(name = "columnDataType", required = true)
   protected String columnDataType;
   @XmlAttribute(name = "required")
   protected Boolean required;
   @XmlAttribute(name = "persisted")
   protected Boolean persisted;
+  @XmlAttribute(name = "parentClass")
+  protected String parentClass;
   @XmlAttribute(name = "parentAttributeName")
   protected String parentAttributeName;
+  @XmlAttribute(name = "javaType")
+  protected String javaType;
+  @XmlAttribute(name = "keyAttribute")
+  protected Boolean keyAttribute;
 
   /**
    * Gets the value of the columnName property.
@@ -107,9 +116,16 @@ public class DirectMapping
    *     {@link Boolean }
    *
    */
-  public Boolean isRequired()
+  public boolean isRequired()
   {
-    return required;
+    if (required == null)
+    {
+      return false;
+    }
+    else
+    {
+      return required;
+    }
   }
 
   /**
@@ -133,9 +149,16 @@ public class DirectMapping
    *     {@link Boolean }
    *
    */
-  public Boolean isPersisted()
+  public boolean isPersisted()
   {
-    return persisted;
+    if (persisted == null)
+    {
+      return true;
+    }
+    else
+    {
+      return persisted;
+    }
   }
 
   /**
@@ -149,6 +172,32 @@ public class DirectMapping
   public void setPersisted(Boolean value)
   {
     this.persisted = value;
+  }
+
+  /**
+   * Gets the value of the parentClass property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getParentClass()
+  {
+    return parentClass;
+  }
+
+  /**
+   * Sets the value of the parentClass property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setParentClass(String value)
+  {
+    this.parentClass = value;
   }
 
   /**
@@ -175,6 +224,65 @@ public class DirectMapping
   public void setParentAttributeName(String value)
   {
     this.parentAttributeName = value;
+  }
+
+  /**
+   * Gets the value of the javaType property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getJavaType()
+  {
+    return javaType;
+  }
+
+  /**
+   * Sets the value of the javaType property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setJavaType(String value)
+  {
+    this.javaType = value;
+  }
+
+  /**
+   * Gets the value of the keyAttribute property.
+   *
+   * @return
+   *     possible object is
+   *     {@link Boolean }
+   *
+   */
+  public boolean isKeyAttribute()
+  {
+    if (keyAttribute == null)
+    {
+      return false;
+    }
+    else
+    {
+      return keyAttribute;
+    }
+  }
+
+  /**
+   * Sets the value of the keyAttribute property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link Boolean }
+   *
+   */
+  public void setKeyAttribute(Boolean value)
+  {
+    this.keyAttribute = value;
   }
 
 }

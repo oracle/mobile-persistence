@@ -16,6 +16,8 @@ import oracle.adfdt.model.objects.DataControl;
 
 import oracle.ateam.sample.mobile.dt.controller.parser.DataControlDataObjectParser;
 
+import oracle.ateam.sample.mobile.dt.model.jaxb.MobileObjectPersistence;
+
 import oracle.ide.Ide;
 
 import oracle.javatools.db.DBObjectProvider;
@@ -26,7 +28,9 @@ public class BusinessObjectGeneratorModel {
 
 //  private static final String DEFAULT_PACKAGE_PROPERTY = "defaultPackage";
 
-    private String dataControlName;
+    private MobileObjectPersistence existingPersistenceMappingModel;
+
+  private String dataControlName;
     private DataControl dataControl;
     private int dataControlIndex;
     private String packageName ;
@@ -44,6 +48,27 @@ public class BusinessObjectGeneratorModel {
   private boolean overwriteDataObjectClasses = true;
   private boolean overwriteServiceObjectClasses = false;
   private boolean enableUsageTracking = false;
+  private boolean useJDK_1_4_Style = false;
+
+  public void setUseJDK_1_4_Style(boolean useJDK_1_4_Style)
+  {
+    this.useJDK_1_4_Style = useJDK_1_4_Style;
+  }
+
+  public boolean isUseJDK_1_4_Style()
+  {
+    return useJDK_1_4_Style;
+  }
+
+  public void setExistingPersistenceMappingModel(MobileObjectPersistence existingPersistenceMappingModel)
+  {
+    this.existingPersistenceMappingModel = existingPersistenceMappingModel;
+  }
+
+  public MobileObjectPersistence getExistingPersistenceMappingModel()
+  {
+    return existingPersistenceMappingModel;
+  }
 
   public void setEnableUsageTracking(boolean enableUsageTracking)
   {

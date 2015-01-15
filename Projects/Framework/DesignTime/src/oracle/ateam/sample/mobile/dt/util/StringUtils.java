@@ -23,6 +23,15 @@ import java.util.StringTokenizer;
 public class StringUtils
 {
 
+  public static String convertEmptyStringToNull(String value)
+  {
+    if (value!=null && value.trim().equals(""))
+    {
+      return null;
+    }
+    return value;
+  }
+  
   public static String getGetterMethodName(String attrName)
   {
     return "get" + initCap(attrName);

@@ -25,8 +25,8 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element ref="{http://www.oracle.com/ateam/mobile/persistenceMapping}foreignKeyColumnReference" maxOccurs="unbounded"/>
  *       &lt;/sequence>
  *       &lt;attribute name="accessorMethod" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="referenceClassName" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="sendAsArrayIfOnlyOneEntry" type="{http://www.w3.org/2001/XMLSchema}boolean" />
+ *       &lt;attribute name="referenceClassName" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="sendAsArrayIfOnlyOneEntry" type="{http://www.w3.org/2001/XMLSchema}boolean" default="true" />
  *     &lt;/extension>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -48,7 +48,7 @@ public class OneToManyMapping
   protected List<ForeignKeyColumnReference> foreignKeyColumnReference;
   @XmlAttribute(name = "accessorMethod")
   protected String accessorMethod;
-  @XmlAttribute(name = "referenceClassName")
+  @XmlAttribute(name = "referenceClassName", required = true)
   protected String referenceClassName;
   @XmlAttribute(name = "sendAsArrayIfOnlyOneEntry")
   protected Boolean sendAsArrayIfOnlyOneEntry;
@@ -144,9 +144,16 @@ public class OneToManyMapping
    *     {@link Boolean }
    *
    */
-  public Boolean isSendAsArrayIfOnlyOneEntry()
+  public boolean isSendAsArrayIfOnlyOneEntry()
   {
-    return sendAsArrayIfOnlyOneEntry;
+    if (sendAsArrayIfOnlyOneEntry == null)
+    {
+      return true;
+    }
+    else
+    {
+      return sendAsArrayIfOnlyOneEntry;
+    }
   }
 
   /**
