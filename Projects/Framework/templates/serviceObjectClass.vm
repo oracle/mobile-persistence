@@ -11,7 +11,7 @@ import oracle.ateam.sample.mobile.v2.persistence.service.EntityCRUDService;
 import ${WSM.currentDataObject.fullyQualifiedClassName};
 
 
-public class ${WSM.currentDataObject.serviceclassName}
+public class ${WSM.currentDataObject.serviceClassName}
   extends EntityCRUDService<${WSM.currentDataObject.className}>
 {
 

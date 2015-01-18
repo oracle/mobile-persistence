@@ -16,6 +16,8 @@ import java.util.Map;
 import oracle.adfmf.util.KXmlUtil;
 import oracle.adfmf.util.XmlAnyDefinition;
 
+import oracle.ateam.sample.mobile.util.MessageUtils;
+
 
 /**
  * Class that maps to the top-level node in the persistenceMapping XML file
@@ -24,8 +26,8 @@ public class ObjectPersistenceMapping
   extends XmlAnyDefinition
 {
   private static ObjectPersistenceMapping instance = null;
-  private Map classMappingDescriptors = null;
-  private Map OAuthConfigSet = null;
+  private Map<String,ClassMappingDescriptor> classMappingDescriptors = null;
+  private Map<String,OAuthConfig> OAuthConfigSet = null;
 
   public ObjectPersistenceMapping()
   {
@@ -44,40 +46,29 @@ public class ObjectPersistenceMapping
         // we use mobile-object-persistence as top node name so we can edit it inside JDev!
         topNode =
           (ObjectPersistenceMapping) KXmlUtil.loadFromXml(is, ObjectPersistenceMapping.class,
-                                                          "mobile-object-persistence");
+                                                          "mobileObjectPersistence");
       }
       catch (Exception e)
       {
-        // we used object-persistence in old versions, need to re-init input`stream as well, otherwise node not found
-        is =
-          Thread.currentThread().getContextClassLoader().getResourceAsStream(PersistenceConfig.getPersistenceMappingXML());
-        topNode =
-          (ObjectPersistenceMapping) KXmlUtil.loadFromXml(is, ObjectPersistenceMapping.class, "object-persistence");
+        MessageUtils.handleError(e);
       }
       instance = topNode;
     }
     return instance;
   }
 
-  public String getName()
-  {
-    return getChildDefinition("name").getText();
-  }
-
   /**
    * Returs map with fully-qualified class name as the key and associated ClassMappingDescriptoras instance as value
    * @return
    */
-  public Map getClassMappingDescriptors()
+  public Map<String,ClassMappingDescriptor> getClassMappingDescriptors()
   {
     if (classMappingDescriptors == null)
     {
-      classMappingDescriptors = new HashMap();
-      XmlAnyDefinition classDescriptorsContainer = this.getChildDefinition("class-mapping-descriptors");
-      List descriptors = classDescriptorsContainer.getChildDefinitions("class-mapping-descriptor");
-      for (int i = 0; i < descriptors.size(); i++)
+      classMappingDescriptors = new HashMap<String,ClassMappingDescriptor>();
+      List<XmlAnyDefinition> descriptors = this.getChildDefinitions("classMappingDescriptor");
+      for (XmlAnyDefinition descriptor : descriptors)
       {
-        XmlAnyDefinition descriptor = (XmlAnyDefinition) descriptors.get(i);
         ClassMappingDescriptor cmd = new ClassMappingDescriptor(descriptor);
         classMappingDescriptors.put(cmd.getClazz().getName(), cmd);
       }
@@ -92,23 +83,22 @@ public class ObjectPersistenceMapping
    */
   public ClassMappingDescriptor findClassMappingDescriptor(String className)
   {
-    return (ClassMappingDescriptor) getClassMappingDescriptors().get(className);
+    return getClassMappingDescriptors().get(className);
   }
 
   /**
    * Return OAuth configurations as defined in persistenceMapping.xml
    * @return
    */
-  public Map getOAuthConfigMap()
+  public Map<String,OAuthConfig> getOAuthConfigMap()
   {
     if (OAuthConfigSet == null)
     {
-      OAuthConfigSet = new HashMap();
-      XmlAnyDefinition configSet = this.getChildDefinition("oauth-config-set");
-      List configDefs = configSet.getChildDefinitions("oauth-config");
-      for (int i = 0; i < configDefs.size(); i++)
+      OAuthConfigSet = new HashMap<String,OAuthConfig>();
+      XmlAnyDefinition configSet = this.getChildDefinition("oauthConfigSet");
+      List<XmlAnyDefinition> configDefs = configSet.getChildDefinitions("oauthConfig");
+      for (XmlAnyDefinition configDef : configDefs)
       {
-        XmlAnyDefinition configDef = (XmlAnyDefinition) configDefs.get(i);
         OAuthConfig oauthConfig = new OAuthConfig(configDef);
         OAuthConfigSet.put(oauthConfig.getConfigName(), oauthConfig);
       }
@@ -123,6 +113,6 @@ public class ObjectPersistenceMapping
    */
   public OAuthConfig findOAuthConfig(String configName)
   {
-    return (OAuthConfig) getOAuthConfigMap().get(configName);
+    return getOAuthConfigMap().get(configName);
   }
 }

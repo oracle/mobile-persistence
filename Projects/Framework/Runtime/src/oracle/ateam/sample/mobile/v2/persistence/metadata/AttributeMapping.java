@@ -39,7 +39,7 @@ public abstract class AttributeMapping
   
   public String getAttributeName()
   {
-    return getChildDefinition("attribute-name").getText();    
+    return getAttributeStringValue("attributeName");    
   }
 
   /**
@@ -48,12 +48,7 @@ public abstract class AttributeMapping
    */
   public String getAttributeNameInPayload()
   {
-    if (getChildDefinition("payload-attribute-name")!=null)
-    {
-      String value = getChildDefinition("payload-attribute-name").getText();    
-      return value;
-    }
-    return null;
+    return getAttributeStringValue("payloadAttributeName");
   }
 
   public abstract String getColumnName();
@@ -82,20 +77,14 @@ public abstract class AttributeMapping
     return classMappingDescriptor;
   }
 
-  public void setPrimaryKeyMapping(boolean primaryKeyMapping)
-  {
-    this.primaryKeyMapping = primaryKeyMapping;
-  }
-
   public boolean isPrimaryKeyMapping()
   {
-    return primaryKeyMapping;
+    return getAttributeBooleanValue("keyAttribute",false);
   }
   
   public boolean isPersisted()
   {
-    XmlAnyDefinition anyDefinition = getChildDefinition("persisted");
-    return anyDefinition!=null ? !("false".equalsIgnoreCase(anyDefinition.getText())) : true;    
+    return getAttributeBooleanValue("persisted",true);  
   }
 
 }

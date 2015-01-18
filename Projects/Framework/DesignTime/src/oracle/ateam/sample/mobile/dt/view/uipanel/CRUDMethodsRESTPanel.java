@@ -350,10 +350,10 @@ public class CRUDMethodsRESTPanel
     getCurrentDataObject().setDeleteMethod(findOrCreateMethod(deleteField, deleteRequestType));
     getCurrentDataObject().setDeleteLocalRows(deleteLocalRowsField.isSelected());
     String orderBy = convertToSQLOrderBy(sortField.getText());
-    getCurrentDataObject().setSortOrder(sortField.getText());
-    getCurrentDataObject().setOrderBy(orderBy);
-    getCurrentDataObject().setPayloadDateFormat(dateFormatField.getText());
-    getCurrentDataObject().setPayloadDateTimeFormat(dateTimeFormatField.getText());
+    getCurrentDataObject().setSortOrder(StringUtils.convertEmptyStringToNull(sortField.getText()));
+    getCurrentDataObject().setOrderBy(StringUtils.convertEmptyStringToNull(orderBy));
+    getCurrentDataObject().setPayloadDateFormat(StringUtils.convertEmptyStringToNull(dateFormatField.getText()));
+    getCurrentDataObject().setPayloadDateTimeFormat(StringUtils.convertEmptyStringToNull(dateTimeFormatField.getText()));
   }
 
   public void setCurrentDataObject(DataObjectInfo currentDataObject)

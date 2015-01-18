@@ -27,7 +27,7 @@ public class StringUtils
    * @param delimiter The delimiting string.
    * @return a List with all the elements as String
    */
-  public static List stringToList(String string, String delimiter)
+  public static List<String> stringToList(String string, String delimiter)
   {
     // TO DO: it is arguable that e.g. "one,,two" should return a List with
     // with "one" and "two" as elements, instead of "one", null, "two"
@@ -39,17 +39,17 @@ public class StringUtils
 
     if (delimiter == null)
     {
-      List returnList = new ArrayList();
+      List<String> returnList = new ArrayList<String>();
       returnList.add(string);
       return returnList;
     }
 
     StringTokenizer tokenizer = new StringTokenizer(string, delimiter);
-    List elements = new ArrayList();
+    List<String> elements = new ArrayList<String>();
     String element = null;
     while (tokenizer.hasMoreTokens())
     {
-      element = ((String) tokenizer.nextToken()).trim();
+      element = tokenizer.nextToken().trim();
       elements.add(element);
     }
     return elements;

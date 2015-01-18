@@ -43,13 +43,12 @@ public class AttributeMappingOneToOne
 
   public String getAccessorMethod()
   {
-    XmlAnyDefinition anyDefinition = getChildDefinition("accessor-method");
-    return anyDefinition!=null? anyDefinition.getText() : null;                                
+    return getAttributeStringValue("accessorMethod");                              
   }
   
   public ClassMappingDescriptor getReferenceClassMappingDescriptor()
   {
-    String refClassName = getChildDefinition("reference-class").getText();
+    String refClassName = getAttributeStringValue("referenceClassName");
     return ObjectPersistenceMapping.getInstance().findClassMappingDescriptor(refClassName);                                          
   }
 
@@ -59,15 +58,14 @@ public class AttributeMappingOneToOne
    * the value is the matching column name in the parent table that maps to the reference entity of this mapping.
    * @return
    */
-  public Map getColumnMappings()
+  public Map<String,String> getColumnMappings()
   {
-    List fieldReferences = getChildDefinition("foreign-key").getChildDefinitions("column-reference");
-    Map columnMappings = new HashMap();
-    for (int i = 0; i < fieldReferences.size(); i++)
+    List<XmlAnyDefinition> fieldReferences = getChildDefinitions("foreignKeyColumnReference");
+    Map<String,String> columnMappings = new HashMap<String,String>();
+    for (XmlAnyDefinition ref :fieldReferences)
     {
-      XmlAnyDefinition ref = (XmlAnyDefinition) fieldReferences.get(i);
-      String source = (String) ref.getChildDefinition("source-column").getAttributeValue("name");
-      String target = (String) ref.getChildDefinition("target-column").getAttributeValue("name");
+      String source = ref.getAttributeStringValue("sourceColumn");
+      String target = ref.getAttributeStringValue("targetColumn");
       columnMappings.put(source, target);
     }
     return columnMappings;

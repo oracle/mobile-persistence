@@ -211,7 +211,7 @@ public class PersistenceMappingLoader
     doi.addAttribute(attr);
     attr.setColumnType(dm.getColumnDataType());
     attr.setKeyAttribute(dm.isKeyAttribute());
-    attr.setPayloadName(dm.getParentAttributeName());
+    attr.setPayloadName(dm.getPayloadAttributeName());
     attr.setPersisted(dm.isPersisted());
     attr.setRequired(dm.isRequired());
     if (dm.getParentAttributeName()!=null)

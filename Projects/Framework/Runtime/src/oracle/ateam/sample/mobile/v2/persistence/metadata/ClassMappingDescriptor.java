@@ -26,20 +26,20 @@ import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 public class ClassMappingDescriptor
   extends XmlAnyDefinition
 {
-  private static final String FIND_ALL_METHOD = "find-all-method";
-  private static final String FIND_ALL_IN_PARENT_METHOD = "find-all-in-parent-method";
-  private static final String GET_AS_PARENT_METHOD = "get-as-parent-method";
-  private static final String GET_CANONICAL_METHOD = "get-canonical-method";
-  private static final String FIND_METHOD = "find-method";
-  private static final String CREATE_METHOD = "create-method";
-  private static final String UPDATE_METHOD = "update-method";
-  private static final String MERGE_METHOD = "merge-method";
-  private static final String REMOVE_METHOD = "remove-method";
-  private static final String CUSTOM_METHOD = "custom-method";
-  private ArrayList attributeMappings = null;
-  private ArrayList attributeMappingsDirect = null;
-  private ArrayList attributeMappingsOneToOne = null;
-  private ArrayList attributeMappingsOneToMany = null;
+  private static final String FIND_ALL_METHOD = "findAllMethod";
+  private static final String FIND_ALL_IN_PARENT_METHOD = "findAllInParentMethod";
+  private static final String GET_AS_PARENT_METHOD = "getAsParentMethod";
+  private static final String GET_CANONICAL_METHOD = "getCanonicalMethod";
+  private static final String FIND_METHOD = "findMethod";
+  private static final String CREATE_METHOD = "createMethod";
+  private static final String UPDATE_METHOD = "updateMethod";
+  private static final String MERGE_METHOD = "mergeMethod";
+  private static final String REMOVE_METHOD = "removeMethod";
+  private static final String CUSTOM_METHOD = "customMethod";
+  private List<AttributeMapping> attributeMappings = null;
+  private List<AttributeMappingDirect> attributeMappingsDirect = null;
+  private List<AttributeMappingOneToOne> attributeMappingsOneToOne = null;
+  private List<AttributeMappingOneToMany> attributeMappingsOneToMany = null;
   private String orderBy = null;
 
 
@@ -72,37 +72,33 @@ public class ClassMappingDescriptor
 
   public String getClassName()
   {
-    return getChildDefinition("class").getText();
+    return getAttributeStringValue("className");
   }
 
   public String getCRUDServiceClassName()
   {
-    XmlAnyDefinition serviceNode = getChildDefinition("crud-service-class");
+    XmlAnyDefinition serviceNode = getCrudServiceClassNode();
     String className = null;
-    if (serviceNode!=null && serviceNode.getChildDefinition("class-name")!=null)
+    if (serviceNode!=null)
     {
-      className = serviceNode.getChildDefinition("class-name").getText();      
-    }
-    else
-    {
-      // old XML structure: text node
-       className = serviceNode.getText();      
+      className = serviceNode.getAttributeStringValue("className");      
     }
     return className;
+  }
+
+  protected XmlAnyDefinition getCrudServiceClassNode()
+  {
+    return getChildDefinition("crudServiceClass");
   }
 
   public String getLocalPersistenceManagerClassName()
   {
     // old XML structure: text node
     String className = DBPersistenceManager.class.getName();
-    XmlAnyDefinition serviceNode = getChildDefinition("crud-service-class");
+    XmlAnyDefinition serviceNode = getCrudServiceClassNode();
     if (serviceNode!=null)
     {
-      XmlAnyDefinition node= serviceNode.getChildDefinition("local-persistence-manager");
-      if (node!=null)
-      {
-        className = node.getText();
-      }      
+        className = serviceNode.getAttributeStringValue("localPersistenceManager");
     }
     return className;
   }
@@ -110,14 +106,10 @@ public class ClassMappingDescriptor
   public String getRemotePersistenceManagerClassName()
   {
     String className = null;
-    XmlAnyDefinition serviceNode = getChildDefinition("crud-service-class");
+    XmlAnyDefinition serviceNode = getCrudServiceClassNode();
     if (serviceNode!=null)
     {
-      XmlAnyDefinition node= serviceNode.getChildDefinition("remote-persistence-manager");
-      if (node!=null)
-      {
-        className = node.getText();
-      }
+      className = serviceNode.getAttributeStringValue("remotePersistenceManager");
     }
     return className;
   }
@@ -126,14 +118,10 @@ public class ClassMappingDescriptor
   {
     // old XML structure: text node
     boolean value = true;
-    XmlAnyDefinition serviceNode = getChildDefinition("crud-service-class");
+    XmlAnyDefinition serviceNode = getCrudServiceClassNode();
     if (serviceNode!=null)
     {
-      XmlAnyDefinition node= serviceNode.getChildDefinition("remote-read-in-background");
-      if (node!=null)
-      {
-        value = "true".equals(node.getText());
-      }
+      value = serviceNode.getAttributeBooleanValue("remoteReadInBackground",true);
     }  
     return value;
   }
@@ -142,14 +130,10 @@ public class ClassMappingDescriptor
   {
     // old XML structure: text node
     boolean value = true;
-    XmlAnyDefinition serviceNode = getChildDefinition("crud-service-class");
+    XmlAnyDefinition serviceNode = getCrudServiceClassNode();
     if (serviceNode!=null)
     {
-      XmlAnyDefinition node= serviceNode.getChildDefinition("remote-write-in-background");
-      if (node!=null)
-      {
-        value = "true".equals(node.getText());
-      }
+      value = serviceNode.getAttributeBooleanValue("remoteWriteInBackground",true);
     }  
     return value;
   }
@@ -157,14 +141,10 @@ public class ClassMappingDescriptor
   public boolean isAutoIncrementPrimaryKey()
   {
     boolean value = true;
-    XmlAnyDefinition serviceNode = getChildDefinition("crud-service-class");
+    XmlAnyDefinition serviceNode = getCrudServiceClassNode();
     if (serviceNode!=null)
     {
-      XmlAnyDefinition node= serviceNode.getChildDefinition("auto-increment-primary-key");
-      if (node!=null)
-      {
-        value = "true".equals(node.getText());
-      }
+      value = serviceNode.getAttributeBooleanValue("autoIncrementPrimaryKey",true);
     } 
     return value;
   }
@@ -172,14 +152,10 @@ public class ClassMappingDescriptor
     public boolean isShowWebServiceInvocationErrors()
     {
       boolean value = true;
-      XmlAnyDefinition serviceNode = getChildDefinition("crud-service-class");
+      XmlAnyDefinition serviceNode = getCrudServiceClassNode();
       if (serviceNode!=null)
       {
-        XmlAnyDefinition node= serviceNode.getChildDefinition("show-web-service-invocation-errors");
-        if (node!=null)
-        {
-          value = "true".equals(node.getText());
-        }
+        value = serviceNode.getAttributeBooleanValue("showWebServiceInvocationErrors",true);
       } 
       return value;
     }
@@ -188,14 +164,10 @@ public class ClassMappingDescriptor
     {
       // old XML structure: text node
       boolean value = true;
-      XmlAnyDefinition serviceNode = getChildDefinition("crud-service-class");
+      XmlAnyDefinition serviceNode = getCrudServiceClassNode();
       if (serviceNode!=null)
       {
-        XmlAnyDefinition node= serviceNode.getChildDefinition("auto-query");
-        if (node!=null)
-        {
-          value = "true".equals(node.getText());
-        }
+        value = serviceNode.getAttributeBooleanValue("autoQuery",true);
       }  
       return value;
     }
@@ -211,8 +183,8 @@ public class ClassMappingDescriptor
     {
       return orderBy;
     }
-    XmlAnyDefinition xmlOrderBy = getChildDefinition("order-by");
-    return xmlOrderBy!=null && !"".equals(xmlOrderBy) ? xmlOrderBy.getText() : null;
+    String orderBy = getAttributeStringValue("orderBy");
+    return !"".equals(orderBy) ? orderBy : null;
   }
 
   /**
@@ -240,64 +212,55 @@ public class ClassMappingDescriptor
 
   public String getTableName()
   {
-    return getChildDefinition("table")!=null ? (String) getChildDefinition("table").getText() : null;
+    return getChildDefinition("table")!=null ? (String) getChildDefinition("table").getAttributeStringValue("name") : null;
   }
 
   public boolean isPersisted()
   {
-    XmlAnyDefinition anyDefinition = getChildDefinition("persisted");
-    return anyDefinition!=null ? !("false".equalsIgnoreCase(anyDefinition.getText())) : true;    
+    return  !("false".equalsIgnoreCase(getAttributeStringValue("persisted")));
   }
 
-  public List getAttributeMappings()
+  public List<AttributeMapping> getAttributeMappings()
   {
     if (attributeMappings == null)
     {
-      attributeMappings = new ArrayList();
-      attributeMappingsDirect = new ArrayList();
-      attributeMappingsOneToOne = new ArrayList();
-      attributeMappingsOneToMany = new ArrayList();
-      XmlAnyDefinition classDescriptorsContainer = this.getChildDefinition("attribute-mappings");
-      List descriptors = classDescriptorsContainer.getChildDefinitions("attribute-mapping");
-      List keyColumnNames = Arrays.asList(getPrimaryKeyColumnNames());
-      for (int i = 0; i < descriptors.size(); i++)
+      attributeMappings = new ArrayList<AttributeMapping>();
+      attributeMappingsDirect = new ArrayList<AttributeMappingDirect>();
+      attributeMappingsOneToOne = new ArrayList<AttributeMappingOneToOne>();
+      attributeMappingsOneToMany = new ArrayList<AttributeMappingOneToMany>();
+      XmlAnyDefinition attributeMappingsNode = this.getChildDefinition("attributeMappings");
+      attributeMappingsDirect = new ArrayList<AttributeMappingDirect>();
+      List<XmlAnyDefinition> directNodes = attributeMappingsNode.getChildDefinitions("directMapping");
+      for (XmlAnyDefinition directNode : directNodes)
       {
-        XmlAnyDefinition descriptor = (XmlAnyDefinition) descriptors.get(i);
-        AttributeMapping instance = null;
-        String mappingType = (String) descriptor.getAttributeValue("xsi:type");
-        if (mappingType==null)
-        {
-          mappingType = (String) descriptor.getAttributeValue("type");
-        }
-        if ("direct-mapping".equals(mappingType))
-        {
-          instance = new AttributeMappingDirect(descriptor);
-          attributeMappings.add(instance);
-          attributeMappingsDirect.add(instance);
-        }
-        else if ("one-to-one-mapping".equals(mappingType))
-        {
-          instance = new AttributeMappingOneToOne(descriptor);
-          attributeMappings.add(instance);
-          attributeMappingsOneToOne.add(instance);
-        }
-        else if ("one-to-many-mapping".equals(mappingType))
-        {
-          instance = new AttributeMappingOneToMany(descriptor);
-          attributeMappings.add(instance);
-          attributeMappingsOneToMany.add(instance);
-        }
-        instance.setClassMappingDescriptor(this);
-        if (keyColumnNames.contains(instance.getColumnName()))
-        {
-          instance. setPrimaryKeyMapping(true);
-        }
+        AttributeMappingDirect mapping = new AttributeMappingDirect(directNode);
+        attributeMappingsDirect.add(mapping);
+        mapping.setClassMappingDescriptor(this);
       }
+
+      List<XmlAnyDefinition> oneToOneNodes = attributeMappingsNode.getChildDefinitions("oneToOneMapping");
+      for (XmlAnyDefinition oneToOneNode : oneToOneNodes)
+      {
+        AttributeMappingOneToOne mapping = new AttributeMappingOneToOne(oneToOneNode);
+        attributeMappingsOneToOne.add(mapping);
+        mapping.setClassMappingDescriptor(this);
+      }
+
+      List<XmlAnyDefinition> oneToManyNodes = attributeMappingsNode.getChildDefinitions("oneToManyMapping");
+      for (XmlAnyDefinition oneToManyNode : oneToManyNodes)
+      {
+        AttributeMappingOneToMany mapping = new AttributeMappingOneToMany(oneToManyNode);
+        attributeMappingsOneToMany.add(mapping);
+        mapping.setClassMappingDescriptor(this);
+      }
+      attributeMappings.addAll(attributeMappingsDirect);
+      attributeMappings.addAll(attributeMappingsOneToOne);
+      attributeMappings.addAll(attributeMappingsOneToMany);
     }
     return attributeMappings;
   }
 
-  public List getAttributeMappingsDirect()
+  public List<AttributeMappingDirect> getAttributeMappingsDirect()
   {
     if (attributeMappings == null)
     {
@@ -306,13 +269,12 @@ public class ClassMappingDescriptor
     return attributeMappingsDirect;
   }
 
-  public List getAttributeMappingsDirectParentPopulated()
+  public List<AttributeMappingDirect> getAttributeMappingsDirectParentPopulated()
   {
-    List ppMappings = new ArrayList();
-    List directs = getAttributeMappingsDirect();
-    for (int i = 0; i < directs.size(); i++)
+    List<AttributeMappingDirect> ppMappings = new ArrayList<AttributeMappingDirect>();
+    List<AttributeMappingDirect> directs = getAttributeMappingsDirect();
+    for (AttributeMappingDirect mapping : directs)
     {
-      AttributeMappingDirect mapping = (AttributeMappingDirect) directs.get(i);
       if (mapping.getParentAttribute()!=null)
       {
         ppMappings.add(mapping);
@@ -321,7 +283,7 @@ public class ClassMappingDescriptor
     return ppMappings;
   }
 
-  public List getAttributeMappingsOneToOne()
+  public List<AttributeMappingOneToOne> getAttributeMappingsOneToOne()
   {
     if (attributeMappings == null)
     {
@@ -330,15 +292,15 @@ public class ClassMappingDescriptor
     return attributeMappingsOneToOne;
   }
 
-  public List getAttributeMappingsDirectAndOneToOne()
+  public List<AttributeMapping> getAttributeMappingsDirectAndOneToOne()
   {
-    List mappings = new ArrayList();
+    List<AttributeMapping> mappings = new ArrayList<AttributeMapping>();
     mappings.addAll(getAttributeMappingsDirect());
     mappings.addAll(getAttributeMappingsOneToOne());
     return mappings;
   }
 
-  public List getAttributeMappingsOneToMany()
+  public List<AttributeMappingOneToMany> getAttributeMappingsOneToMany()
   {
     if (attributeMappings == null)
     {
@@ -350,10 +312,9 @@ public class ClassMappingDescriptor
   public AttributeMapping findAttributeMappingByName(String attributeName)
   {
     AttributeMapping found = null;
-    List descriptors = getAttributeMappings();
-    for (int i = 0; i < descriptors.size(); i++)
+    List<AttributeMapping> mappings = getAttributeMappings();
+    for (AttributeMapping mapping : mappings)
     {
-      AttributeMapping mapping = (AttributeMapping) descriptors.get(i);
       if (mapping.getAttributeName().equals(attributeName))
       {
         found = mapping;
@@ -366,10 +327,9 @@ public class ClassMappingDescriptor
   public AttributeMapping findAttributeMappingByPayloadName(String payloadName)
   {
     AttributeMapping found = null;
-    List descriptors = getAttributeMappings();
-    for (int i = 0; i < descriptors.size(); i++)
+    List<AttributeMapping> mappings = getAttributeMappings();
+    for (AttributeMapping mapping : mappings)
     {
-      AttributeMapping mapping = (AttributeMapping) descriptors.get(i);
       if (payloadName.equals(mapping.getAttributeNameInPayload()))      
       {
         found = mapping;
@@ -382,10 +342,9 @@ public class ClassMappingDescriptor
   public AttributeMapping findAttributeMappingByColumnName(String columnName)
   {
     AttributeMapping found = null;
-    List descriptors = getAttributeMappings();
-    for (int i = 0; i < descriptors.size(); i++)
+    List<AttributeMapping> mappings = getAttributeMappings();
+    for (AttributeMapping mapping : mappings)
     {
-      AttributeMapping mapping = (AttributeMapping) descriptors.get(i);
       if (columnName.equals(mapping.getColumnName()))
       {
         found = mapping;
@@ -400,14 +359,13 @@ public class ClassMappingDescriptor
    * Use this method for composite PK 
    * @return
    */
-  public String[] getPrimaryKeyColumnNames()
+  public List<String> getPrimaryKeyColumnNames()
   {
-    List fields = getChildDefinition("primary-key").getChildDefinitions("column-name");
-    String[] attrs = new String[fields.size()];
-    for (int i = 0; i < fields.size(); i++)
+    List<XmlAnyDefinition> fields = getChildDefinition("table").getChildDefinitions("primaryKeyColumn");
+    List<String> attrs = new ArrayList<String>();
+    for (XmlAnyDefinition field : fields)
     {
-      XmlAnyDefinition field = (XmlAnyDefinition) fields.get(i);
-      attrs[i] = (String) field.getText();      
+      attrs.add(field.getAttributeStringValue("name"));      
     }
     return attrs;
   }
@@ -416,15 +374,17 @@ public class ClassMappingDescriptor
    * Use this method for composite PK 
    * @return
    */
-  public AttributeMapping[] getPrimaryKeyAttributeMappings()
+  public List<AttributeMapping> getPrimaryKeyAttributeMappings()
   {
-    String[] cols = getPrimaryKeyColumnNames();
-    AttributeMapping[] mappings = new AttributeMapping[cols.length];
-    for (int i = 0; i < cols.length; i++)
+    List<AttributeMapping> keyAttrs = new ArrayList<AttributeMapping>();
+    for (AttributeMapping mapping : getAttributeMappings())
     {
-      mappings[i] = findAttributeMappingByColumnName(cols[i]);
+      if (mapping.isPrimaryKeyMapping())
+      {
+        keyAttrs.add(mapping);
+      }
     }
-    return mappings;
+    return keyAttrs;
   }
 
 
@@ -432,78 +392,90 @@ public class ClassMappingDescriptor
    * Use this method for composite PK 
    * @return
    */
-  public String[] getPrimaryKeyAttributeNames()
+  public List<String> getPrimaryKeyAttributeNames()
   {
-    AttributeMapping[] mappings =  getPrimaryKeyAttributeMappings();
-    String[] attrs = new String[mappings.length];
-    for (int i = 0; i < attrs.length; i++)
+    List<AttributeMapping> mappings =  getPrimaryKeyAttributeMappings();
+    List<String> attrs = new ArrayList<String>();
+    for (AttributeMapping mapping : mappings)
     {
-      attrs[i] = mappings[i].getAttributeName();
+      attrs.add(mapping.getAttributeName());
     }
     return attrs;
   }
   
   public String getDateFormat()
   {
-    XmlAnyDefinition anyDefinition = getChildDefinition("date-format");
-    return anyDefinition!=null ? anyDefinition.getText() : "yyyy-MM-dd";
+    return getAttributeStringValue("dateFormat");
   }
 
   public String getDateTimeFormat()
   {
-    XmlAnyDefinition anyDefinition = getChildDefinition("date-time-format");
-    return anyDefinition!=null ? anyDefinition.getText() : "yyyy-MM-dd hh:mm";
+    return getAttributeStringValue("dateTimeFormat");
+  }
+
+  public XmlAnyDefinition getMethodNode(String methodName)
+  {
+    if (getChildDefinition("methods")!=null)
+    {
+      return getChildDefinition("methods").getChildDefinition(methodName);      
+    }
+    return null;
+  }
+
+  public List<XmlAnyDefinition> getMethodNodes(String methodName)
+  {
+    if (getChildDefinition("methods")!=null)
+    {
+      return getChildDefinition("methods").getChildDefinitions(methodName);      
+    }
+    return new ArrayList<XmlAnyDefinition>();
   }
 
   public String getFindAllMethodName()
   {
-    return (String) (isCreateSupported() ? getChildDefinition(FIND_ALL_METHOD).getAttributeValue("name") : null);
+    return (String) (isCreateSupported() ? getMethodNode(FIND_ALL_METHOD).getAttributeValue("name") : null);
   }
 
   public String getFindMethodName()
   {
-    return (String) (isCreateSupported() ? getChildDefinition(FIND_METHOD).getAttributeValue("name") : null);
+    return (String) (isCreateSupported() ? getMethodNode(FIND_METHOD).getAttributeValue("name") : null);
   }
 
   public String getCreateMethodName()
   {
-    return (String) (isCreateSupported() ? getChildDefinition(CREATE_METHOD).getAttributeValue("name") : null);
+    return (String) (isCreateSupported() ? getMethodNode(CREATE_METHOD).getAttributeValue("name") : null);
   }
 
   public String getUpdateMethodName()
   {
-    return (String) (isCreateSupported() ? getChildDefinition(UPDATE_METHOD).getAttributeValue("name") : null);
+    return (String) (isCreateSupported() ? getMethodNode(UPDATE_METHOD).getAttributeValue("name") : null);
   }
 
   public String getMergeMethodName()
   {
-    return (String) (isCreateSupported() ? getChildDefinition(MERGE_METHOD).getAttributeValue("name") : null);
+    return (String) (isCreateSupported() ? getMethodNode(MERGE_METHOD).getAttributeValue("name") : null);
   }
 
   public String getRemoveMethodName()
   {
-    return (String) (isCreateSupported() ? getChildDefinition(REMOVE_METHOD).getAttributeValue("name") : null);
+    return (String) (isCreateSupported() ? getMethodNode(REMOVE_METHOD).getAttributeValue("name") : null);
   }
 
   public boolean isFindAllSupported()
   {
-    return this.getChildDefinition(FIND_ALL_METHOD)!=null;    
+    return this.getMethodNode(FIND_ALL_METHOD)!=null;    
   }
 
   public boolean isFindAllInParentSupported(String accessorAttribute)
   {
-    List methods = getChildDefinitions(FIND_ALL_IN_PARENT_METHOD);
+    List<XmlAnyDefinition> methods = getMethodNodes(FIND_ALL_IN_PARENT_METHOD);
     boolean found = false;
-    if (methods!=null)
+    for (XmlAnyDefinition method : methods)
     {
-      for (int i = 0; i < methods.size(); i++)
+      if (accessorAttribute.equals(method.getAttributeValue("name")))
       {
-        XmlAnyDefinition method = (XmlAnyDefinition) methods.get(i);
-        if (accessorAttribute.equals(method.getAttributeValue("name")))
-        {
-          found = true;
-          break;
-        }
+        found = true;
+        break;
       }
     }
     return found;
@@ -511,18 +483,14 @@ public class ClassMappingDescriptor
 
   public boolean isGetAsParentSupported(String accessorAttribute)
   {
-    List methods = getChildDefinitions(GET_AS_PARENT_METHOD);
+    List<XmlAnyDefinition> methods = getMethodNodes(GET_AS_PARENT_METHOD);
     boolean found = false;
-    if (methods!=null)
+    for (XmlAnyDefinition method : methods)
     {
-      for (int i = 0; i < methods.size(); i++)
+      if (accessorAttribute.equals(method.getAttributeValue("name")))
       {
-        XmlAnyDefinition method = (XmlAnyDefinition) methods.get(i);
-        if (accessorAttribute.equals(method.getAttributeValue("name")))
-        {
-          found = true;
-          break;
-        }
+        found = true;
+        break;
       }
     }
     return found;
@@ -530,32 +498,32 @@ public class ClassMappingDescriptor
 
   public boolean isFindSupported()
   {
-    return this.getChildDefinition(FIND_METHOD)!=null;    
+    return this.getMethodNode(FIND_METHOD)!=null;    
   }
 
   public boolean isGetCanonicalSupported()
   {
-    return this.getChildDefinition(GET_CANONICAL_METHOD)!=null;    
+    return this.getMethodNode(GET_CANONICAL_METHOD)!=null;    
   }
 
   public boolean isCreateSupported()
   {
-    return this.getChildDefinition(CREATE_METHOD)!=null || isMergeSupported();    
+    return this.getMethodNode(CREATE_METHOD)!=null || isMergeSupported();    
   }
 
   public boolean isUpdateSupported()
   {
-    return this.getChildDefinition(UPDATE_METHOD)!=null || isMergeSupported();    
+    return this.getMethodNode(UPDATE_METHOD)!=null || isMergeSupported();    
   }
 
   public boolean isMergeSupported()
   {
-    return this.getChildDefinition(MERGE_METHOD)!=null;    
+    return this.getMethodNode(MERGE_METHOD)!=null;    
   }
 
   public boolean isRemoveSupported()
   {
-    return this.getChildDefinition(REMOVE_METHOD)!=null;    
+    return this.getMethodNode(REMOVE_METHOD)!=null;    
   }
   
   public Method getMethod(String methodName)
@@ -566,23 +534,19 @@ public class ClassMappingDescriptor
   
   public Method getFindAllMethod()
   {
-    return isFindAllSupported() ? new Method(getChildDefinition(FIND_ALL_METHOD)) : null;
+    return isFindAllSupported() ? new Method(getMethodNode(FIND_ALL_METHOD)) : null;
   }
 
   public Method getFindAllInParentMethod(String accessorAttribute)
   {
-    List methods = getChildDefinitions(FIND_ALL_IN_PARENT_METHOD);
+    List<XmlAnyDefinition> xmlMethods = getMethodNodes(FIND_ALL_IN_PARENT_METHOD);
     Method method = null;
-    if (methods!=null)
+    for (XmlAnyDefinition xmlMethod : xmlMethods)
     {
-      for (int i = 0; i < methods.size(); i++)
+      if (accessorAttribute.equals(xmlMethod.getAttributeValue("name")))
       {
-        XmlAnyDefinition xmlMethod = (XmlAnyDefinition) methods.get(i);
-        if (accessorAttribute.equals(xmlMethod.getAttributeValue("name")))
-        {
-          method = new Method(xmlMethod);
-          break;
-        }
+        method = new Method(xmlMethod);
+        break;
       }
     }
     return method;
@@ -590,18 +554,14 @@ public class ClassMappingDescriptor
 
   public Method getGetAsParentMethod(String accessorAttribute)
   {
-    List methods = getChildDefinitions(GET_AS_PARENT_METHOD);
+    List<XmlAnyDefinition> xmlMethods = getMethodNodes(FIND_ALL_IN_PARENT_METHOD);
     Method method = null;
-    if (methods!=null)
-    {
-      for (int i = 0; i < methods.size(); i++)
+    for (XmlAnyDefinition xmlMethod : xmlMethods)
+    {  
+      if (accessorAttribute.equals(xmlMethod.getAttributeValue("name")))
       {
-        XmlAnyDefinition xmlMethod = (XmlAnyDefinition) methods.get(i);
-        if (accessorAttribute.equals(xmlMethod.getAttributeValue("name")))
-        {
-          method = new Method(xmlMethod);
-          break;
-        }
+        method = new Method(xmlMethod);
+        break;
       }
     }
     return method;
@@ -609,52 +569,48 @@ public class ClassMappingDescriptor
 
   public Method getGetCanonicalMethod()
   {
-    return isGetCanonicalSupported() ? new Method(getChildDefinition(GET_CANONICAL_METHOD)) : null;
+    return isGetCanonicalSupported() ? new Method(getMethodNode(GET_CANONICAL_METHOD)) : null;
   }
 
   public Method getFindMethod()
   {
-    return isFindSupported() ? new Method(getChildDefinition(FIND_METHOD)) : null;
+    return isFindSupported() ? new Method(getMethodNode(FIND_METHOD)) : null;
   }
 
   public Method getCreateMethod()
   {
-    XmlAnyDefinition anyDefinition = getChildDefinition(CREATE_METHOD);
+    XmlAnyDefinition anyDefinition = getMethodNode(CREATE_METHOD);
     return anyDefinition!=null ? new Method(anyDefinition) : null;
   }
 
   public Method getUpdateMethod()
   {
-    XmlAnyDefinition anyDefinition = getChildDefinition(UPDATE_METHOD);
+    XmlAnyDefinition anyDefinition = getMethodNode(UPDATE_METHOD);
     return anyDefinition!=null ? new Method(anyDefinition) : null;
   }
 
   public Method getMergeMethod()
   {
-    XmlAnyDefinition anyDefinition = getChildDefinition(MERGE_METHOD);
+    XmlAnyDefinition anyDefinition = getMethodNode(MERGE_METHOD);
     return anyDefinition!=null ? new Method(anyDefinition) : null;
   }
 
   public Method getRemoveMethod()
   {
-    XmlAnyDefinition anyDefinition = getChildDefinition(REMOVE_METHOD);
+    XmlAnyDefinition anyDefinition = getMethodNode(REMOVE_METHOD);
     return anyDefinition!=null ? new Method(anyDefinition) : null;
   }
 
   public Method getCustomMethod(String methodName)
   {
-    List methods = getChildDefinitions(CUSTOM_METHOD);
+    List<XmlAnyDefinition> methods = getMethodNodes(CUSTOM_METHOD);
     Method method = null;
-    if (methods!=null)
+    for (XmlAnyDefinition xmlMethod : methods)
     {
-      for (int i = 0; i < methods.size(); i++)
+      if (methodName.equals(xmlMethod.getAttributeValue("name")))
       {
-        XmlAnyDefinition xmlMethod = (XmlAnyDefinition) methods.get(i);
-        if (methodName.equals(xmlMethod.getAttributeValue("name")))
-        {
-          method = new Method(xmlMethod);
-          break;
-        }
+        method = new Method(xmlMethod);
+        break;
       }
     }
     return method;
@@ -662,15 +618,14 @@ public class ClassMappingDescriptor
 
   public boolean isDeleteLocalRowsOnFindAll()
   {
-    return isFindAllSupported() && "true".equals(getChildDefinition(FIND_ALL_METHOD).getAttributeValue("deleteLocalRows"));
+    return isFindAllSupported() && getMethodNode(FIND_ALL_METHOD).getAttributeBooleanValue("deleteLocalRows");
   }
       
   private Method findMatchingMethod(String[] elemNames, String methodName)
   {
     Method method = null;
-    for (int i = 0; i < elemNames.length; i++)
+    for (String elemName : elemNames)
     {
-      String elemName = elemNames[i];
       XmlAnyDefinition methodElem = getChildDefinition(elemName);
       if (methodElem!=null && methodElem.getAttributeValue("name").equals(methodName))
       {

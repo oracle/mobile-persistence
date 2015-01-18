@@ -51,10 +51,10 @@ public abstract class AbstractPersistenceManager implements PersistenceManager
     ObjectPersistenceMapping mapping = ObjectPersistenceMapping.getInstance();
     ClassMappingDescriptor descriptor = mapping.findClassMappingDescriptor(entity.getClass().getName());
     List bindParamInfos = new ArrayList();
-    AttributeMapping[] keyMappings = descriptor.getPrimaryKeyAttributeMappings();
-    for (int i = 0; i < keyMappings.length; i++)
+    List<AttributeMapping> keyMappings = descriptor.getPrimaryKeyAttributeMappings();
+    for (AttributeMapping keyMapping : keyMappings)
     {
-      BindParamInfo primaryKeyValue = constructBindParamInfo(entity, keyMappings[i]);
+      BindParamInfo primaryKeyValue = constructBindParamInfo(entity, keyMapping);
       bindParamInfos.add(primaryKeyValue);
     }
     return bindParamInfos;
@@ -71,10 +71,10 @@ public abstract class AbstractPersistenceManager implements PersistenceManager
     ObjectPersistenceMapping mapping = ObjectPersistenceMapping.getInstance();
     ClassMappingDescriptor descriptor = mapping.findClassMappingDescriptor(entityClass.getName());
     List bindParamInfos = new ArrayList();
-    AttributeMapping[] keyMappings = descriptor.getPrimaryKeyAttributeMappings();
-    for (int i = 0; i < keyMappings.length; i++)
+    List<AttributeMapping> keyMappings = descriptor.getPrimaryKeyAttributeMappings();
+    for (AttributeMapping keyMapping : keyMappings)
     {
-      BindParamInfo primaryKeyValue = constructBindParamInfo(entityClass, keyMappings[i]);
+      BindParamInfo primaryKeyValue = constructBindParamInfo(entityClass, keyMapping);
       bindParamInfos.add(primaryKeyValue);
     }
     return bindParamInfos;
@@ -277,15 +277,15 @@ public abstract class AbstractPersistenceManager implements PersistenceManager
    */
   protected boolean isAllPrimaryKeyBindParamInfosPopulated(ClassMappingDescriptor descriptor, List bindParamInfos)
   {
-    String[] attrs = descriptor.getPrimaryKeyAttributeNames();
+    List<String> attrs = descriptor.getPrimaryKeyAttributeNames();
     boolean OK = true;
-    for (int i = 0; i < attrs.length; i++)
+    for (int i = 0; i < attrs.size(); i++)
     {
       boolean attrPopulated = false;
       for (int j = 0; j < bindParamInfos.size(); j++)
       {
         BindParamInfo bpInfo = (BindParamInfo) bindParamInfos.get(j);
-        if (bpInfo.getAttributeName().equals(attrs[i]) && bpInfo.getValue() != null)
+        if (bpInfo.getAttributeName().equals(attrs.get(i)) && bpInfo.getValue() != null)
         {
           attrPopulated = true;
           break;

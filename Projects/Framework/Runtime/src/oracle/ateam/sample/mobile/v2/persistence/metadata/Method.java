@@ -19,8 +19,8 @@ import oracle.ateam.sample.mobile.util.StringUtils;
 public class Method extends XmlAnyDefinition
 {
   
-  private List params = null;
-  private List headerParams = null;
+  private List<MethodParameter> params = null;
+  private List<MethodHeaderParameter> headerParams = null;
   
   public Method(XmlAnyDefinition xmlAnyDefinition)
   {
@@ -29,47 +29,47 @@ public class Method extends XmlAnyDefinition
   
   public String getName()
   {
-    return (String) getAttributeValue("name");
+    return getAttributeStringValue("name");
   }
 
   public String getDataControlName()
   {
-    return (String) getAttributeValue("dataControlName");
+    return getAttributeStringValue("dataControlName");
   }
 
   public String getConnectionName()
   {
-    return (String) getAttributeValue("connectionName");
+    return getAttributeStringValue("connectionName");
   }
 
   public String getRequestType()
   {
-    return (String) getAttributeValue("requestType");
+    return getAttributeStringValue("requestType");
   }
   
   public String getRequestUri()
   {
-    return (String) getAttributeValue("uri");
+    return getAttributeStringValue("uri");
   }
 
   public String getPayloadElementName()
   {
-    return (String) getAttributeValue("payloadElementName");
+    return getAttributeStringValue("payloadElementName");
   }
 
   public String getPayloadRowElementName()
   {
-    return (String) getAttributeValue("payloadRowElementName");
+    return getAttributeStringValue("payloadRowElementName");
   }
 
   public boolean isSecured()
   {
-    return "true".equals(getAttributeValue("secured"));
+    return getAttributeBooleanValue("secured",false);
   }
 
   public boolean isSendDataObjectAsPayload()
   {
-    return "true".equals(getAttributeValue("sendDataObjectAsPayload"));
+    return getAttributeBooleanValue("sendDataObjectAsPayload",false);
   }
       
   /**
@@ -78,46 +78,46 @@ public class Method extends XmlAnyDefinition
    * is returned.
    * @return
    */
-  public List getAttributesToIgnore()
+  public List<String> getAttributesToIgnore()
   {
     String attrNames = (String) getAttributeValue("attributesToExclude");
     if (attrNames==null || attrNames.trim().equals(""))
     {
-      return new ArrayList();
+      return new ArrayList<String>();
     }
-    List attrs = StringUtils.stringToList(attrNames, ",");
+    List<String> attrs = StringUtils.stringToList(attrNames, ",");
     return attrs;
   }
 
   public String getOAuthConfigName()
   {
-    return (String) getAttributeValue("oauthConfig");
+    return getAttributeStringValue("oauthConfig");
   }
 
-  public List getParams()
+  public List<MethodParameter> getParams()
   {
     if (params==null)
     {
-      params = new ArrayList();
-      List paramElems = getChildDefinitions("parameter");
-      for (int i = 0; i < paramElems.size(); i++)
+      params = new ArrayList<MethodParameter>();
+      List<XmlAnyDefinition> paramElems = getChildDefinitions("parameter");
+      for (XmlAnyDefinition paramElem : paramElems)
       {
-        MethodParameter param = new XMLMethodParameter((XmlAnyDefinition) paramElems.get(i)); 
+        MethodParameter param = new XMLMethodParameter(paramElem); 
         params.add(param);
       }
     }
     return params;
   }
 
-  public List getHeaderParams()
+  public List<MethodHeaderParameter> getHeaderParams()
   {
     if (headerParams==null)
     {
-      headerParams = new ArrayList();
-      List paramElems = getChildDefinitions("header-parameter");
-      for (int i = 0; i < paramElems.size(); i++)
+      headerParams = new ArrayList<MethodHeaderParameter>();
+      List<XmlAnyDefinition> paramElems = getChildDefinitions("headerParameter");
+      for (XmlAnyDefinition paramElem : paramElems)
       {
-        MethodHeaderParameter param = new XMLMethodHeaderParameter((XmlAnyDefinition) paramElems.get(i)); 
+        MethodHeaderParameter param = new XMLMethodHeaderParameter(paramElem); 
         headerParams.add(param);
       }
     }

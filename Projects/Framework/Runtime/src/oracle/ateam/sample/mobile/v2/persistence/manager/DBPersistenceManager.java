@@ -56,6 +56,7 @@ import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.MessageUtils;
+import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
 
 
 /**
@@ -909,11 +910,10 @@ public class DBPersistenceManager
   public StringBuffer getSqlSelectFromPart(ClassMappingDescriptor descriptor)
   {
     StringBuffer sql = new StringBuffer(SQL_SELECT_KEYWORD);
-    List attributeMappings = descriptor.getAttributeMappingsDirect();
+    List<AttributeMappingDirect> attributeMappings = descriptor.getAttributeMappingsDirect();
     boolean first = true;
-    for (int i = 0; i < attributeMappings.size(); i++)
+    for (AttributeMappingDirect mapping : attributeMappings)
     {
-      AttributeMapping mapping = (AttributeMapping) attributeMappings.get(i);
       if (mapping.getColumnName()==null)
       {
         continue;
@@ -947,11 +947,11 @@ public class DBPersistenceManager
     {
       ClassMappingDescriptor classDescriptor =
         ((AttributeMapping) attributeMappings.get(0)).getClassMappingDescriptor();
-      AttributeMapping[] pkKeyMappings = classDescriptor.getPrimaryKeyAttributeMappings();
+      List<AttributeMapping> keyMappings = classDescriptor.getPrimaryKeyAttributeMappings();
       Class entityClass = classDescriptor.getClazz();
       while (resultSet.next())
       {
-        Object[] keyValue = getAttributeValuesFromResultSet(resultSet, pkKeyMappings, entityClass);
+        Object[] keyValue = getAttributeValuesFromResultSet(resultSet, keyMappings, entityClass);
         Entity entity = EntityCache.getInstance().findByUID(classDescriptor.getClazz(), keyValue);
         boolean entityInCache = entity != null;
         if (entityInCache)
@@ -1031,12 +1031,12 @@ public class DBPersistenceManager
     return EntityUtils.convertColumnValueToAttributeTypeIfNeeded(entityClass, mapping.getAttributeName(), sqlValue);      
   }
 
-  public Object[] getAttributeValuesFromResultSet(ResultSet resultSet, AttributeMapping[] mappings, Class entityClass)
+  public Object[] getAttributeValuesFromResultSet(ResultSet resultSet, List<AttributeMapping> mappings, Class entityClass)
   {
-    Object[] values = new Object[mappings.length];
-    for (int i = 0; i < mappings.length; i++)
+    Object[] values = new Object[mappings.size()];
+    for (int i = 0; i < mappings.size(); i++)
     {
-      values[i] = getAttributeValueFromResultSet(resultSet,mappings[i],entityClass);      
+      values[i] = getAttributeValueFromResultSet(resultSet,mappings.get(i),entityClass);      
     }
     return values;
   }

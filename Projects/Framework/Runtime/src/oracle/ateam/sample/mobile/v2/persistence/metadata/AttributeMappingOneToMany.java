@@ -55,25 +55,18 @@ public class AttributeMappingOneToMany
     
   public boolean isSendAsArrayIfOnlyOneEntry()
   {
-    XmlAnyDefinition sendArray = getChildDefinition("send-as-array-if-only-one-entry");
-    boolean value = true;
-    if (sendArray!=null)
-    {
-      value = "true".equalsIgnoreCase(sendArray.getText());
-    }
-    return value;                                  
+    return getAttributeBooleanValue("sendAsArrayIfOnlyOneEntry", true);                                  
   }
 
   public ClassMappingDescriptor getReferenceClassMappingDescriptor()
   {
-    String refClassName = getChildDefinition("reference-class").getText();
+    String refClassName = getAttributeStringValue("referenceClassName");
     return ObjectPersistenceMapping.getInstance().findClassMappingDescriptor(refClassName);                                          
   }
 
   public String getAccessorMethod()
   {
-    XmlAnyDefinition anyDefinition = getChildDefinition("accessor-method");
-    return anyDefinition!=null? anyDefinition.getText() : null;                                
+    return getAttributeStringValue("accessorMethod");                              
   }
 
   /**
@@ -82,15 +75,14 @@ public class AttributeMappingOneToMany
    * the value is the matching column name in the table that maps to the entity of this mapping.
    * @return
    */
-  public Map getColumnMappings()
+  public Map<String,String> getColumnMappings()
   {
-    List fieldReferences = getChildDefinition("target-foreign-key").getChildDefinitions("column-reference");
-    Map columnMappings = new HashMap();
-    for (int i = 0; i < fieldReferences.size(); i++)
+    List<XmlAnyDefinition> fieldReferences = getChildDefinitions("foreignKeyColumnReference");
+    Map<String,String> columnMappings = new HashMap<String,String>();
+    for (XmlAnyDefinition ref :fieldReferences)
     {
-      XmlAnyDefinition ref = (XmlAnyDefinition) fieldReferences.get(i);
-      String source = (String) ref.getChildDefinition("source-column").getAttributeValue("name");
-      String target = (String) ref.getChildDefinition("target-column").getAttributeValue("name");
+      String source = ref.getAttributeStringValue("sourceColumn");
+      String target = ref.getAttributeStringValue("targetColumn");
       columnMappings.put(source, target);
     }
     return columnMappings;

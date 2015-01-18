@@ -22,27 +22,27 @@ public class XMLMethodParameter extends XmlAnyDefinition implements MethodParame
 
   public String getName()
   {
-    return (String) getAttributeValue("name");
+    return getAttributeStringValue("name");
   }
 
   public String getValueProvider()
   {
-    return (String) getAttributeValue("valueProvider");
+    return getAttributeStringValue("valueProvider");
   }
 
   public String getDataObjectAttribute()
   {
-    return (String) getAttributeValue("dataObjectAttribute");
+    return getAttributeStringValue("dataObjectAttribute");
   }
 
   public String getValue()
   {
-    return (String) getAttributeValue("value");
+    return getAttributeStringValue("value");
   }
 
   public String getJavaType()
   {
-    return (String) getAttributeValue("javaType");
+    return getAttributeStringValue("javaType");
   }
 
   public Class getJavaTypeClass()
@@ -88,15 +88,7 @@ public class XMLMethodParameter extends XmlAnyDefinition implements MethodParame
   }
 
   public boolean isPathParam()
-  {
-    
-    String value = (String) getAttributeValue("pathParam");
-    if (value==null || "".equals(value))
-    {
-      // use old attr name for backwards compatibility
-      value = (String) getAttributeValue("uriParam");
-    }
-    return "true".equals(value);
+  {    
+    return getAttributeBooleanValue("pathParam",false);
   }
-  
 }
