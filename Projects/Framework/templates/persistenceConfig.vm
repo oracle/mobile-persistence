@@ -4,8 +4,8 @@ db.name=${WSM.workspaceName}.db
 # DB creation script
 ddl.script=META-INF/${WSM.workspaceName}.sql
 
-# Location ofXML mapping file in classpath
-persistence.mapping.xml=META-INF/persistenceMapping.xml
+# Location of XML mapping file in classpath
+persistence.mapping.xml=META-INF/persistence-mapping.xml
 
 # Usage tracking
 tracking.enabled=${WSM.enableUsageTracking}

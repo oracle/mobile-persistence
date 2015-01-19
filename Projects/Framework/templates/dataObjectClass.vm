@@ -1,4 +1,4 @@
-package ${WSM.packageName};
+package ${WSM.currentDataObject.packageName};
 
 #if (${WSM.currentDataObject.children.size()}>0)
 import java.util.Arrays;
@@ -14,6 +14,17 @@ import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 
   #foreach($type in ${WSM.currentDataObject.attributeImportTypes})
      import ${type};
+  #end
+
+  #foreach($child in ${WSM.currentDataObject.children})
+    #if (${child.childDataObject.packageName}!=${WSM.currentDataObject.packageName})
+      import ${child.childDataObject.fullyQualifiedClassName};
+    #end
+  #end
+  #foreach($parent in ${WSM.currentDataObject.parents})
+    #if (${parent.parentDataObject.packageName}!=${WSM.currentDataObject.packageName})
+      import ${parent.parentDataObject.fullyQualifiedClassName};
+    #end
   #end
 
 public class ${WSM.currentDataObject.className} extends Entity

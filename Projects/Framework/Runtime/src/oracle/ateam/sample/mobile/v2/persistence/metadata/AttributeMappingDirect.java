@@ -34,14 +34,17 @@ public class AttributeMappingDirect
   
   public String getColumnName()
   {
-    XmlAnyDefinition anyDefinition = getChildDefinition("column");
-    return (String) (anyDefinition != null? anyDefinition.getAttributeValue("name"): null);    
+    return getAttributeStringValue("columnName");
   }
 
   public String getParentAttribute()
   {
-    XmlAnyDefinition anyDefinition = getChildDefinition("parent-attribute-name");
-    return anyDefinition!=null ? anyDefinition.getText() : null;    
+    return getAttributeStringValue("parentAttributeName");
+  }
+
+  public String getParentAttributeClass()
+  {
+    return getAttributeStringValue("parentClass");
   }
 
   public boolean isDirectMapping()
@@ -51,8 +54,7 @@ public class AttributeMappingDirect
 
   public boolean isRequired()
   {
-    XmlAnyDefinition anyDefinition = getChildDefinition("required");
-    return anyDefinition!=null ? "true".equalsIgnoreCase(anyDefinition.getText()) : false;    
+    return getAttributeBooleanValue("required",false);
   }
 
 

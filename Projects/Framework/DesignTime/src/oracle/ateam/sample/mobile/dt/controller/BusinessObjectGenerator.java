@@ -82,7 +82,10 @@ public class BusinessObjectGenerator
     log.info(model.getLogTitle()+" started");
 
     // add extension libs
-    String[] libraries = new String[] { "A-Team Mobile Persistence Designtime", "A-Team Mobile Persistence Runtime"};
+    // Very strange: if there is other lib but the AMPA libs, the source editor shows all refernces to AMPA classes/methods red underlined!
+    // if we add one other strandard lib, doesn't matter which one, everything is fine again... Need to log bug...
+    // so, that's why Apache Ant is added here...
+    String[] libraries = new String[] { "A-Team Mobile Persistence Designtime", "A-Team Mobile Persistence Runtime", "Apache Ant"};
     JProjectUtil.addLibraries(project, libraries);
     log.info("Added A-Team Mobile Persistence Libraries to "+project.getShortLabel());
     JProjectUtil.addLibraries(appControllerProject, libraries);
@@ -96,24 +99,30 @@ public class BusinessObjectGenerator
     for (DataObjectInfo doi: model.getSelectedDataObjects())
     {
       model.setCurrentDataObject(doi);
-      URL sourceURL = FileUtils.getSourceURL(project, model.getPackageName(), doi.getClassName() + ".java");
+      // set fully qualified package name if new data object using generator options wizard page setting
+      if (!doi.isExisting())
+      {
+        doi.setPackageName(model.getPackageName());        
+        doi.setServicePackageName(model.getServicePackageName());
+      }
+      URL sourceURL = FileUtils.getSourceURL(project, doi.getPackageName(), doi.getClassName() + ".java");
       if (!FileUtils.fileExists(sourceURL) || model.isOverwriteDataObjectClasses())
       {
         String output = processor.processTemplate(model, "dataObjectClass.vm");
         FileUtils.addFileToProject(sourceURL, output, null);
         FileUtils.formatJavaFile(project, sourceURL);
-        log.info("Data object class "+model.getPackageName()+"."+doi.getClassName() + ".java"+" created in "+project.getShortLabel());        
+        log.info("Data object class "+doi.getFullyQualifiedClassName() + ".java"+" created in "+project.getShortLabel());        
       }
       if (doi.getParent()==null)
       {
         // top-level node, generate service class
-        sourceURL = FileUtils.getSourceURL(project, model.getServicePackageName(), doi.getClassName() + "Service.java");
+        sourceURL = FileUtils.getSourceURL(project, doi.getServicePackageName(), doi.getServiceClassName() + ".java");
         if (!FileUtils.fileExists(sourceURL) || model.isOverwriteServiceObjectClasses())
         {
           String output = processor.processTemplate(model, "serviceObjectClass.vm");
           FileUtils.addFileToProject(sourceURL, output, null);
           FileUtils.formatJavaFile(project, sourceURL);        
-          log.info("Service object class "+model.getServicePackageName()+"."+doi.getClassName() + "Service.java"+" created in "+project.getShortLabel());          
+          log.info("Service object class "+ doi.getFullyQualifiedServiceClassName() + ".java"+" created in "+project.getShortLabel());          
         }
       }
     }
@@ -141,18 +150,38 @@ public class BusinessObjectGenerator
     {
       Map<String,String> mappings = getExistingMappings(content);
       model.setExistingDescriptorMappings(new ArrayList<String>(mappings.values()));            
-    }
-    output = processor.processTemplate(model, "persistenceMapping.vm");
-    if (output!=null)
-    {
-      FileUtils.addFileToProject(sourceURL, output, null);      
-      verb = content!=null ? " updated " : " created ";
-      log.info("Object-relational mapping file "+fileName+verb+" in src/META-INF folder in "+appControllerProject.getShortLabel());
+      output = processor.processTemplate(model, "persistenceMapping.vm");
+      if (output!=null)
+      {
+        FileUtils.addFileToProject(sourceURL, output, null);      
+        verb = content!=null ? " updated " : " created ";
+        log.info("Object-relational mapping file "+fileName+verb+" in src/META-INF folder in "+appControllerProject.getShortLabel());
+      }
+      else
+      {
+        log.error("Error creating object-relational mapping file "+fileName+verb+" in src/META-INF folder in "+appControllerProject.getShortLabel());
+      //      throw new RuntimeException("Error parsing persistenceMapping.vm");
+      }
     }
     else
     {
-      log.error("Error creating object-relational mapping file "+fileName+verb+" in src/META-INF folder in "+appControllerProject.getShortLabel());
-//      throw new RuntimeException("Error parsing persistenceMapping.vm");
+      // generate new persistence-mapping.xml using jaxb model
+      fileName = "persistence-mapping.xml";
+      sourceURL = FileUtils.getSourceURL(appControllerProject, "META-INF", fileName);
+      InputStream is =FileUtils.getInputStream(sourceURL);
+      PersistenceMappingGenerator pmg = new PersistenceMappingGenerator(model);
+      output = pmg.run();
+      if (output!=null)
+      {
+        FileUtils.addFileToProject(sourceURL, output, null);      
+        verb = is!=null ? " updated " : " created ";
+        log.info("Object-relational mapping file "+fileName+verb+" in src/META-INF folder in "+appControllerProject.getShortLabel());
+      }
+      else
+      {
+        log.error("Error creating object-relational mapping file "+fileName+verb+" in src/META-INF folder in "+appControllerProject.getShortLabel());
+      //      throw new RuntimeException("Error parsing persistenceMapping.vm");
+      }
     }
 
     // generate config properties file

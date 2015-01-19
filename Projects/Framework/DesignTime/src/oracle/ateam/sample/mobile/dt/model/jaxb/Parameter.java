@@ -17,11 +17,11 @@ import javax.xml.bind.annotation.XmlType;
  * &lt;complexType>
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;attribute name="name" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="name" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="value" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="valueProvider" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="valueProvider" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="dataObjectAttribute" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="pathParam" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="pathParam" use="required" type="{http://www.w3.org/2001/XMLSchema}boolean" />
  *       &lt;attribute name="javaType" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -33,163 +33,168 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "")
 @XmlRootElement(name = "parameter")
-public class Parameter {
+public class Parameter
+{
 
-    @XmlAttribute(name = "name")
-    protected String name;
-    @XmlAttribute(name = "value")
-    protected String value;
-    @XmlAttribute(name = "valueProvider")
-    protected String valueProvider;
-    @XmlAttribute(name = "dataObjectAttribute")
-    protected String dataObjectAttribute;
-    @XmlAttribute(name = "pathParam")
-    protected String pathParam;
-    @XmlAttribute(name = "javaType")
-    protected String javaType;
+  @XmlAttribute(name = "name", required = true)
+  protected String name;
+  @XmlAttribute(name = "value")
+  protected String value;
+  @XmlAttribute(name = "valueProvider", required = true)
+  protected String valueProvider;
+  @XmlAttribute(name = "dataObjectAttribute")
+  protected String dataObjectAttribute;
+  @XmlAttribute(name = "pathParam", required = true)
+  protected boolean pathParam;
+  @XmlAttribute(name = "javaType")
+  protected String javaType;
 
-    /**
-     * Gets the value of the name property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getName() {
-        return name;
-    }
+  /**
+   * Gets the value of the name property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getName()
+  {
+    return name;
+  }
 
-    /**
-     * Sets the value of the name property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setName(String value) {
-        this.name = value;
-    }
+  /**
+   * Sets the value of the name property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setName(String value)
+  {
+    this.name = value;
+  }
 
-    /**
-     * Gets the value of the value property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getValue() {
-        return value;
-    }
+  /**
+   * Gets the value of the value property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getValue()
+  {
+    return value;
+  }
 
-    /**
-     * Sets the value of the value property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setValue(String value) {
-        this.value = value;
-    }
+  /**
+   * Sets the value of the value property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setValue(String value)
+  {
+    this.value = value;
+  }
 
-    /**
-     * Gets the value of the valueProvider property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getValueProvider() {
-        return valueProvider;
-    }
+  /**
+   * Gets the value of the valueProvider property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getValueProvider()
+  {
+    return valueProvider;
+  }
 
-    /**
-     * Sets the value of the valueProvider property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setValueProvider(String value) {
-        this.valueProvider = value;
-    }
+  /**
+   * Sets the value of the valueProvider property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setValueProvider(String value)
+  {
+    this.valueProvider = value;
+  }
 
-    /**
-     * Gets the value of the dataObjectAttribute property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getDataObjectAttribute() {
-        return dataObjectAttribute;
-    }
+  /**
+   * Gets the value of the dataObjectAttribute property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getDataObjectAttribute()
+  {
+    return dataObjectAttribute;
+  }
 
-    /**
-     * Sets the value of the dataObjectAttribute property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setDataObjectAttribute(String value) {
-        this.dataObjectAttribute = value;
-    }
+  /**
+   * Sets the value of the dataObjectAttribute property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setDataObjectAttribute(String value)
+  {
+    this.dataObjectAttribute = value;
+  }
 
-    /**
-     * Gets the value of the pathParam property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getPathParam() {
-        return pathParam;
-    }
+  /**
+   * Gets the value of the pathParam property.
+   *
+   */
+  public boolean isPathParam()
+  {
+    return pathParam;
+  }
 
-    /**
-     * Sets the value of the pathParam property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setPathParam(String value) {
-        this.pathParam = value;
-    }
+  /**
+   * Sets the value of the pathParam property.
+   *
+   */
+  public void setPathParam(boolean value)
+  {
+    this.pathParam = value;
+  }
 
-    /**
-     * Gets the value of the javaType property.
-     *
-     * @return
-     *     possible object is
-     *     {@link String }
-     *
-     */
-    public String getJavaType() {
-        return javaType;
-    }
+  /**
+   * Gets the value of the javaType property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getJavaType()
+  {
+    return javaType;
+  }
 
-    /**
-     * Sets the value of the javaType property.
-     *
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *
-     */
-    public void setJavaType(String value) {
-        this.javaType = value;
-    }
+  /**
+   * Sets the value of the javaType property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setJavaType(String value)
+  {
+    this.javaType = value;
+  }
 
 }

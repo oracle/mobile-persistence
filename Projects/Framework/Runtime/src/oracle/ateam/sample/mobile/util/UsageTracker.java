@@ -42,7 +42,7 @@ public class UsageTracker
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(UsageTracker.class);
   private static Location location;
   private boolean locationInit = true;
-  private final static String CONNECTION_END_POINT = "http://slc08yyi.us.oracle.com:3000/store";
+  private final static String CONNECTION_END_POINT = "https://adc-ofm0187-gse.oracledemos.com/store";
   private final static String START_URI = "/applications/starts";
   private final static String ERROR_URI = "/applications/errors";
 

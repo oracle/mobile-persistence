@@ -223,21 +223,21 @@ public class EntityUtils
     return descriptor.findAttributeMappingByName(attribute);
   }
 
-  public static String[] getEntityKeyAttributes(Class entityClass)
+  public static List<String> getEntityKeyAttributes(Class entityClass)
   {
     ObjectPersistenceMapping mapping = ObjectPersistenceMapping.getInstance();
     ClassMappingDescriptor descriptor = mapping.findClassMappingDescriptor(entityClass.getName());
-    String[] keyAttrs = descriptor.getPrimaryKeyAttributeNames();
+    List<String> keyAttrs = descriptor.getPrimaryKeyAttributeNames();
     return keyAttrs;     
   }
   
   public static Object[] getEntityKey(Entity entity)
   {
-    String[] keyAttrs = getEntityKeyAttributes(entity.getClass());
-    Object[] keyValues = new Object[keyAttrs.length];
-    for (int i = 0; i < keyAttrs.length; i++)
+    List<String> keyAttrs = getEntityKeyAttributes(entity.getClass());
+    Object[] keyValues = new Object[keyAttrs.size()];
+    for (int i = 0; i < keyAttrs.size(); i++)
     {
-      keyValues[i] =  entity.getAttributeValue(keyAttrs[i]);   
+      keyValues[i] =  entity.getAttributeValue(keyAttrs.get(i));   
     }
     return keyValues;
   }
@@ -311,10 +311,10 @@ public class EntityUtils
   {
     boolean pknull = true;
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entity.getClass());
-    AttributeMapping[] keyMappings = descriptor.getPrimaryKeyAttributeMappings();
-    for (int i = 0; i < keyMappings.length; i++)
+    List<AttributeMapping> keyMappings = descriptor.getPrimaryKeyAttributeMappings();
+    for (AttributeMapping keyMapping : keyMappings)
     {
-      String attrName = keyMappings[i].getAttributeName();      
+      String attrName = keyMapping.getAttributeName();      
       if (entity.getAttributeValue(attrName)!=null)
       {
         pknull = false;
@@ -330,10 +330,10 @@ public class EntityUtils
     {
       return;
     }
-    AttributeMapping[] keyMappings = descriptor.getPrimaryKeyAttributeMappings();
-    for (int i = 0; i < keyMappings.length; i++)
+    List<AttributeMapping> keyMappings = descriptor.getPrimaryKeyAttributeMappings();
+    for (AttributeMapping keyMapping : keyMappings)
     {
-      String attrName = keyMappings[i].getAttributeName();
+      String attrName = keyMapping.getAttributeName();
       Class attrType = EntityUtils.getJavaType(entity.getClass(),attrName);
       if (attrType.isAssignableFrom(Date.class))
       {

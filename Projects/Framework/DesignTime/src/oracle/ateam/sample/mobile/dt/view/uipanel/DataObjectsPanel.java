@@ -124,8 +124,12 @@ public class DataObjectsPanel
       {
         if (doi.getParent()==null && doi.getFindAllMethod()!=null)
         {
-          doi.getFindAllMethod().setPayloadElementName(doi.getPayloadListElementName());            
-          doi.getFindAllMethod().setPayloadRowElementName(doi.getPayloadRowElementName());            
+          // We ONLY do this for new methods, we should preserve the values manually set in persistence-mapping
+          if (!doi.getFindAllMethod().isExisting())
+          {
+            doi.getFindAllMethod().setPayloadElementName(doi.getPayloadListElementName());            
+            doi.getFindAllMethod().setPayloadRowElementName(doi.getPayloadRowElementName());            
+          } 
         }
         else
         {

@@ -398,12 +398,17 @@ public class ParentChildAccessorsPanel
       {
         if (childAccessorMethod==null)
         {
-          childAccessorMethod = new DCMethod(childAccessorNameField.getText()+"List",model.getConnectionName(), childAccessorMethodFieldRest.getText(), (String) childAccessorMethodRequestType.getSelectedItem());                      
+          String suffix = model.isUseJDK_1_4_Style() ? "List" : "";
+          childAccessorMethod = new DCMethod(childAccessorNameField.getText()+suffix,model.getConnectionName(), childAccessorMethodFieldRest.getText(), (String) childAccessorMethodRequestType.getSelectedItem());                      
         }
         childAccessorMethod.setParameterValueProviderDataObject(parent);
-        // we assume payload structure is same as one used to discover dthe data objects
-        childAccessorMethod.setPayloadElementName(child.getPayloadListElementName());
-        childAccessorMethod.setPayloadRowElementName(child.getPayloadRowElementName()); 
+        // we assume payload structure is same as one used to discover the data objects
+        // We ONLY do this for new methods, we should preserve the values manually set in persistence-mapping
+        if (!childAccessorMethod.isExisting())
+        {
+          childAccessorMethod.setPayloadElementName(child.getPayloadListElementName());
+          childAccessorMethod.setPayloadRowElementName(child.getPayloadRowElementName());           
+        }
       }
       if (StringUtils.isNotEmpty(parentAccessorMethodFieldRest.getText()) && StringUtils.isNotEmpty(parentAccessorNameField.getText()))
       {
@@ -413,8 +418,12 @@ public class ParentChildAccessorsPanel
         }
         parentAccessorMethod.setParameterValueProviderDataObject(child);
         // we assume payload structure is same as one used to discover dthe data objects
-        parentAccessorMethod.setPayloadElementName(parent.getPayloadListElementName());
-        parentAccessorMethod.setPayloadRowElementName(parent.getPayloadRowElementName()); 
+        // We ONLY do this for new methods, we should preserve the values manually set in persistence-mapping
+        if (!parentAccessorMethod.isExisting())
+        {
+          parentAccessorMethod.setPayloadElementName(parent.getPayloadListElementName());
+          parentAccessorMethod.setPayloadRowElementName(parent.getPayloadRowElementName()); 
+        }
       }
     }
     if (childAccessorMethod!=null || StringUtils.isNotEmpty(childAccessorPayloadNameField.getText()))
@@ -700,7 +709,7 @@ public class ParentChildAccessorsPanel
       // create reference attribute in child data object
       String attrName =
         getCurrentAccessor().getParentDataObject().getClassName() + StringUtils.initCap(masterAttr);
-      childAttr = new AttributeInfo(attrName, parentAttr);
+      childAttr = new AttributeInfo(attrName, getCurrentAccessor().getParentDataObject(), parentAttr);
       DataObjectInfo childDataObject = getCurrentAccessor().getChildDataObject();
       childDataObject.addAttribute(childAttr);
     }

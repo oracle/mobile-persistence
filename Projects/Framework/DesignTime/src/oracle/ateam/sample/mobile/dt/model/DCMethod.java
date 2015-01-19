@@ -55,7 +55,24 @@ public class DCMethod
   private boolean sendSerializedDataObjectAsPayload = false;
   private List<HeaderParam> headerParams = new ArrayList<HeaderParam>();
   private String samplePayload;
-  
+  private String dataControlName;
+  private boolean existing = false;
+
+  public void setExisting(boolean existing)
+  {
+    this.existing = existing;
+  }
+
+  public boolean isExisting()
+  {
+    return existing;
+  }
+
+  public void setDataControlName(String dataControlName)
+  {
+    this.dataControlName = dataControlName;
+  }
+
   public DCMethod(OperationDefinition method)
   {
     this.method = method;
@@ -167,7 +184,12 @@ public class DCMethod
 
   public String getDataControlName()
   {
-    if (method!=null)
+    if (dataControlName!=null)
+    {
+      // this is the case when method is created from existing persistence-mapping
+      return dataControlName;         
+    }
+    else if (method!=null)
     {
       return ((NamedDefinition)method.getDefinitionParent()).getName();            
     }
@@ -372,7 +394,7 @@ public class DCMethod
 
   /**
    * This methods sets the full uri including parameter string that can be used
-   * to derive parameters. Also sets the "short" uri without parameters in query string
+   * to derive parameters. Also sets the "short" uri without parameters in name property
    * @param fullUri
    */
   public void setFullUri(String fullUri)

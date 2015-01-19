@@ -21,11 +21,11 @@ public class XMLMethodHeaderParameter extends XmlAnyDefinition implements Method
 
   public String getName()
   {
-    return (String) getAttributeValue("name");
+    return getAttributeStringValue("name");
   }
 
   public String getValue()
   {
-    return (String) getAttributeValue("value");
+    return getAttributeStringValue("value");
   }
 }

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mobileObjectPersistence xmlns="http://www.oracle.com/ateam/mobile/persistenceMapping">
+  <classMappingDescriptor className="oracle.ateam.sample.mobile.v2.persistence.service.DataSynchAction"
+                          dateFormat="dd-MMM-yyyy" >
+    <table name="DATA_SYNCH_ACTIONS">
+      <primaryKeyColumn name="SERVICE_CLASS_NAME"/>
+      <primaryKeyColumn name="ID"/>
+    </table>
+    <attributeMappings>
+      <directMapping attributeName="id" columnName="ID" javaType="java.lang.Integer" columnDataType="NUMERIC"
+                     keyAttribute="true" required="true" />
+      <directMapping attributeName="serviceClass" columnName="SERVICE_CLASS_NAME" javaType="java.lang.String"
+                     columnDataType="VARCHAR" keyAttribute="true" required="true" />
+      <directMapping attributeName="entityClassString" columnName="ENTITY_CLASS_NAME" javaType="java.lang.String"
+                     columnDataType="VARCHAR" />
+      <directMapping attributeName="entityAsJSONString" columnName="JSON_PAYLOAD" javaType="java.lang.String"
+                     columnDataType="VARCHAR" />
+      <directMapping attributeName="action" columnName="ACTION" javaType="java.lang.String" columnDataType="VARCHAR"
+                     />
+      <directMapping attributeName="dateCreated" columnName="DATE_CREATED" javaType="java.util.Date"
+                     columnDataType="DATE" />
+      <directMapping attributeName="lastSynchAttempt" columnName="DATE_LAST_SYNCH" javaType="java.util.Date"
+                     columnDataType="DATE" />
+      <directMapping attributeName="lastSynchError" columnName="LAST_SYNCH_ERROR" javaType="java.lang.String"
+                     columnDataType="VARCHAR" />
+      <directMapping attributeName="customMethodName" columnName="CUSTOM_METHOD_NAME" javaType="java.lang.String"
+                     columnDataType="VARCHAR" />
+    </attributeMappings>
+  </classMappingDescriptor>
+</mobileObjectPersistence>

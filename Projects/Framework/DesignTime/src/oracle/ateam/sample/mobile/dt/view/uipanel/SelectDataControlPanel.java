@@ -28,6 +28,7 @@ import oracle.adfdt.model.DataControlManager;
 import oracle.adfdt.model.datacontrols.JUDTAdapterDataControl;
 import oracle.adfdt.model.objects.DataControl;
 
+import oracle.ateam.sample.mobile.dt.controller.PersistenceMappingLoader;
 import oracle.ateam.sample.mobile.dt.model.BusinessObjectGeneratorModel;
 
 import oracle.ateam.sample.mobile.dt.view.wizard.BusinessObjectsFromWSDataControlWizard;
@@ -128,6 +129,7 @@ public class SelectDataControlPanel
       model.setDataObjectInfos(null);
       model.setCurrentDataObject(null);
       model.setWebServiceDataControl(true);
+      model.setExistingPersistenceMappingModel(new PersistenceMappingLoader().loadJaxbModel());
     }
     super.onExit(tc);
   }

@@ -328,10 +328,10 @@ public class CRUDMethodsPanel
     getCurrentDataObject().setDeleteMethod(methodMap.get(deleteField.getSelectedItem()));
     getCurrentDataObject().setDeleteLocalRows(deleteLocalRowsField.isSelected());
     String orderBy = convertToSQLOrderBy(sortField.getText());
-    getCurrentDataObject().setSortOrder(sortField.getText());
-    getCurrentDataObject().setOrderBy(orderBy);
-    getCurrentDataObject().setPayloadDateFormat(dateFormatField.getText());
-    getCurrentDataObject().setPayloadDateTimeFormat(dateTimeFormatField.getText());
+    getCurrentDataObject().setSortOrder(StringUtils.convertEmptyStringToNull(sortField.getText()));
+    getCurrentDataObject().setOrderBy(StringUtils.convertEmptyStringToNull(orderBy));
+    getCurrentDataObject().setPayloadDateFormat(StringUtils.convertEmptyStringToNull(dateFormatField.getText()));
+    getCurrentDataObject().setPayloadDateTimeFormat(StringUtils.convertEmptyStringToNull(dateTimeFormatField.getText()));
     dateFormatField.setText(currentDataObject.getPayloadDateFormat());
     dateTimeFormatField.setText(currentDataObject.getPayloadDateTimeFormat());
   }

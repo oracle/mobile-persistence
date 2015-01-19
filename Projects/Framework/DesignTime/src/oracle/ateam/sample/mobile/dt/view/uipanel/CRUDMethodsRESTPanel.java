@@ -328,9 +328,13 @@ public class CRUDMethodsRESTPanel
     method.setRequestType((String) requestType.getSelectedItem());
     // We assume that the structure for write methods is same as for findAll method
     // so we set payloadElementName to and payloadRowElementName (might be null in case of JSON)
-    // to the names stored on the DataObjectInfo when discovering it
-    method.setPayloadElementName(getCurrentDataObject().getPayloadListElementName()); 
-    method.setPayloadRowElementName(getCurrentDataObject().getPayloadRowElementName()); 
+    // to the names stored on the DataObjectInfo when discovering it.
+    // We ONLY do this for new methods, we should preserve the values manually set in persistence-mapping
+    if (!method.isExisting())
+    {
+      method.setPayloadElementName(getCurrentDataObject().getPayloadListElementName()); 
+      method.setPayloadRowElementName(getCurrentDataObject().getPayloadRowElementName());       
+    }
     return method;
   }
 
@@ -346,10 +350,10 @@ public class CRUDMethodsRESTPanel
     getCurrentDataObject().setDeleteMethod(findOrCreateMethod(deleteField, deleteRequestType));
     getCurrentDataObject().setDeleteLocalRows(deleteLocalRowsField.isSelected());
     String orderBy = convertToSQLOrderBy(sortField.getText());
-    getCurrentDataObject().setSortOrder(sortField.getText());
-    getCurrentDataObject().setOrderBy(orderBy);
-    getCurrentDataObject().setPayloadDateFormat(dateFormatField.getText());
-    getCurrentDataObject().setPayloadDateTimeFormat(dateTimeFormatField.getText());
+    getCurrentDataObject().setSortOrder(StringUtils.convertEmptyStringToNull(sortField.getText()));
+    getCurrentDataObject().setOrderBy(StringUtils.convertEmptyStringToNull(orderBy));
+    getCurrentDataObject().setPayloadDateFormat(StringUtils.convertEmptyStringToNull(dateFormatField.getText()));
+    getCurrentDataObject().setPayloadDateTimeFormat(StringUtils.convertEmptyStringToNull(dateTimeFormatField.getText()));
   }
 
   public void setCurrentDataObject(DataObjectInfo currentDataObject)

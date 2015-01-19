@@ -17,14 +17,14 @@ public class OAuthConfig
   extends XmlAnyDefinition
 {
 
-  private static final String CONFIG_NAME = "config-name";
-  private static final String CONNECTION_NAME = "connection-name";
-  private static final String TOKEN_URI = "token-uri";
-  private static final String CLIENT_SECRET = "client-secret";
-  private static final String GRANT_TYPE = "grant-type";
-  private static final String CLIENT_ASSERTION_TYPE = "client-assertion-type";
+  private static final String CONFIG_NAME = "configName";
+  private static final String CONNECTION_NAME = "connectionName";
+  private static final String TOKEN_URI = "tokenUri";
+  private static final String CLIENT_SECRET = "clientSecret";
+  private static final String GRANT_TYPE = "grantType";
+  private static final String CLIENT_ASSERTION_TYPE = "clientAssertionType";
   private static final String SCOPE = "scope";
-  private HashMap parameterMap;
+  private HashMap<String,String> parameterMap;
 
 
   public static OAuthConfig getInstance(String configName)
@@ -46,61 +46,55 @@ public class OAuthConfig
 
   public String getConfigName()
   {
-    return getChildDefinition(CONFIG_NAME).getText();
+    return getAttributeStringValue(CONFIG_NAME);
   }
 
   public String getConnectionName()
   {
-    return getChildDefinition(CONNECTION_NAME).getText();
+    return getAttributeStringValue(CONNECTION_NAME);
   }
 
   public String getTokenURI()
   {
-    return getChildDefinition(TOKEN_URI).getText();
-
+    return getAttributeStringValue(TOKEN_URI);
   }
 
   public String getClientSecret()
   {
-    return getChildDefinition(CLIENT_SECRET).getText();
+    return getAttributeStringValue(CLIENT_SECRET);
 
   }
 
   public String getGrantType()
   {
-    return getChildDefinition(GRANT_TYPE).getText();
-
+    return getAttributeStringValue(GRANT_TYPE);
   }
 
   public String getClientAssertionType()
   {
-    return getChildDefinition(CLIENT_ASSERTION_TYPE).getText();
-
+    return getAttributeStringValue(CLIENT_ASSERTION_TYPE);
   }
 
   public String getScope()
   {
-    return getChildDefinition(SCOPE).getText();
-
+    return getAttributeStringValue(SCOPE);
   }
 
   /**
    *  Return name-value pairs for OAuth parameters
    */  
-  public Map getParameterMapping()
+  public Map<String,String> getParameterMapping()
   {
     if (parameterMap == null)
     {
-      parameterMap = new HashMap();
-      XmlAnyDefinition parameterContainer = this.getChildDefinition("parameters");
-      List parameters = parameterContainer.getChildDefinitions("parameter");
-      for (int i = 0; i < parameters.size(); i++)
+      parameterMap = new HashMap<String,String>();
+      List<XmlAnyDefinition> parameters = this.getChildDefinitions("parameter");
+      for (XmlAnyDefinition parameter : parameters)
       {
-        XmlAnyDefinition descriptor = (XmlAnyDefinition) parameters.get(i);
-        String paramName = (String) descriptor.getAttributeValue("name");
+        String paramName = parameter.getAttributeStringValue("name");
         if (paramName != null)
         {
-          String paramValue = (String) descriptor.getAttributeValue("value");
+          String paramValue = parameter.getAttributeStringValue("value");
           if (paramValue != null)
           {
             parameterMap.put(paramName, paramValue);
