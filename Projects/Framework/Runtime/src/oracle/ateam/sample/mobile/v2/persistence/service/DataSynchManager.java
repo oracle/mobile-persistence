@@ -37,12 +37,11 @@ public class DataSynchManager
   extends ChangeEventSupportable
 {
   private transient EntityCRUDService crudService;
-  private transient List dataSynchActionList = new ArrayList();
+  private transient List dataSynchActions = new ArrayList();
   private transient boolean dataSynchRunning = false;
   
   // dummy attrs to prevent JSON serialization
-  private transient List registeredDataSynchManagers;
-  private transient DataSynchAction[]  dataSynchActions;
+  private transient List<DataSynchManager> registeredDataSynchManagers;
 
   public DataSynchManager(EntityCRUDService crudService)
   {
@@ -55,19 +54,18 @@ public class DataSynchManager
     registerDataSynchManager();
   }
   
-  public static List getRegisteredDataSynchManagers()
+  public static List<DataSynchManager> getRegisteredDataSynchManagers()
   {
-    List syncManagers = (List) AdfmfJavaUtilities.evaluateELExpression("#{applicationScope.dataSynchManagers}");
+    List<DataSynchManager> syncManagers = (List<DataSynchManager>) AdfmfJavaUtilities.evaluateELExpression("#{applicationScope.dataSynchManagers}");
     return syncManagers;
   }
 
   public static DataSynchManager geDataSynchManager(String entityClass)
   {
     DataSynchManager curManager = null;
-    List managers = getRegisteredDataSynchManagers();
-    for (int i = 0; i < managers.size(); i++)
+    List<DataSynchManager> managers = getRegisteredDataSynchManagers();
+    for (DataSynchManager manager : managers)
     {
-      DataSynchManager manager = (DataSynchManager) managers.get(i);
       if (entityClass.equals(manager.getCrudService().getEntityClass().getName()))
       {
         curManager = manager;
@@ -79,10 +77,10 @@ public class DataSynchManager
 
   protected void registerDataSynchManager()
   {
-    List syncManagers = (List) AdfmfJavaUtilities.evaluateELExpression("#{applicationScope.dataSynchManagers}");
+    List<DataSynchManager> syncManagers = (List<DataSynchManager>) AdfmfJavaUtilities.evaluateELExpression("#{applicationScope.dataSynchManagers}");
     if (syncManagers==null)
     {
-      syncManagers = new ArrayList();
+      syncManagers = new ArrayList<DataSynchManager>();
       Map appscope = (Map) AdfmfJavaUtilities.evaluateELExpression("#{applicationScope}");
       appscope.put("dataSynchManagers",syncManagers);
     }
@@ -91,7 +89,7 @@ public class DataSynchManager
 
   public void synchronize(boolean inBackground)
   {
-    if (isDataSynchRunning() || getDataSynchActionList().size() == 0)
+    if (isDataSynchRunning() || getDataSynchActions().size() == 0)
     {
       return;
     }
@@ -166,22 +164,21 @@ public class DataSynchManager
    */
   protected void registerDataSynchAction(DataSynchAction synchAction)
   {
-    DataSynchAction[] oldArray = getDataSynchActions();
+    List<DataSynchAction> oldList = getDataSynchActions();
     // set the id, first retrieve current max id
     int maxId= 0;
-    for (int i = 0; i < oldArray.length; i++)
+    for (DataSynchAction action : oldList)
     {
-      DataSynchAction action = oldArray[i];
       if (action.getId().intValue()>maxId)
       {
         maxId = action.getId().intValue();
       }
     }
     synchAction.setId(new Integer(maxId+1));
-    dataSynchActionList.add(synchAction);
+    dataSynchActions.add(synchAction);
    // call to refresh list causes unpredictable behavior, not really needed here anyway
 //    refreshDataSynchActionsList(oldArray);
-    refreshHasDataSynchActions(oldArray.length>0);
+    refreshHasDataSynchActions(oldList.size()>0);
     // we save to DB when last synch erro is not null. We don't have to check online/offline, because
     // when we are offline the 
     if (synchAction.getLastSynchError()!=null )
@@ -213,15 +210,15 @@ public class DataSynchManager
     return pm;
   }
 
-  protected void refreshDataSynchActionsList(DataSynchAction[] oldArray)
+  protected void refreshDataSynchActionsList(List<DataSynchAction> oldList)
   {
-    Object newArray = getDataSynchActions();
-    boolean oldHasDataSynchActions = oldArray.length>0;
+    List<DataSynchAction> newList = getDataSynchActions();
+    boolean oldHasDataSynchActions = oldList.size()>0;
     if (getHasDataSynchActions()!=oldHasDataSynchActions)
     {
       getPropertyChangeSupport().firePropertyChange("hasDataSynchActions", oldHasDataSynchActions, getHasDataSynchActions());      
     }
-    getPropertyChangeSupport().firePropertyChange("dataSynchActions", oldArray, newArray);
+    getPropertyChangeSupport().firePropertyChange("dataSynchActions", oldList, newList);
     getProviderChangeSupport().fireProviderRefresh("dataSynchActions");
     if (AdfmfJavaUtilities.isBackgroundThread())
     {
@@ -242,7 +239,7 @@ public class DataSynchManager
   protected void refreshHasDataSynchActions(boolean oldValue)
   {
     String name = getCrudService().getEntityListName()+"_dataSyncActionsCount";
-    AdfmfJavaUtilities.setELValue("#{applicationScope."+name+"}", new Integer(getDataSynchActionList().size()));
+    AdfmfJavaUtilities.setELValue("#{applicationScope."+name+"}", new Integer(getDataSynchActions().size()));
     if (getHasDataSynchActions()!=oldValue)
     {
       getPropertyChangeSupport().firePropertyChange("hasDataSynchActions", oldValue, getHasDataSynchActions());      
@@ -253,10 +250,6 @@ public class DataSynchManager
     }
   }
 
-  protected List getDataSynchActionList()
-  {
-    return dataSynchActionList;
-  }
 
   protected void setDataSynchRunning(boolean dataSynchRunning)
   {
@@ -268,11 +261,9 @@ public class DataSynchManager
     return dataSynchRunning;
   }
 
-  public DataSynchAction[] getDataSynchActions()
+  public List<DataSynchAction> getDataSynchActions()
   {
-    DataSynchAction[] departments =
-      (DataSynchAction[]) getDataSynchActionList().toArray(new DataSynchAction[getDataSynchActionList().size()]);
-    return departments;
+    return dataSynchActions;
   }
 
 
@@ -286,7 +277,7 @@ public class DataSynchManager
   public void removeDataSynchAction(DataSynchAction synchAction)
   {
  //   MessageUtils.handleMessage(AdfException.INFO, "sync sction removed: "+synchAction.getId());
-    getDataSynchActionList().remove(synchAction);
+    getDataSynchActions().remove(synchAction);
     if (synchAction.getLastSynchError()!=null)
     {
       DBPersistenceManager pm = getDBPersistenceManager(); 
@@ -330,92 +321,32 @@ public class DataSynchManager
 
   public void saveSynchActionsToDB()
   {
-    if (getDataSynchActionList().size()==0)
+    if (getDataSynchActions().size()==0)
     {
       return;
     }
     DBPersistenceManager pm = getDBPersistenceManager(); 
-    for (int i = 0; i < getDataSynchActionList().size(); i++)
+    for (DataSynchAction action : getDataSynchActions())
     {
-      DataSynchAction action = (DataSynchAction) getDataSynchActionList().get(i);
       pm.mergeEntity(action, true);
     }
   }
 
-//  public void loadSynchActionsFromFile()
-//  {
-//    File file = new File(getFilePath());
-//    if (!file.exists())
-//    {
-//      return;
-//    }
-//    final StringBuffer json = new StringBuffer(300000);
-//    InputStream inputStream = Utility.getResourceAsStream(getFilePath());
-//    final BufferedReader in;
-//    try
-//    {
-//      // While this works for iPhone without explicitly mentioning an encoding, in Android we need to
-//      // explicitly use the ISO-8859 or the US-ASCII encoding, otherwise the j.io.ISR will try to read the json
-//      // file using UTF8 (which somehow fails with an exception).
-//      in = new BufferedReader(new InputStreamReader(inputStream, "ISO-8859-1"));
-//    }
-//    catch (UnsupportedEncodingException e)
-//    {
-//      e.printStackTrace();
-//      throw new AdfException(e);
-//    }
-//    try
-//    {
-//      String line;
-//      while ((line = in.readLine()) != null)
-//      {
-//        json.append(line);
-//      }
-//    }
-//    catch (IOException e)
-//    {
-//      e.printStackTrace();
-//      throw new AdfException(e);
-//    }
-//    finally
-//    {
-//      try
-//      {
-//        in.close();
-//      }
-//      catch (IOException e)
-//      {
-//        throw new AdfException(e);
-//      }
-//    }
-//    DataSynchPayload payload = fromJSON(json.toString());
-//// Doesn't work: creates immutable list!
-//// List actions = Arrays.asList(payload.getDataSynchActions());
-//// this.dataSynchActionList = actions;
-//
-//    DataSynchAction[] actions = payload.getDataSynchActions();
-//    for (int i = 0; i < actions.length; i++)
-//    {
-//      this.dataSynchActionList.add(actions[i]);
-//    }
-//    // remove the file!
-//    file.delete();
-//  }
-
   public void loadSynchActionsFromDB()
   {
-    DBPersistenceManager pm = (DBPersistenceManager) getCrudService().getLocalPersistenceManager();
-    List attrNamesToSearch = new ArrayList();
+    DBPersistenceManager pm = getCrudService().getLocalPersistenceManager();
+    List<String> attrNamesToSearch = new ArrayList<String>();
     attrNamesToSearch.add("serviceClass");
-    this.dataSynchActionList = pm.find(DataSynchAction.class, getCrudService().getClass().getName(), attrNamesToSearch);
-    for (int i = 0; i < dataSynchActionList.size(); i++)
+    this.dataSynchActions =
+       pm.find(DataSynchAction.class, getCrudService().getClass().getName(), attrNamesToSearch);
+    for (int i = 0; i < dataSynchActions.size(); i++)
     {
       // create entity instance in synch action from json string
       // When adding the logic in createEntityFromJSONString directly in method
       // setEntityAsJSONString (which is eecuted during JSOn serialization of the data synch action, 
       // an outOfmemoryError is thrown for unclear reasons. When doing the create entity instance
       // action after the DataSynch actions are created, as below, it works fine
-      DataSynchAction action = (DataSynchAction)dataSynchActionList.get(i);
+      DataSynchAction action = (DataSynchAction)dataSynchActions.get(i);
       action.createEntityFromJSONString();
     }
     refreshHasDataSynchActions(false);
@@ -426,7 +357,7 @@ public class DataSynchManager
    */
   public boolean getHasDataSynchActions()
   {
-    return getDataSynchActionList().size()>0;
+    return getDataSynchActions().size()>0;
   }
 
 }

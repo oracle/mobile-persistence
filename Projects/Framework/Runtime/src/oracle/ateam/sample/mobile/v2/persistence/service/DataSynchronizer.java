@@ -24,8 +24,8 @@ public class DataSynchronizer
   private final DataSynchPayload payload;
   private final DataSynchManager synchManager;
   private final EntityCRUDService crudService;
-  List failedSynchActions = new ArrayList();
-  List succeededSynchActions = new ArrayList();
+  List<DataSynchAction> failedSynchActions = new ArrayList<DataSynchAction>();
+  List<DataSynchAction> succeededSynchActions = new ArrayList<DataSynchAction>();
 
   public DataSynchronizer(DataSynchManager synchManager,DataSynchPayload payload)
   {
@@ -38,13 +38,12 @@ public class DataSynchronizer
   public void run()
   {
     synchManager.setDataSynchRunning(true); 
-    DataSynchAction[] dataSynchActions = payload.getDataSynchActions();
+    List<DataSynchAction> dataSynchActions = payload.getDataSynchActions();
     if (dataSynchActions != null)
     {
       RemotePersistenceManager remotePersistenceManager = crudService.getRemotePersistenceManager();
-      for (int i = 0; i < dataSynchActions.length; i++)
+      for (DataSynchAction syncAction : dataSynchActions)
       {
-        DataSynchAction syncAction = dataSynchActions[i];
         String action = syncAction.getAction();
         Entity entity = syncAction.getEntity();
         try
@@ -83,12 +82,12 @@ public class DataSynchronizer
     crudService.dataSynchFinished(getSucceededSynchActions(), getFailedSynchActions());
   }
 
-  public List getFailedSynchActions()
+  public List<DataSynchAction> getFailedSynchActions()
   {
     return failedSynchActions;
   }
 
-  public List getSucceededSynchActions()
+  public List<DataSynchAction> getSucceededSynchActions()
   {
     return succeededSynchActions;
   }

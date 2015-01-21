@@ -187,9 +187,9 @@ public abstract class Entity extends ChangeEventSupportable
    */
   public void refreshChildEntityList(List oldList, List newList, Class childClass, String childAttribute)
   {
-    Entity[] oldEntityArray = EntityUtils.getEntityListAsCorrectlyTypedArray(oldList, childClass);
-    Entity[] newEntityArray = EntityUtils.getEntityListAsCorrectlyTypedArray(newList, childClass);
-    getPropertyChangeSupport().firePropertyChange(childAttribute, oldEntityArray, newEntityArray);
+//    Entity[] oldEntityArray = EntityUtils.getEntityListAsCorrectlyTypedArray(oldList, childClass);
+//    Entity[] newEntityArray = EntityUtils.getEntityListAsCorrectlyTypedArray(newList, childClass);
+    getPropertyChangeSupport().firePropertyChange(childAttribute, oldList, newList);
     getProviderChangeSupport().fireProviderRefresh(childAttribute);
   }
 

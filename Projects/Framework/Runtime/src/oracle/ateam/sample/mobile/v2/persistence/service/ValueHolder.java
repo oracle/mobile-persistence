@@ -83,14 +83,14 @@ public class ValueHolder
       if (parent!=null)
       {
         // update foreign key column(s) in child entity so we can restore the relationship in ofline mode
-        Map columnMappings  = mapping.getColumnMappings();
-        Iterator iterator = columnMappings.keySet().iterator();
+        Map<String,String> columnMappings  = mapping.getColumnMappings();
+        Iterator<String> iterator = columnMappings.keySet().iterator();
         ClassMappingDescriptor childDescriptor = mapping.getClassMappingDescriptor();
         while (iterator.hasNext())
         {
-          String childColumn = (String) iterator.next();
+          String childColumn = iterator.next();
           String childAttribute = childDescriptor.findAttributeMappingByColumnName(childColumn).getAttributeName();
-          String parentColumn = (String) columnMappings.get(childColumn);
+          String parentColumn = columnMappings.get(childColumn);
           String parentAttribute = referenceDescriptor.findAttributeMappingByColumnName(parentColumn).getAttributeName();
           entity.setAttributeValue(childAttribute, parent.getAttributeValue(parentAttribute));
         }        

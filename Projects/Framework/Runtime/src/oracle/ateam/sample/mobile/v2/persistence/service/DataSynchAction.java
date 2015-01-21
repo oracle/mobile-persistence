@@ -161,21 +161,21 @@ public class DataSynchAction extends Entity
     return lastSynchError;
   }
   
-  public Map getAttributeValues()
+  public Map<String,Object> getAttributeValues()
   {
-    Map attributeValues = EntityUtils.getEntityAttributeValues(getEntity());
+    Map<String,Object> attributeValues = EntityUtils.getEntityAttributeValues(getEntity());
     return attributeValues;
   }
 
   public String getData()
   {
     StringBuffer data = new StringBuffer("");
-    Map values = getAttributeValues();
-    Iterator attrs = values.keySet().iterator();
+    Map<String,Object> values = getAttributeValues();
+    Iterator<String> attrs = values.keySet().iterator();
     boolean firstAttr= true;
     while(attrs.hasNext())
     {
-      String attr = (String) attrs.next();
+      String attr = attrs.next();
       Object value = values.get(attr);
       if (value!=null)
       {

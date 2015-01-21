@@ -625,7 +625,7 @@ public abstract class RestPersistenceManager
     if (findAllMethod == null)
     {
       sLog.severe("No findAll method found for " + entityClass.getName());
-      return Collections.EMPTY_LIST;
+      return entities;
     }
     Map<MethodParameter,String> paramValues = createParameterMap(null, findAllMethod, null, null);
     try
@@ -652,15 +652,15 @@ public abstract class RestPersistenceManager
     return entities;
   }
 
-  public List findAllInParent(Class childEntityClass, Entity parent, String accessorAttribute)
+  public List<Entity> findAllInParent(Class childEntityClass, Entity parent, String accessorAttribute)
   {
-    List entities = new ArrayList();
+    List<Entity> entities = new ArrayList<Entity>();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(childEntityClass);
     Method findAllInParentMethod = descriptor.getFindAllInParentMethod(accessorAttribute);
     if (findAllInParentMethod == null)
     {
       sLog.severe("No findAllInParent method found for " + childEntityClass.getName());
-      return Collections.EMPTY_LIST;
+      return entities;
     }
     Map<MethodParameter,String> paramValues = createParameterMap(parent, findAllInParentMethod, null, null);
     try
@@ -668,7 +668,7 @@ public abstract class RestPersistenceManager
       String restResponse = invokeRestService(findAllInParentMethod, paramValues);
       if (restResponse != null)
       {
-        List parentBindParamInfos = getBindParamInfos(parent);
+        List<BindParamInfo> parentBindParamInfos = getBindParamInfos(parent);
         entities =
           handleReadResponse(restResponse, childEntityClass, findAllInParentMethod.getPayloadElementName(),
                              findAllInParentMethod.getPayloadRowElementName(), parentBindParamInfos, false);
@@ -688,12 +688,12 @@ public abstract class RestPersistenceManager
     return entities;
   }
 
-  public List find(Class entityClass, String searchValue)
+  public List<Entity> find(Class entityClass, String searchValue)
   {
     return Collections.EMPTY_LIST;
   }
 
-  public List find(Class entityClass, String searchValue, List attrNamesToSearch)
+  public List<Entity> find(Class entityClass, String searchValue, List attrNamesToSearch)
   {
     return Collections.EMPTY_LIST;
   }
@@ -771,12 +771,12 @@ public abstract class RestPersistenceManager
         // only retrieve key values, otherwise we can get an endless loop because a getter method for parent attributes
         // typically causes this method to be called
         List<BindParamInfo> parentBindParamInfos = getBindParamInfos(child, true);
-        List entities =
+        List<Entity> entities =
           handleReadResponse(restResponse, parentEtityClass, getAsParentMethod.getPayloadElementName(),
                              getAsParentMethod.getPayloadRowElementName(), parentBindParamInfos, false);
         if (entities.size() > 0)
         {
-          Entity parent = (Entity) entities.get(0);
+          Entity parent = entities.get(0);
           return parent;
         }
       }
@@ -804,11 +804,11 @@ public abstract class RestPersistenceManager
   protected abstract String getSerializedDataObject(Entity entity, String collectionElementName, String rowElementName,
                                                     List<String> attributesToExclude, boolean deleteRow);
 
-  protected abstract List handleReadResponse(String restResponse, Class entityClass, String collectionElementName,
+  protected abstract List<Entity> handleReadResponse(String restResponse, Class entityClass, String collectionElementName,
                                              String rowElementName, List<BindParamInfo> parentBindParamInfos,
                                              boolean deleteLocalRowsOnFindAll);
 
-  protected abstract List handleResponse(String restResponse, Class entityClass, String collectionElementName,
+  protected abstract List<Entity> handleResponse(String restResponse, Class entityClass, String collectionElementName,
                                              String rowElementName, List<BindParamInfo> parentBindParamInfos, Entity currentEntity,
                                              boolean deleteLocalRowsOnFindAll);
 }

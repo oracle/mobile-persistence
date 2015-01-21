@@ -300,7 +300,7 @@ public abstract class EntityCRUDService<E extends Entity>
    * @param succeededDataSynchActions
    * @param failedDataSynchActions
    */
-  protected void dataSynchFinished(List succeededDataSynchActions, List failedDataSynchActions)
+  protected void dataSynchFinished(List<DataSynchAction> succeededDataSynchActions, List<DataSynchAction> failedDataSynchActions)
   {
     refreshEntityList(getEntityList());
     if (isDoRemoteWriteInBackground())
@@ -518,15 +518,7 @@ public abstract class EntityCRUDService<E extends Entity>
 
   /**
    * Return the current list of entities. Method is protected to prevent it from showing
-   * up in data control palette. You should add a public method to your subclass that converts this list
-   * into a typed array, like this:
-   * <pre>
-   public Department[] getDepartments()
-   {
-     Department[] departments =(Department[]) getEntityList().toArray(new Department[getEntityList().size()]);
-     return departments;
-   }
-   * </pre>
+   * up in data control palette. You can override in yourt cncrete service and cast it to the actual type
    * @return
    */
   protected List<E> getEntityList()

@@ -8,36 +8,24 @@
 package oracle.ateam.sample.mobile.v2.persistence.manager;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.api.JSONBeanSerializationHelper;
 import oracle.adfmf.framework.exception.AdfException;
 import oracle.adfmf.json.JSONArray;
-import oracle.adfmf.json.JSONObject;
 import oracle.adfmf.json.JSONException;
+import oracle.adfmf.json.JSONObject;
 
-import oracle.adfmf.util.AttributeInfo;
-import oracle.adfmf.util.GenericType;
-
-import oracle.ateam.sample.mobile.v2.persistence.cache.EntityCache;
+import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.util.StringUtils;
 import oracle.ateam.sample.mobile.v2.persistence.db.BindParamInfo;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;
-import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingOneToMany;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
-import oracle.ateam.sample.mobile.v2.persistence.metadata.Method;
-import oracle.ateam.sample.mobile.v2.persistence.metadata.MethodParameter;
-import oracle.ateam.sample.mobile.v2.persistence.metadata.ObjectPersistenceMapping;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
-import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
-import oracle.ateam.sample.mobile.util.ADFMobileLogger;
-import oracle.ateam.sample.mobile.util.MessageUtils;
-import oracle.ateam.sample.mobile.util.StringUtils;
 
 
 /**
@@ -159,7 +147,7 @@ public class RestJSONPersistenceManager
     return StringUtils.substitute(json, "{\".null\":true}", "null");
   }
 
-  protected List handleReadResponse(String jsonResponse, Class entityClass, String collectionElementName,
+  protected List<Entity> handleReadResponse(String jsonResponse, Class entityClass, String collectionElementName,
                                     String rowElementName, List<BindParamInfo> parentBindParamInfos, boolean deleteAllRows)
   {
     return handleResponse(jsonResponse, entityClass,collectionElementName,
@@ -474,30 +462,5 @@ public class RestJSONPersistenceManager
     }
     return entity;
   }
-
-
-  public static void main(String[] args)
-  {
-    String json =
-      "{\"DepartmentsView\":[{\"DepartmentId\":\"60\",\"DepartmentName\":\"dep60\"},{\"DepartmentId\":\"8\",\"DepartmentName\":\"NewDepartment888\"}]}";
-    String json2 = "{\"DepartmentId\":\"60\",\"DepartmentName\":\"dep60\"}";
-    HashMap map = new HashMap();
-    try
-    {
-      JSONObject aap = (JSONObject) JSONBeanSerializationHelper.fromJSON(JSONObject.class, json);
-      JSONArray rows = (JSONArray) aap.get("DepartmentsView");
-      for (int i = 0; i < rows.length(); i++)
-      {
-        JSONObject row = (JSONObject) rows.get(i);
-        String[] names = row.getNames(row);
-        System.err.println(row);
-      }
-    }
-    catch (Exception e)
-    {
-      e.printStackTrace();
-    }
-  }
-
 
 }
