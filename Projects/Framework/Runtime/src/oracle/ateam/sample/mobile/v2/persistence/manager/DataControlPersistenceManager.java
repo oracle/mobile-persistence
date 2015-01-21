@@ -80,10 +80,10 @@ public class DataControlPersistenceManager
    * @param entityClass
    * @return
    */
-  public List findAll(Class entityClass)
+  public List<Entity> findAll(Class entityClass)
   {
     sLog.fine("Executing findAll for entity "+entityClass.getName());
-    List entities = new ArrayList();
+    List<Entity> entities = new ArrayList<Entity>();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
     Method method = descriptor.getFindAllMethod();
     if (method ==null)
@@ -92,9 +92,9 @@ public class DataControlPersistenceManager
     }
     try
     {
-      List paramNames = new ArrayList();
-      List paramValues = new ArrayList();
-      List paramTypes = new ArrayList();
+      List<String> paramNames = new ArrayList<String>();
+      List<Object> paramValues = new ArrayList<Object>();
+      List<Class> paramTypes = new ArrayList<Class>();
       
       createMethodArguments(null, method, paramNames, paramValues, paramTypes,null);
 
@@ -135,9 +135,9 @@ public class DataControlPersistenceManager
     sLog.fine("Executing sendWriteRequest for entity "+entity.getClass().getName()+", method "+method.getName());
     try
     {
-      List paramNames = new ArrayList();
-      List paramValues = new ArrayList();
-      List paramTypes = new ArrayList();
+      List<String> paramNames = new ArrayList<String>();
+      List<Object> paramValues = new ArrayList<Object>();
+      List<Class> paramTypes = new ArrayList<Class>();
       
       createMethodArguments(entity, method, paramNames, paramValues, paramTypes,null);
       GenericType result =
@@ -156,13 +156,12 @@ public class DataControlPersistenceManager
     }    
   }
 
-  public void createMethodArguments(Entity entity, Method method, List paramNames, List paramValues,
-                                     List paramTypes, Map searchValues)
+  public void createMethodArguments(Entity entity, Method method, List<String> paramNames, List<Object> paramValues,
+                                     List<Class> paramTypes, Map<String,String> searchValues)
   {
-    List params = method.getParams();
-    for (int i = 0; i < params.size(); i++)
+    List<MethodParameter> params = method.getParams();
+    for (MethodParameter param : params)
     {
-      MethodParameter param = (MethodParameter) params.get(i);
       if (param.isSerializedDataObject() && entity!=null)
       {
         GenericType genericType = convertToGenericType(entity,param.getName());
@@ -221,10 +220,9 @@ public class DataControlPersistenceManager
     String entityClass = entity.getClass().getName();
     ObjectPersistenceMapping mapping = ObjectPersistenceMapping.getInstance();
     ClassMappingDescriptor descriptor = mapping.findClassMappingDescriptor(entityClass);
-    List attributeMappings = descriptor.getAttributeMappingsDirect();
-    for (int i = 0; i < attributeMappings.size(); i++)
+    List<AttributeMappingDirect> attributeMappings = descriptor.getAttributeMappingsDirect();
+    for (AttributeMappingDirect attrMapping : attributeMappings)
     {
-      AttributeMapping attrMapping = (AttributeMapping) attributeMappings.get(i);
       if (attrMapping.getAttributeNameInPayload()!=null)
       {
         Object value =entity.getAttributeValue(attrMapping.getAttributeName());
@@ -242,14 +240,12 @@ public class DataControlPersistenceManager
     ObjectPersistenceMapping mapping = ObjectPersistenceMapping.getInstance();
     String entityClass = parentEntity.getClass().getName();
     ClassMappingDescriptor descriptor = mapping.findClassMappingDescriptor(entityClass);
-    List attributeMappings = descriptor.getAttributeMappingsOneToMany();
-    for (int i = 0; i < attributeMappings.size(); i++)
+    List<AttributeMappingOneToMany> attributeMappings = descriptor.getAttributeMappingsOneToMany();
+    for (AttributeMappingOneToMany attrMapping : attributeMappings)
     {
-      AttributeMappingOneToMany attrMapping = (AttributeMappingOneToMany) attributeMappings.get(i);
-      List children = (List) parentEntity.getAttributeValue(attrMapping.getAttributeName());
-      for (int j = 0; j < children.size(); j++)
+      List<Entity> children = (List<Entity>) parentEntity.getAttributeValue(attrMapping.getAttributeName());
+      for (Entity child : children)
       {
-        Entity child = (Entity) children.get(j);
         String payloadAttr = attrMapping.getAttributeNameInPayload();
         GenericType childType = convertToGenericType(child,payloadAttr);
         parentType.defineAttribute(null,payloadAttr,GenericType.class, childType);              
@@ -264,9 +260,9 @@ public class DataControlPersistenceManager
    * @param entityClass
    * @param deleteAllRows
    */
-  protected List handleReadResponse(GenericType result, Class entityClass, String payloadElementName, List parentBindParamInfos, boolean deleteAllRows)
+  protected List<Entity> handleReadResponse(GenericType result, Class entityClass, String payloadElementName, List<BindParamInfo> parentBindParamInfos, boolean deleteAllRows)
   {
-    List entities = new ArrayList();      
+    List<Entity> entities = new ArrayList<Entity>();      
     try
     {
       if (deleteAllRows)
@@ -286,7 +282,7 @@ public class DataControlPersistenceManager
   }
 
 
-  protected void findAndProcessPayloadElements(String elementName, GenericType result, Class entityClass, List parentBindParamInfos, List entities, Entity currentEntity)
+  protected void findAndProcessPayloadElements(String elementName, GenericType result, Class entityClass, List<BindParamInfo> parentBindParamInfos, List<Entity> entities, Entity currentEntity)
   {
     for (int i = 0; i < result.getAttributeCount(); i++)
     {
@@ -326,14 +322,13 @@ public class DataControlPersistenceManager
    * @param currentEntity only has a value when this method called from handleWriteResponse 
    * @return
    */
-  protected Entity processPayloadElement(GenericType payloadGenericType,Class entityClass, List parentBindParamInfos, Entity currentEntity)
+  protected Entity processPayloadElement(GenericType payloadGenericType,Class entityClass, List<BindParamInfo> parentBindParamInfos, Entity currentEntity)
   {
-    List bindParamInfos = new ArrayList();
+    List<BindParamInfo> bindParamInfos = new ArrayList<BindParamInfo>();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);    
     int attrCount = payloadGenericType.getAttributeInfoCount();
     // map contains mappign as key, and a list of instances as value
     Map oneToManyMappings = new HashMap();
-    List attrMappings = descriptor.getAttributeMappings();
     // we need to loop over attr infos, we cannot loop over mappings and then get attr info, because
     // for 1-to-many mappings, each child type is returned as an attribute with the name of the child collection.
     // In other words: there can be multiple attrs with the same name!
@@ -341,7 +336,7 @@ public class DataControlPersistenceManager
     for (int j = 0; j < payloadGenericType.getAttributeInfoCount(); j++)
     {
       AttributeInfo attrInfo = payloadGenericType.getAttributeInfo(j);
-      AttributeMapping mapping = (AttributeMapping) descriptor.findAttributeMappingByPayloadName(attrInfo.name);
+      AttributeMapping mapping = descriptor.findAttributeMappingByPayloadName(attrInfo.name);
       if (mapping == null)
       {
         sLog.warning(entityClass.getName() + ": no mapping found for payload attribute " +
@@ -401,11 +396,11 @@ public class DataControlPersistenceManager
       AttributeMappingOneToMany mapping = (AttributeMappingOneToMany) mappings.next(); 
       Class refClass = mapping.getReferenceClassMappingDescriptor().getClazz();
       List children = (List) oneToManyMappings.get(mapping);
-      List childEntities = new ArrayList();
-      List currentChildEntities = null;
+      List<Entity> childEntities = new ArrayList<Entity>();
+      List<Entity> currentChildEntities = null;
       if (currentEntity!=null)
       {
-        currentChildEntities = (List) currentEntity.getAttributeValue(mapping.getAttributeName());
+        currentChildEntities = (List<Entity>) currentEntity.getAttributeValue(mapping.getAttributeName());
         if (currentChildEntities.size()!=children.size())
         {
           // this should never happen, because current entity child list is send as payload for write action
@@ -422,7 +417,7 @@ public class DataControlPersistenceManager
           // recursive call to populate DB with child entity row. Note that
           // multiple child rows are NOT wrapped in own GenericType, instead each
           // child instance is just an additional attribute of type GenericType
-          Entity currentChildEntity = (Entity) (currentChildEntities!=null ? currentChildEntities.get(i) : null);
+          Entity currentChildEntity = currentChildEntities!=null ? currentChildEntities.get(i) : null;
           Entity childEntity = processPayloadElement((GenericType) rawValue, refClass, bindParamInfos,currentChildEntity);
           childEntities.add(childEntity);
         }              
@@ -437,9 +432,9 @@ public class DataControlPersistenceManager
   }
 
 
-  public List find(Class entityClass, String searchValue)
+  public List<Entity> find(Class entityClass, String searchValue)
   {
-    List entities = new ArrayList();
+    List<Entity> entities = new ArrayList<Entity>();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
     Method method = descriptor.getFindMethod();
     if (method ==null)
@@ -449,19 +444,18 @@ public class DataControlPersistenceManager
     // we don;t know for which param the seaarch value might be used, so we create a map
     // with all attrs as keys with this search value, so it can be applied to the proper
     // attr in createMethodArguments
-    Map searchValues = new HashMap();
+    Map<String,String> searchValues = new HashMap<String,String>();
     if (searchValue!=null)
     {
-      List params = method.getParams();
-      for (int i = 0; i < params.size(); i++)
+      List<MethodParameter> params = method.getParams();
+      for (MethodParameter param : params)
       {
-        MethodParameter param = (MethodParameter) params.get(i);
         searchValues.put(param.getName(),searchValue);
       }      
     }
-    List paramNames = new ArrayList();
-    List paramValues = new ArrayList();
-    List paramTypes = new ArrayList();
+    List<String> paramNames = new ArrayList<String>();
+    List<Object> paramValues = new ArrayList<Object>();
+    List<Class> paramTypes = new ArrayList<Class>();
     
     createMethodArguments(null, method, paramNames, paramValues, paramTypes,searchValues);
 
@@ -492,7 +486,7 @@ public class DataControlPersistenceManager
     }
   }
 
-  public List find(Class entityClass, String searchValue, List attrNamesToSearch)
+  public List<Entity> find(Class entityClass, String searchValue, List<String> attrNamesToSearch)
   {
     return Collections.EMPTY_LIST;
   }
@@ -529,9 +523,9 @@ public class DataControlPersistenceManager
   {
   }
 
-  public List findAllInParent(Class childEntityClass, Entity parent, String accessorAttribute)
+  public List<Entity> findAllInParent(Class childEntityClass, Entity parent, String accessorAttribute)
   {
-    List entities = new ArrayList();
+    List<Entity> entities = new ArrayList<Entity>();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(childEntityClass);
     Method method = descriptor.getFindAllInParentMethod(accessorAttribute);
     if (method ==null)
@@ -540,9 +534,9 @@ public class DataControlPersistenceManager
     }
     try
     {
-      List paramNames = new ArrayList();
-      List paramValues = new ArrayList();
-      List paramTypes = new ArrayList();
+      List<String> paramNames = new ArrayList<String>();
+      List<Object> paramValues = new ArrayList<Object>();
+      List<Class> paramTypes = new ArrayList<Class>();
       
       createMethodArguments(parent, method, paramNames, paramValues, paramTypes,null);
 
@@ -553,7 +547,7 @@ public class DataControlPersistenceManager
       // result returns first row, NOT the collection since M15!
       // Need to get to the parent to get the collection!!!
       result = result!=null && result.getParent()!=null ? result.getParent() : result;
-      List parentBindParamInfos = getBindParamInfos(parent);
+      List<BindParamInfo> parentBindParamInfos = getBindParamInfos(parent);
       entities = handleReadResponse(result, childEntityClass, method.getPayloadElementName(), parentBindParamInfos, false);
       // only if an order-by statement is specified, we execute the find method against the local DB to reorder
       // the entity list. Note that the entity instances are not recreated because they will be retrieved from the cache
@@ -593,7 +587,7 @@ public class DataControlPersistenceManager
     {
       try
       {
-        findAndProcessPayloadElements(method.getPayloadElementName(), response, entity.getClass(), null, new ArrayList(), entity);
+        findAndProcessPayloadElements(method.getPayloadElementName(), response, entity.getClass(), null, new ArrayList<Entity>(), entity);
           // processPayloadElement(payloadGenericType, entityClass, dbpm, parentBindParamInfos, currentEntity) handleReadResponse(response, entity.getClass(), method.getPayloadElementName(), null, false);      
       }
       catch (Exception e)
@@ -606,7 +600,7 @@ public class DataControlPersistenceManager
 
   public Entity getAsParent(Class parentEntityClass, Entity child, String accessorAttribute)
   {
-    List entities = new ArrayList();
+    List<Entity> entities = new ArrayList<Entity>();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(parentEntityClass);
     Method method = descriptor.getGetAsParentMethod(accessorAttribute);
     if (method ==null)
@@ -614,9 +608,9 @@ public class DataControlPersistenceManager
       sLog.severe("No getAsParent method found for "+parentEntityClass.getName());
       return null;
     }
-    List paramNames = new ArrayList();
-    List paramValues = new ArrayList();
-    List paramTypes = new ArrayList();    
+    List<String> paramNames = new ArrayList<String>();
+    List<Object> paramValues = new ArrayList<Object>();
+    List<Class> paramTypes = new ArrayList<Class>();
     createMethodArguments(child, method, paramNames, paramValues, paramTypes,null);
     try
     {
@@ -626,14 +620,14 @@ public class DataControlPersistenceManager
       // result returns first row, NOT the collection since M15!
       // Need to get to the parent to get the collection!!!
       result = result!=null && result.getParent()!=null ? result.getParent() : result;
-      List parentBindParamInfos = getBindParamInfos(child);
+      List<BindParamInfo> parentBindParamInfos = getBindParamInfos(child);
       entities = handleReadResponse(result, parentEntityClass, method.getPayloadElementName(),parentBindParamInfos,false);
     }
     catch (Exception e)
     {
       handleWebServiceInvocationError(descriptor, e, false);      
     }
-    return (Entity) (entities.size()>0 ? entities.get(0) : null);
+    return entities.size()>0 ? entities.get(0) : null;
   }
 
   public void getCanonical(Entity entity)
@@ -645,9 +639,9 @@ public class DataControlPersistenceManager
       sLog.severe("No getCanonical method found for "+entity.getClass().getName());
       return;
     }
-    List paramNames = new ArrayList();
-    List paramValues = new ArrayList();
-    List paramTypes = new ArrayList();    
+    List<String> paramNames = new ArrayList<String>();
+    List<Object> paramValues = new ArrayList<Object>();
+    List<Class> paramTypes = new ArrayList<Class>();
     createMethodArguments(entity, method, paramNames, paramValues, paramTypes,null);
     try
     {
@@ -657,7 +651,7 @@ public class DataControlPersistenceManager
       // result returns first row, NOT the collection since M15!
       // Need to get to the parent to get the collection!!!
       result = result!=null && result.getParent()!=null ? result.getParent() : result;
-      List parentBindParamInfos = getBindParamInfos(entity);
+      List<BindParamInfo> parentBindParamInfos = getBindParamInfos(entity);
       List entities =handleReadResponse(result, entity.getClass(), method.getPayloadElementName(),parentBindParamInfos,false);
     }
     catch (Exception e)
@@ -675,9 +669,9 @@ public class DataControlPersistenceManager
       sLog.severe("Custom method "+methodName+" not found for "+entity.getClass().getName());
       return;
     }
-    List paramNames = new ArrayList();
-    List paramValues = new ArrayList();
-    List paramTypes = new ArrayList();    
+    List<String> paramNames = new ArrayList<String>();
+    List<Object> paramValues = new ArrayList<Object>();
+    List<Class> paramTypes = new ArrayList<Class>();
     createMethodArguments(entity, method, paramNames, paramValues, paramTypes,null);
     try
     {

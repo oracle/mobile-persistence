@@ -28,7 +28,7 @@ public interface RemotePersistenceManager extends PersistenceManager
 
   boolean isRemoveSupported(Class clazz);
   
-  List findAllInParent(Class childEntityClass, Entity parent, String accessorAttribute);
+  List<Entity> findAllInParent(Class childEntityClass, Entity parent, String accessorAttribute);
 
   Entity getAsParent(Class parentEntityClass, Entity child, String accessorAttribute);
 

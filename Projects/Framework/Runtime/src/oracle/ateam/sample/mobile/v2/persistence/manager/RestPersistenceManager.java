@@ -35,9 +35,11 @@ import oracle.ateam.sample.mobile.v2.persistence.metadata.MethodParameter;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.MethodParameterImpl;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ObjectPersistenceMapping;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
-import oracle.ateam.sample.mobile.security.OAuthTokenManager;
+import oracle.ateam.sample.mobile.v2.security.OAuthTokenManager;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.StringUtils;
+import oracle.ateam.sample.mobile.v2.persistence.db.BindParamInfo;
+import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
 
 /**
  * Abstract class that provides generic implementation of some of the methods of the
@@ -49,7 +51,7 @@ public abstract class RestPersistenceManager
   extends AbstractRemotePersistenceManager
 {
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(RestPersistenceManager.class);
-  private static final String AUTH_HEADER_PARAM_NAME = "Authorization";
+//  private static final String AUTH_HEADER_PARAM_NAME = "Authorization";
   private Map lastResponseHeaders;
 
   public RestPersistenceManager()
@@ -99,19 +101,17 @@ public abstract class RestPersistenceManager
    * @param entity
    * @return
    */
-  public Map getPayloadKeyValuePairs(Entity entity, List attributesToExclude)
+  public Map<String,Object> getPayloadKeyValuePairs(Entity entity, List<String> attributesToExclude)
   {
-    Map pairs = new HashMap();
+    Map<String,Object> pairs = new HashMap<String,Object>();
     String entityClass = entity.getClass().getName();
     ObjectPersistenceMapping mapping = ObjectPersistenceMapping.getInstance();
     ClassMappingDescriptor descriptor = mapping.findClassMappingDescriptor(entityClass);
-    List attributeMappings = descriptor.getAttributeMappingsDirect();
-    // when attributes have a dot in the attribute name, they are nested, and we have
+    List<AttributeMappingDirect> attributeMappings = descriptor.getAttributeMappingsDirect();
     // to create nested maps to create the correct json payload
     // we assume that nesting is only one level deep.
-    for (int i = 0; i < attributeMappings.size(); i++)
+    for (AttributeMappingDirect attrMapping : attributeMappings)
     {
-      AttributeMapping attrMapping = (AttributeMapping) attributeMappings.get(i);
       String attrName = attrMapping.getAttributeName();
       if (attributesToExclude!=null && attributesToExclude.contains(attrName))
       {
@@ -127,12 +127,12 @@ public abstract class RestPersistenceManager
         {
           String nestedObjectName = payloadAttr.substring(0, dotpos);
           String nestedAttributeName = payloadAttr.substring(dotpos + 1);
-          Map nestedObjectMap = (Map) pairs.get(nestedObjectName);
+          Map<String,Object> nestedObjectMap = (Map<String, Object>) pairs.get(nestedObjectName);
           if (nestedObjectMap == null)
           {
             // first attribute of this nested object, create the map and add it to
             // top-level map
-            nestedObjectMap = new HashMap();
+            nestedObjectMap = new HashMap<String,Object>();
             pairs.put(nestedObjectName, nestedObjectMap);
           }
           // add the attribute to the nested map
@@ -155,42 +155,42 @@ public abstract class RestPersistenceManager
       }
     }
     // loop over one-to-many relationships to add detail data objects
-    List oneToManyMappings = descriptor.getAttributeMappingsOneToMany();
-    for (int i = 0; i < oneToManyMappings.size(); i++)
+    List<AttributeMappingOneToMany> oneToManyMappings = descriptor.getAttributeMappingsOneToMany();
+    for (AttributeMappingOneToMany attrMapping : oneToManyMappings)
     {
-      AttributeMappingOneToMany attrMapping = (AttributeMappingOneToMany) oneToManyMappings.get(i);
       String attrName2 = attrMapping.getAttributeName();
       if (attributesToExclude!=null && attributesToExclude.contains(attrName2))
       {
         continue;
       }
-      if (attrMapping.getAccessorMethod() != null || attrMapping.getAttributeNameInPayload() == null)
+      //      if (attrMapping.getAccessorMethod() != null || attrMapping.getAttributeNameInPayload() == null)
+      if (attrMapping.getAttributeNameInPayload() == null)
       {
-        // skip child entities when they have their own finder method or no payload attr specified
-        // continue;
+        // skip child entities when no payload attr specified. There stiull might a finder method for reead operations,
+        // so we only check payload attr to allow write operatiuons to include the detaild
+        continue;
       }
-      List children = (List) entity.getAttributeValue(attrMapping.getAttributeName());
-      List childKeyValuePairs = new ArrayList();
-      for (int j = 0; j < children.size(); j++)
+      List<Entity> children = (List<Entity>) entity.getAttributeValue(attrMapping.getAttributeName());
+      List<Map<String,Object>> childKeyValuePairs = new ArrayList<Map<String,Object>>();
+      for (Entity child : children)
       {
-        Entity child = (Entity) children.get(j);
         // recursive call
         // only include attributesToExclude that are prefixed with the child entityName
-        List childAttrsToIgnore = new ArrayList();
+        List<String> childAttrsToIgnore = new ArrayList<String>();
         if (attributesToExclude!=null)
         {
           String childClassName = child.getClass().getName();
           String childDataObjectName = childClassName.substring(childClassName.lastIndexOf(".")+1);
           for (int k = 0; k < attributesToExclude.size(); k++)
           {
-            String attrName = (String) attributesToExclude.get(k);
+            String attrName = attributesToExclude.get(k);
             if (attrName.startsWith(childDataObjectName+"."))
             {
               childAttrsToIgnore.add(attrName.substring(childDataObjectName.length()));
             }            
           }
         }
-        Map childMap = getPayloadKeyValuePairs(child,childAttrsToIgnore);
+        Map<String,Object> childMap = getPayloadKeyValuePairs(child,childAttrsToIgnore);
         childKeyValuePairs.add(childMap);
       }
       // if there is only one child, we check property sendAsArrayIfOnlyOneEntry
@@ -244,7 +244,7 @@ public abstract class RestPersistenceManager
   }
 
   public String invokeRestService(String connectionName, String requestType, String requestUri, String payload,
-                                  Map headerParamMap, int retryLimit, boolean secured)
+                                  Map<String,String> headerParamMap, int retryLimit, boolean secured)
   {
     boolean isGET = "GET".equals(requestType);
     RestServiceAdapter restService = Model.createRestServiceAdapter();
@@ -262,14 +262,14 @@ public abstract class RestPersistenceManager
     //    boolean added = addAuthorizationHeaderIfNeeded(connectionName, requestUri, secured, restService);
     if (headerParamMap != null)
     {
-      Iterator keys = headerParamMap.keySet().iterator();
+      Iterator<String> keys = headerParamMap.keySet().iterator();
       while (keys.hasNext())
       {
-        String key = (String) keys.next();
+        String key = keys.next();
         // Authorization header might already be added because mobile security is enabled
         //        if (!key.equals(AUTH_HEADER_PARAM_NAME) || !added)
         //        {
-        restService.addRequestProperty(key, (String) headerParamMap.get(key));
+        restService.addRequestProperty(key, headerParamMap.get(key));
         //        }
       }
     }
@@ -417,7 +417,7 @@ public abstract class RestPersistenceManager
     //    return false;
   }
 
-  public String invokeRestService(Method method, Map paramValues)
+  public String invokeRestService(Method method, Map<MethodParameter, String> paramValues)
   {
     // parameters with pathParam=true are included between curly brackets in uri, we need
     // to substitute the param with the actual value in that case
@@ -426,17 +426,17 @@ public abstract class RestPersistenceManager
     String uri = method.getRequestUri();
     StringBuffer payload = new StringBuffer("");
     StringBuffer queryString = new StringBuffer("");
-    Iterator paramIter = paramValues.keySet().iterator();
+    Iterator<MethodParameter> paramIter = paramValues.keySet().iterator();
     while (paramIter.hasNext())
     {
-      MethodParameter param = (MethodParameter) paramIter.next();
+      MethodParameter param = paramIter.next();
       String paramName = param.getName();
       if (param.isPathParam())
       {
         // substitute in uri
         String oldValue = "{" + paramName + "}";
-        Object value = paramValues.get(param);
-        String newValue = value != null? value.toString(): "";
+        String value = paramValues.get(param);
+        String newValue = value != null? value : "";
         uri = StringUtils.substitute(uri, oldValue, newValue);
       }
       else
@@ -467,17 +467,18 @@ public abstract class RestPersistenceManager
         }
       }
     }
-    Map headerParamMap = new HashMap();
-    List headerParams = method.getHeaderParams();
+    Map<String,String> headerParamMap = new HashMap<String,String>();
+    List<MethodHeaderParameter> headerParams = method.getHeaderParams();
     // add OAuth header params if needed
     addOAuthHeaderParamsIfNeeded(method, headerParams);
     
-    for (int i = 0; i < headerParams.size(); i++)
+    for (MethodHeaderParameter param : headerParams)
     {
-      MethodHeaderParameter param = (MethodHeaderParameter) headerParams.get(i);
       // value might be EL expression
       Object value = AdfmfJavaUtilities.evaluateELExpression(param.getValue());
-      headerParamMap.put(param.getName(), value);
+      // header request prop must be string value
+      String strValue = value!=null ? value.toString() : null;
+      headerParamMap.put(param.getName(), strValue);
     }
     if (!queryString.toString().equals(""))
     {
@@ -492,7 +493,7 @@ public abstract class RestPersistenceManager
    * @param method
    * @param headerParams
    */
-  protected void addOAuthHeaderParamsIfNeeded(Method method, List headerParams)
+  protected void addOAuthHeaderParamsIfNeeded(Method method, List<MethodHeaderParameter> headerParams)
   {
     String oauthConfigName = method.getOAuthConfigName();
     if (oauthConfigName!=null && !"".equals(oauthConfigName))
@@ -503,7 +504,7 @@ public abstract class RestPersistenceManager
 
   public void sendWriteRequest(Entity entity, Method method, String action)
   {
-    Map paramValues = createParameterMap(entity, method, null, action);
+    Map<MethodParameter,String> paramValues = createParameterMap(entity, method, null, action);
     try
     {
       String response = invokeRestService(method, paramValues);
@@ -570,7 +571,7 @@ public abstract class RestPersistenceManager
     {
       sLog.severe("No getCanonical method found for " + entityClass.getName());
     }
-    Map paramValues = createParameterMap(entity, getCanonicalMethod, null, null);
+    Map<MethodParameter,String> paramValues = createParameterMap(entity, getCanonicalMethod, null, null);
     try
     {
       String restResponse = invokeRestService(getCanonicalMethod, paramValues);
@@ -600,7 +601,7 @@ public abstract class RestPersistenceManager
       sLog.severe("Custom method " + customMethod + " not found for " + entityClass.getName());
       return;
     }
-    Map paramValues = createParameterMap(entity, customMethod, null, null);
+    Map<MethodParameter,String> paramValues = createParameterMap(entity, customMethod, null, null);
     try
     {
       String restResponse = invokeRestService(customMethod, paramValues);
@@ -616,9 +617,9 @@ public abstract class RestPersistenceManager
   }
 
 
-  public List findAll(Class entityClass)
+  public List<Entity> findAll(Class entityClass)
   {
-    List entities = new ArrayList();
+    List<Entity> entities = new ArrayList<Entity>();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
     Method findAllMethod = descriptor.getFindAllMethod();
     if (findAllMethod == null)
@@ -626,7 +627,7 @@ public abstract class RestPersistenceManager
       sLog.severe("No findAll method found for " + entityClass.getName());
       return Collections.EMPTY_LIST;
     }
-    Map paramValues = createParameterMap(null, findAllMethod, null, null);
+    Map<MethodParameter,String> paramValues = createParameterMap(null, findAllMethod, null, null);
     try
     {
       String restResponse = invokeRestService(findAllMethod, paramValues);
@@ -661,7 +662,7 @@ public abstract class RestPersistenceManager
       sLog.severe("No findAllInParent method found for " + childEntityClass.getName());
       return Collections.EMPTY_LIST;
     }
-    Map paramValues = createParameterMap(parent, findAllInParentMethod, null, null);
+    Map<MethodParameter,String> paramValues = createParameterMap(parent, findAllInParentMethod, null, null);
     try
     {
       String restResponse = invokeRestService(findAllInParentMethod, paramValues);
@@ -697,10 +698,10 @@ public abstract class RestPersistenceManager
     return Collections.EMPTY_LIST;
   }
 
-  public Map createParameterMap(Entity entity, Method method, Map searchValues, String action)
+  public Map<MethodParameter,String> createParameterMap(Entity entity, Method method, Map<String,String> searchValues, String action)
   {
-    List params = method.getParams();
-    Map paramValues = new HashMap();
+    List<MethodParameter> params = method.getParams();
+    Map<MethodParameter,String> paramValues = new HashMap<MethodParameter,String>();
     // if we need to send serialized DO as payload, we add it to parameter map with param name as ""
     if (method.isSendDataObjectAsPayload())
     {
@@ -711,9 +712,8 @@ public abstract class RestPersistenceManager
       MethodParameter payloadParam = new MethodParameterImpl("");
       paramValues.put(payloadParam, serializedDO);
     }
-    for (int i = 0; i < params.size(); i++)
+    for (MethodParameter param : params)
     {
-      MethodParameter param = (MethodParameter) params.get(i);
       if (param.isSerializedDataObject() && entity != null)
       {
         boolean remove = ACTION_REMOVE.equals(action);
@@ -726,7 +726,7 @@ public abstract class RestPersistenceManager
         Object value = entity.getAttributeValue(param.getDataObjectAttribute());
         if (value != null)
         {
-          paramValues.put(param, value);
+          paramValues.put(param, value.toString());
         }
       }
       else if (param.isLiteralValue() && param.getValue() != null)
@@ -738,7 +738,7 @@ public abstract class RestPersistenceManager
         Object value = AdfmfJavaUtilities.evaluateELExpression(param.getValue());
         if (value != null)
         {
-          paramValues.put(param, value);
+          paramValues.put(param, value.toString());
         }
       }
       else if (param.isSearchValue() && searchValues != null)
@@ -746,7 +746,7 @@ public abstract class RestPersistenceManager
         Object value = searchValues.get(param.getName());
         if (value != null)
         {
-          paramValues.put(param, value);
+          paramValues.put(param, value.toString());
         }
       }
     }
@@ -762,7 +762,7 @@ public abstract class RestPersistenceManager
       sLog.severe("No getAsParent method found for " + parentEtityClass.getName());
       return null;
     }
-    Map paramValues = createParameterMap(child, getAsParentMethod, null, null);
+    Map<MethodParameter,String> paramValues = createParameterMap(child, getAsParentMethod, null, null);
     try
     {
       String restResponse = invokeRestService(getAsParentMethod, paramValues);
@@ -770,7 +770,7 @@ public abstract class RestPersistenceManager
       {
         // only retrieve key values, otherwise we can get an endless loop because a getter method for parent attributes
         // typically causes this method to be called
-        List parentBindParamInfos = getBindParamInfos(child, true);
+        List<BindParamInfo> parentBindParamInfos = getBindParamInfos(child, true);
         List entities =
           handleReadResponse(restResponse, parentEtityClass, getAsParentMethod.getPayloadElementName(),
                              getAsParentMethod.getPayloadRowElementName(), parentBindParamInfos, false);
@@ -802,13 +802,13 @@ public abstract class RestPersistenceManager
                                                     boolean deleteRow);
 
   protected abstract String getSerializedDataObject(Entity entity, String collectionElementName, String rowElementName,
-                                                    List attributesToExclude, boolean deleteRow);
+                                                    List<String> attributesToExclude, boolean deleteRow);
 
   protected abstract List handleReadResponse(String restResponse, Class entityClass, String collectionElementName,
-                                             String rowElementName, List parentBindParamInfos,
+                                             String rowElementName, List<BindParamInfo> parentBindParamInfos,
                                              boolean deleteLocalRowsOnFindAll);
 
   protected abstract List handleResponse(String restResponse, Class entityClass, String collectionElementName,
-                                             String rowElementName, List parentBindParamInfos, Entity currentEntity,
+                                             String rowElementName, List<BindParamInfo> parentBindParamInfos, Entity currentEntity,
                                              boolean deleteLocalRowsOnFindAll);
 }

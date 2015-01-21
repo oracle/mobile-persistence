@@ -2,6 +2,8 @@
   Copyright © 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  20-jan-2015   Steven Davelaar
+  1.1           Fixed bug in getLocalPersistenceManager, local pm might not be set against (child) descriptor
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
@@ -439,6 +441,11 @@ public class EntityUtils
 //    }
     DBPersistenceManager pm = null;  
     String className =  descriptor.getLocalPersistenceManagerClassName();
+    if (className==null)
+    {
+      // might not be set for child entity
+      className = DBPersistenceManager.class.getName();
+    }
       try   
       {
         Class pmClass =  Utility.loadClass(className);

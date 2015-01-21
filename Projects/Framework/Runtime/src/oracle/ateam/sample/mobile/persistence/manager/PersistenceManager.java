@@ -33,7 +33,7 @@ public interface PersistenceManager
   
   void removeEntity(Entity entity, boolean doCommit);
 
-  List findAll(Class entityClass);
+  List<Entity> findAll(Class entityClass);
 
   List find(Class entityClass, String searchValue);
 

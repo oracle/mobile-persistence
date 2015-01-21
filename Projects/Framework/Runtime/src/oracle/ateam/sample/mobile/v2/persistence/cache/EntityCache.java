@@ -22,7 +22,7 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 public class EntityCache
 {
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(EntityCache.class);
-  private Map cache = new HashMap();
+  private Map<Class,Map<EntityKey,Entity>> cache = new HashMap<Class,Map<EntityKey,Entity>>();
   private static EntityCache instance;
   
   public EntityCache()
@@ -49,7 +49,7 @@ public class EntityCache
    */
   public void addEntity(Entity entity)
   {
-     Map entityCache = findOrCreateEntityCache(entity.getClass());
+     Map<EntityKey,Entity> entityCache = findOrCreateEntityCache(entity.getClass());
      entityCache.put(new EntityKey(EntityUtils.getEntityKey(entity)), entity);
   }
 
@@ -57,15 +57,14 @@ public class EntityCache
    * Addes a list of entities to the cache.
    * @param entities
    */
-  public void addEntities(List entities)
+  public void addEntities(List<Entity> entities)
   {
     if (entities.size()>0)
     {
       Class entityClass = entities.get(0).getClass();
-      Map entityCache = findOrCreateEntityCache(entityClass);
-      for (int i = 0; i < entities.size(); i++)
+      Map<EntityKey,Entity> entityCache = findOrCreateEntityCache(entityClass);
+      for (Entity entity : entities)
       {
-        Entity entity = (Entity) entities.get(i);
         entityCache.put(new EntityKey(EntityUtils.getEntityKey(entity)), entity);
       }
     }
@@ -73,16 +72,16 @@ public class EntityCache
 
   public void removeEntity(Entity entity)
   {
-     Map entityCache = findOrCreateEntityCache(entity.getClass());
+     Map<EntityKey,Entity> entityCache = findOrCreateEntityCache(entity.getClass());
      entityCache.remove(new EntityKey(EntityUtils.getEntityKey(entity)));
   }
 
-  public Map findOrCreateEntityCache(Class entityClass)
+  public Map<EntityKey,Entity> findOrCreateEntityCache(Class entityClass)
   {
-     Map entityCache = (Map) cache.get(entityClass);
+     Map<EntityKey,Entity> entityCache = cache.get(entityClass);
      if (entityCache==null)
      {
-       entityCache = new HashMap();
+       entityCache = new HashMap<EntityKey,Entity>();
        cache.put(entityClass, entityCache);
      }
      return entityCache;
@@ -112,7 +111,7 @@ public class EntityCache
    */
   public void clear(Class entityClass)
   {
-    Map entityCache = (Map) cache.get(entityClass);
+    Map<EntityKey,Entity> entityCache = cache.get(entityClass);
     if (entityCache!=null)
     {
       entityCache.clear();

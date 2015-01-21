@@ -253,8 +253,8 @@ public class CRUDMethodsPanel
       if (doi.getParent()==null)
       {
         doi.initCrudMethodsIfNeeded(methods);
-        dataObjectMap.put(doi.getClassName() + "Service", doi);
-        dataObjectNames.add(doi.getClassName() + "Service");
+        dataObjectMap.put(doi.getServiceClassName(), doi);
+        dataObjectNames.add(doi.getServiceClassName());        
       }
     }
     doilist.setModel(new DefaultComboBoxModel(dataObjectNames.toArray()));
@@ -345,8 +345,10 @@ public class CRUDMethodsPanel
                               null);
     getCanonicalField.setText(currentDataObject.getGetCanonicalMethod() != null?
                                  currentDataObject.getGetCanonicalMethod().getName(): null);
-    createField.setSelectedItem(currentDataObject.getCreateMethod() != null?
-                                currentDataObject.getCreateMethod().getName(): null);
+    String createMethod = currentDataObject.getCreateMethod() != null?
+                                currentDataObject.getCreateMethod().getName(): null;
+    createField.setSelectedItem(createMethod);
+    String aap = (String) createField.getSelectedItem();
     updateField.setSelectedItem(currentDataObject.getUpdateMethod() != null?
                                 currentDataObject.getUpdateMethod().getName(): null);
     mergeField.setSelectedItem(currentDataObject.getMergeMethod() != null?

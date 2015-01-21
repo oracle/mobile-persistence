@@ -361,7 +361,10 @@ public class PersistenceMappingGenerator
   {
     OneToManyMapping mapping = objectFactory.createOneToManyMapping();
     attributeMappings.getOneToManyMapping().add(mapping);
-    mapping.setAccessorMethod(acc.getChildAccessorMethod().getName());
+    if (acc.getChildAccessorMethod()!=null)
+    {
+      mapping.setAccessorMethod(acc.getChildAccessorMethod().getName());      
+    }
     mapping.setAttributeName(acc.getChildAccessorName());
     mapping.setPayloadAttributeName(acc.getChildAccessorPayloadName());
     mapping.setReferenceClassName(acc.getChildDataObject().getFullyQualifiedClassName());

@@ -67,6 +67,7 @@ public class DataObjectInfo
   private DCMethod mergeMethod;
   private DCMethod deleteMethod;
   private boolean crudMethodsInitialized = false;
+
   private boolean deleteLocalRows = true;
   private String sortOrder;
   private String payloadDateFormat;
@@ -143,6 +144,16 @@ public class DataObjectInfo
     this.payloadListElementName = name;
     this.accessorPath = accessorPath;
     attributeInfos = new ArrayList<AttributeInfo>();
+  }
+
+  public void setCrudMethodsInitialized(boolean crudMethodsInitialized)
+  {
+    this.crudMethodsInitialized = crudMethodsInitialized;
+  }
+
+  public boolean isCrudMethodsInitialized()
+  {
+    return crudMethodsInitialized;
   }
 
   private String initClassName(String defaultName)

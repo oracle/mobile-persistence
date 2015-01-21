@@ -129,7 +129,6 @@ public class SelectDataControlPanel
       model.setDataObjectInfos(null);
       model.setCurrentDataObject(null);
       model.setWebServiceDataControl(true);
-      model.setExistingPersistenceMappingModel(new PersistenceMappingLoader().loadJaxbModel());
     }
     super.onExit(tc);
   }

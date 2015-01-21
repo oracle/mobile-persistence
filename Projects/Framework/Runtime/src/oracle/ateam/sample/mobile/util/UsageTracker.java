@@ -110,7 +110,7 @@ public class UsageTracker
 //    return true;    
   }
 
-  protected Map getBasePayload()
+  protected Map<String,Object> getBasePayload()
   {
     // device info
     String networkStatus = DeviceManagerFactory.getDeviceManager().getNetworkStatus();
@@ -124,7 +124,7 @@ public class UsageTracker
     String appVendor = AdfmfContainerUtilities.getApplicationInformation().getVendor();
     String appVersion = AdfmfContainerUtilities.getApplicationInformation().getVersion();
 
-    Map payload = new HashMap();
+    Map<String,Object> payload = new HashMap<String,Object>();
     payload.put("appId", appId);
     payload.put("appVersion", appVersion);
     String appstoreAppId = PersistenceConfig.getPropertyValue("tracking.appstore.appid");
@@ -143,7 +143,7 @@ public class UsageTracker
       Location loc = getLocation();
       if (loc != null)
       {
-        Map locMap = new HashMap();
+        Map<String,String> locMap = new HashMap<String,String>();
         payload.put("location", locMap);
         locMap.put("lat", loc.getLatitude() + "");
         locMap.put("lng", loc.getLongitude() + "");

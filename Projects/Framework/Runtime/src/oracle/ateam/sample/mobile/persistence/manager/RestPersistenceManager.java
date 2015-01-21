@@ -189,10 +189,12 @@ public abstract class RestPersistenceManager
       {
         continue;
       }
-      if (attrMapping.getAccessorMethod() != null || attrMapping.getAttributeNameInPayload() == null)
+//      if (attrMapping.getAccessorMethod() != null || attrMapping.getAttributeNameInPayload() == null)
+      if (attrMapping.getAttributeNameInPayload() == null)
       {
-        // skip child entities when they have their own finder method or no payload attr specified
-        // continue;
+        // skip child entities when no payload attr specified. There stiull might a finder method for reead operations,
+        // so we only check payload attr to allow write operatiuons to include the detaild
+        continue;
       }
       List children = (List) entity.getAttributeValue(attrMapping.getAttributeName());
       List childKeyValuePairs = new ArrayList();

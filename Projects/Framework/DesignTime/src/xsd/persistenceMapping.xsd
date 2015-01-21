@@ -146,7 +146,7 @@
     <xs:complexType>
       <xs:attribute type="xs:string" name="name" use="required"/>
       <xs:attribute type="xs:string" name="value"/>
-      <xs:attribute type="xs:string" name="valueProvider" use="required"/>
+      <xs:attribute type="xs:string" name="valueProvider"/>
       <xs:attribute type="xs:string" name="dataObjectAttribute"/>
       <xs:attribute type="xs:boolean" name="pathParam" use="required"/>
       <xs:attribute type="xs:string" name="javaType"/>
@@ -169,7 +169,7 @@
     </xs:sequence>
     <xs:attribute type="xs:string" name="name"/>
     <xs:attribute type="xs:string" name="uri"/>
-    <xs:attribute type="xs:string" name="connectionName" use="required"/>
+    <xs:attribute type="xs:string" name="connectionName" />
     <xs:attribute type="xs:string" name="dataControlName"/>
     <!--
     using enumeration causes ClassNotFoundError when running the wizrad
@@ -180,7 +180,7 @@
     <xs:attribute type="xs:string" name="payloadRowElementName"/>
     <xs:attribute type="xs:boolean" name="sendDataObjectAsPayload" default="false"/>
     <xs:attribute type="xs:boolean" name="deleteLocalRows" default="false"/>
-    <xs:attribute type="xs:string" name="payloadElementName" use="required"/>
+    <xs:attribute type="xs:string" name="payloadElementName"/>
     <xs:attribute type="xs:string" name="attributesToExclude"/>
     <xs:attribute type="xs:string" name="oauthConfig"/>
   </xs:complexType>

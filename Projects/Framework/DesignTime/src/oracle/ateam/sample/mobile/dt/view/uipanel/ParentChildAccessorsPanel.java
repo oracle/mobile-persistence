@@ -430,7 +430,7 @@ public class ParentChildAccessorsPanel
     {  
       child.addFindAllInParentMethod(childAccessorMethod);            
       accessorInfo.setChildAccessorMethod(childAccessorMethod);
-      accessorInfo.setChildAccessorPayloadName(childAccessorPayloadNameField.getText());  
+      accessorInfo.setChildAccessorPayloadName(StringUtils.convertEmptyStringToNull(childAccessorPayloadNameField.getText()));  
       accessorInfo.setChildAccessorName(childAccessorNameField.getText());            
       // add as new child if this accessor instance is not already added
       // note that we cant just pass in edit or new mode to this method to determine whether we

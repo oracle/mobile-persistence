@@ -181,21 +181,19 @@ public abstract class AbstractRemotePersistenceManager
    * @param bindParamInfos
    * @param descriptor
    */
-  protected void addParentPopulatedBindParamInfos(Class entityClass, List parentBindParamInfos, List bindParamInfos,
+  protected void addParentPopulatedBindParamInfos(Class entityClass, List<BindParamInfo> parentBindParamInfos, List<BindParamInfo> bindParamInfos,
                                                   ClassMappingDescriptor descriptor)
   {
     if (parentBindParamInfos != null)
     {
-      List mappings = descriptor.getAttributeMappingsDirectParentPopulated();
-      for (int i = 0; i < mappings.size(); i++)
+      List<AttributeMappingDirect> mappings = descriptor.getAttributeMappingsDirectParentPopulated();
+      for (AttributeMappingDirect mapping : mappings)
       {
-        AttributeMappingDirect mapping = (AttributeMappingDirect) mappings.get(i);
         String parentAttr = mapping.getParentAttribute();
         // find corresponding parent bind param info
         BindParamInfo parentBindParamInfo = null;
-        for (int j = 0; j < parentBindParamInfos.size(); j++)
+        for (BindParamInfo bpInfo : parentBindParamInfos)
         {
-          BindParamInfo bpInfo = (BindParamInfo) parentBindParamInfos.get(j);
           if (bpInfo.getAttributeName().equals(parentAttr))
           {
             parentBindParamInfo = bpInfo;
@@ -272,11 +270,10 @@ public abstract class AbstractRemotePersistenceManager
    */
   public XmlAnyDefinition findConnection(String name)
   {
-    List connections = Utility.getConnections().getChildDefinitions("Reference");
+    List<XmlAnyDefinition> connections = Utility.getConnections().getChildDefinitions("Reference");
     XmlAnyDefinition connection = null;
-    for (int i = 0; i < connections.size(); i++)
+    for (XmlAnyDefinition currConnection : connections)
     {
-      XmlAnyDefinition currConnection = (XmlAnyDefinition) connections.get(i);
       if (name.equals(currConnection.getAttributeValue("name")))
       {
         connection = currConnection;
@@ -300,12 +297,11 @@ public abstract class AbstractRemotePersistenceManager
    * entity. This is NOT the same instance as in the entity list!!!
    * @return
    */
-  protected Entity createOrUpdateEntityInstance(Class entityClass, List bindParamInfos, Entity currentEntity)
+  protected Entity createOrUpdateEntityInstance(Class entityClass, List<BindParamInfo> bindParamInfos, Entity currentEntity)
   {
     Entity newEntity = EntityUtils.getNewEntityInstance(entityClass);
-    for (int i = 0; i < bindParamInfos.size(); i++)
+    for (BindParamInfo bpInfo : bindParamInfos)
     {
-      BindParamInfo bpInfo = (BindParamInfo) bindParamInfos.get(i);
       newEntity.setAttributeValue(bpInfo.getAttributeName(), bpInfo.getValue());
     }
     // get the key of the new instance and check the cache, if an instance is already present in the cache

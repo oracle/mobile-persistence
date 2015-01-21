@@ -13,6 +13,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -23,9 +24,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.TableColumn;
 
+import oracle.ateam.sample.mobile.dt.controller.PersistenceMappingLoader;
 import oracle.ateam.sample.mobile.dt.model.BusinessObjectGeneratorModel;
 import oracle.ateam.sample.mobile.dt.controller.parser.DataControlDataObjectParser;
 import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
+import oracle.ateam.sample.mobile.dt.model.jaxb.MobileObjectPersistence;
 import oracle.ateam.sample.mobile.dt.view.uimodel.DataObjectTableModel;
 import oracle.ateam.sample.mobile.dt.view.wizard.BusinessObjectsFromWSDataControlWizard;
 
@@ -105,6 +108,16 @@ public class DataObjectsPanel
       showCollectionAccessorsOnly.isSelected()? dataControlVisitor.getAllCollectionAccessorBeans():
       dataControlVisitor.getAllAccessorBeans();
     model.setDataObjectInfos(dataObjects);
+
+    PersistenceMappingLoader loader = new PersistenceMappingLoader();
+    MobileObjectPersistence jaxbModel = loader.loadJaxbModel();
+    model.setExistingPersistenceMappingModel(jaxbModel);
+    if (jaxbModel!=null)
+    {
+      Collection<DataObjectInfo> existingDataObjects =  loader.run(jaxbModel);
+      model.getDataObjectInfos().addAll(existingDataObjects);      
+    }
+
   }
 
   public void onExit(TraversableContext tc)

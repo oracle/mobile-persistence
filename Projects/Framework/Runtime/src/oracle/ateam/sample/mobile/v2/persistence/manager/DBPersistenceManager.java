@@ -119,7 +119,7 @@ public class DBPersistenceManager
    * @param bindParamInfos
    * @return
    */
-  public ResultSet executeSqlSelect(String sql, List bindParamInfos)
+  public ResultSet executeSqlSelect(String sql, List<BindParamInfo> bindParamInfos)
   {
     sLog.fine("Executing SQL statement "+sql);
     PreparedStatement statement = null;
@@ -156,7 +156,7 @@ public class DBPersistenceManager
    * @param bindParamInfos
    * @param doCommit
    */
-  public void executeSqlDml(String sql, List bindParamInfos, boolean doCommit)
+  public void executeSqlDml(String sql, List<BindParamInfo> bindParamInfos, boolean doCommit)
   {
     PreparedStatement statement = null;
     try
@@ -226,7 +226,7 @@ public class DBPersistenceManager
     {
       MessageUtils.handleError(entity.getClass().getName()+ " with this key already exists");
     }
-    List bindParamInfos = getBindParamInfos(entity,false,true);
+    List<BindParamInfo> bindParamInfos = getBindParamInfos(entity,false,true);
     insertRow(bindParamInfos, doCommit);
     mergeChildren(entity,doCommit);
   }
@@ -236,7 +236,7 @@ public class DBPersistenceManager
    * @param bindParamInfos
    * @param doCommit
    */
-  public void insertRow(List bindParamInfos, boolean doCommit)
+  public void insertRow(List<BindParamInfo> bindParamInfos, boolean doCommit)
   {
     if (bindParamInfos.size() == 0)
     {
@@ -256,7 +256,7 @@ public class DBPersistenceManager
    * @param bindParamInfos
    * @param doCommit
    */
-  public void mergeRow(List bindParamInfos, boolean doCommit)
+  public void mergeRow(List<BindParamInfo> bindParamInfos, boolean doCommit)
   {
     if (bindParamInfos.size() == 0)
     {
@@ -264,10 +264,9 @@ public class DBPersistenceManager
       return;
     }
     // get the primary key bind info
-    List primaryKeyBindParamInfos = new ArrayList();
-    for (int i = 0; i < bindParamInfos.size(); i++)
+    List<BindParamInfo> primaryKeyBindParamInfos = new ArrayList();
+    for (BindParamInfo bpInfo : bindParamInfos)
     {
-      BindParamInfo bpInfo = (BindParamInfo) bindParamInfos.get(i);
       if (bpInfo.isPrimaryKey())
       {
         primaryKeyBindParamInfos.add(bpInfo);
@@ -313,7 +312,7 @@ public class DBPersistenceManager
     StringBuffer sql = new StringBuffer();
     sql.append(SQL_DELETE_KEYWORD);
     sql.append(tableName);
-    executeSqlDml(sql.toString(), new ArrayList(), doCommit);
+    executeSqlDml(sql.toString(), new ArrayList<BindParamInfo>(), doCommit);
   }
 
   /**
@@ -323,8 +322,8 @@ public class DBPersistenceManager
    */
   public void removeEntity(Entity entity, boolean doCommit)
   {
-    List primaryKeyBindParamInfos = getPrimaryKeyBindParamInfo(entity);
-    BindParamInfo firstPkValue = (BindParamInfo) primaryKeyBindParamInfos.get(0);
+    List<BindParamInfo> primaryKeyBindParamInfos = getPrimaryKeyBindParamInfo(entity);
+    BindParamInfo firstPkValue = primaryKeyBindParamInfos.get(0);
     StringBuffer sql = new StringBuffer(SQL_DELETE_KEYWORD);
     sql.append(firstPkValue.getTableName());
     sql = constructWhereClause(sql, primaryKeyBindParamInfos);
@@ -341,7 +340,7 @@ public class DBPersistenceManager
    */
   public void updateEntity(Entity entity, boolean doCommit)
   {
-    List bindParamInfos = getBindParamInfos(entity,false,true);
+    List<BindParamInfo> bindParamInfos = getBindParamInfos(entity,false,true);
     updateRow(bindParamInfos, doCommit);
     mergeChildren(entity,doCommit);
   }
@@ -355,7 +354,7 @@ public class DBPersistenceManager
    * @param bindParamInfos
    * @param doCommit
    */
-  public void updateRow(List bindParamInfos, boolean doCommit)
+  public void updateRow(List<BindParamInfo> bindParamInfos, boolean doCommit)
   {
     if (bindParamInfos.size() == 0)
     {
@@ -364,9 +363,8 @@ public class DBPersistenceManager
     }
     // if all bindParamInfos are pk bindings then there is nothing to update
     boolean update =false;
-    for (int i = 0; i < bindParamInfos.size(); i++)
+    for (BindParamInfo bpInfo : bindParamInfos)
     {
-      BindParamInfo bpInfo = (BindParamInfo) bindParamInfos.get(i);
       if (!bpInfo.isPrimaryKey())
       {
         update = true;
@@ -386,9 +384,9 @@ public class DBPersistenceManager
    * @param bindParamInfos
    * @return
    */
-  public StringBuffer getSqlInsertIntoPart(List bindParamInfos)
+  public StringBuffer getSqlInsertIntoPart(List<BindParamInfo> bindParamInfos)
   {
-    BindParamInfo firstValue = (BindParamInfo) bindParamInfos.get(0);
+    BindParamInfo firstValue = bindParamInfos.get(0);
     StringBuffer insertSQL = new StringBuffer(SQL_INSERT_KEYWORD);
     insertSQL.append(firstValue.getTableName());
     insertSQL.append(" (");
@@ -409,17 +407,16 @@ public class DBPersistenceManager
    * @param bindParamInfos
    * @return
    */
-  public StringBuffer getSqlUpdateStatement(List bindParamInfos)
+  public StringBuffer getSqlUpdateStatement(List<BindParamInfo> bindParamInfos)
   {
-    BindParamInfo firstValue = (BindParamInfo) bindParamInfos.get(0);
+    BindParamInfo firstValue = bindParamInfos.get(0);
     StringBuffer sql = new StringBuffer(SQL_UPDATE_KEYWORD);
     sql.append(firstValue.getTableName());
     sql.append(SQL_SET_KEYWORD);
     boolean first = true;
-    List primaryKeyValues = new ArrayList();
-    for (int i = 0; i < bindParamInfos.size(); i++)
+    List<BindParamInfo> primaryKeyValues = new ArrayList<BindParamInfo>();
+    for (BindParamInfo bindParamInfo : bindParamInfos)
     {
-      BindParamInfo bindParamInfo = (BindParamInfo) bindParamInfos.get(i);
       if (bindParamInfo.getColumnName()==null)
       {
         continue;
@@ -454,13 +451,12 @@ public class DBPersistenceManager
    * @param statement
    * @throws java.sql.SQLException
    */
-  public void setSqlBindParams(List bindParamInfos, PreparedStatement statement, boolean pkValueAsLast)
+  public void setSqlBindParams(List<BindParamInfo> bindParamInfos, PreparedStatement statement, boolean pkValueAsLast)
     throws java.sql.SQLException
   { 
     int countPkBindParams = 0;
-    for (int i = 0; i < bindParamInfos.size(); i++)
+    for (BindParamInfo bindParamInfo : bindParamInfos)
     {
-      BindParamInfo bindParamInfo = (BindParamInfo) bindParamInfos.get(i);
       if (bindParamInfo.isPrimaryKey())
       {
         countPkBindParams++;
@@ -468,9 +464,8 @@ public class DBPersistenceManager
     }
     int pkBindParamsProcessed = 0;
     int bindVarCounter = 1;
-    for (int i = 0; i < bindParamInfos.size(); i++)
+    for (BindParamInfo bindParamInfo : bindParamInfos)
     {
-      BindParamInfo bindParamInfo = (BindParamInfo) bindParamInfos.get(i);
       Object value = bindParamInfo.getValue();
       int bindpos = bindVarCounter;
       if (pkValueAsLast && bindParamInfo.isPrimaryKey())
@@ -515,14 +510,13 @@ public class DBPersistenceManager
    * @param bindParamInfos
    * @return
    */
-  public String getSqlInsertValuesPart(List bindParamInfos)
+  public String getSqlInsertValuesPart(List<BindParamInfo> bindParamInfos)
   {
     StringBuffer valuesPart = new StringBuffer();
     valuesPart.append("VALUES (");
     boolean first = true;
-    for (int i = 0; i < bindParamInfos.size(); i++)
+    for (BindParamInfo bpInfo : bindParamInfos)
     {
-      BindParamInfo bpInfo = (BindParamInfo) bindParamInfos.get(i);
       if (bpInfo.getColumnName()==null)
       {
         continue;
@@ -547,13 +541,12 @@ public class DBPersistenceManager
    * @param bindParamInfos
    * @return
    */
-  public String getSqlColumnNamesCommaSeparated(List bindParamInfos)
+  public String getSqlColumnNamesCommaSeparated(List<BindParamInfo> bindParamInfos)
   {
     StringBuffer columnNames = new StringBuffer();
     boolean first = true;
-    for (int i = 0; i < bindParamInfos.size(); i++)
+    for (BindParamInfo bindParamInfo : bindParamInfos)
     {
-      BindParamInfo bindParamInfo = (BindParamInfo) bindParamInfos.get(i);
       if (bindParamInfo.getColumnName()==null)
       {
         continue;
@@ -580,7 +573,7 @@ public class DBPersistenceManager
    */
   public boolean isEntityExixtsInDB(Entity entity)
   {
-    List primaryKeyValues = getPrimaryKeyBindParamInfo(entity);
+    List<BindParamInfo> primaryKeyValues = getPrimaryKeyBindParamInfo(entity);
     return isRowExistsInDB(primaryKeyValues);
   }
 
@@ -593,7 +586,7 @@ public class DBPersistenceManager
    */
   public boolean isRowExistsInDB(BindParamInfo bindParamInfo)
   {
-    List bindParamInfos = new ArrayList();
+    List<BindParamInfo> bindParamInfos = new ArrayList<BindParamInfo>();
     bindParamInfos.add(bindParamInfo);
     return isRowExistsInDB(bindParamInfos);
   }
@@ -605,9 +598,9 @@ public class DBPersistenceManager
    * @param entity
    * @return
    */
-  public boolean isRowExistsInDB(List bindParamInfos)
+  public boolean isRowExistsInDB(List<BindParamInfo> bindParamInfos)
   {
-    BindParamInfo firstBindParamInfo = (BindParamInfo) bindParamInfos.get(0);
+    BindParamInfo firstBindParamInfo = bindParamInfos.get(0);
     StringBuffer sql = new StringBuffer(SQL_SELECT_KEYWORD);
     sql.append("1");
     sql.append(SQL_FROM_KEYWORD);
@@ -648,7 +641,7 @@ public class DBPersistenceManager
     }
   }
 
-  public List findAll(Class entityClass)
+  public List<Entity> findAll(Class entityClass)
   {
     return findAll(entityClass.getName());
   }
@@ -682,10 +675,10 @@ public class DBPersistenceManager
     if (entity == null)
     {
       sLog.fine("Entity with key "+key+" not found in entity cache, now checking database");
-      List keyBindParamInfos = getPrimaryKeyBindParamInfo(entityClass);
+      List<BindParamInfo> keyBindParamInfos = getPrimaryKeyBindParamInfo(entityClass);
       for (int i = 0; i < keyBindParamInfos.size(); i++)
       {
-        BindParamInfo keyValue = (BindParamInfo) keyBindParamInfos.get(i);
+        BindParamInfo keyValue = keyBindParamInfos.get(i);
         if (key.length>i)
         {
           keyValue.setValue(key[i]);          
@@ -697,10 +690,10 @@ public class DBPersistenceManager
       constructWhereClause(sql, keyBindParamInfos);      
       ResultSet set = executeSqlSelect(sql.toString(), keyBindParamInfos);
 
-      List entities = createEntitiesFromResultSet(set, descriptor.getAttributeMappingsDirect());
+      List<Entity> entities = createEntitiesFromResultSet(set, descriptor.getAttributeMappings());
       if (entities.size() > 0)
       {
-        entity = (Entity) entities.get(0);
+        entity = entities.get(0);
         sLog.fine("Entity with key "+key+" found in database");
       }
       else
@@ -718,7 +711,7 @@ public class DBPersistenceManager
    * @param entityClass
    * @return
    */
-  public List findAll(String entityClass)
+  public List<Entity> findAll(String entityClass)
   {
     return find(entityClass, null);
   }
@@ -754,7 +747,7 @@ public class DBPersistenceManager
    * @param searchValue
    * @return List of matching entity instances
    */
-  public List find(Class entityClass, String searchValue)
+  public List<Entity> find(Class entityClass, String searchValue)
   {
     return find(entityClass, searchValue, null);
   }
@@ -773,19 +766,18 @@ public class DBPersistenceManager
    * will be searched on
    * @return List of matching entity instances
    */
-  public List find(Class entityClass, String searchValue, List attrNamesToSearch)
+  public List<Entity> find(Class entityClass, String searchValue, List<String> attrNamesToSearch)
   {
     ObjectPersistenceMapping persMapping = ObjectPersistenceMapping.getInstance();
     ClassMappingDescriptor descriptor = persMapping.findClassMappingDescriptor(entityClass.getName());
     StringBuffer sql = getSqlSelectFromPart(descriptor);
 
-    List bindParamInfos = new ArrayList();
-    List attributeMappings = descriptor.getAttributeMappingsDirect();
+    List<BindParamInfo> bindParamInfos = new ArrayList<BindParamInfo>();
+    List<AttributeMappingDirect> attributeMappings = descriptor.getAttributeMappingsDirect();
     BigDecimal numericSearchValue = getBigDecimalValue(searchValue);
     boolean isNumeric = numericSearchValue!=null;
-    for (int i = 0; i < attributeMappings.size(); i++)
+    for (AttributeMappingDirect mapping : attributeMappings)
     {
-      AttributeMapping mapping =(AttributeMapping) attributeMappings.get(i);
       if (attrNamesToSearch!=null && !attrNamesToSearch.contains(mapping.getAttributeName()))
       {
         // skip this attr
@@ -813,7 +805,7 @@ public class DBPersistenceManager
     sql = constructWhereClause(sql, bindParamInfos, SQL_OR_OPERATOR);
     sql = constructOrderByClause(sql, descriptor);
     ResultSet set = executeSqlSelect(sql.toString(), bindParamInfos);
-    return createEntitiesFromResultSet(set, descriptor.getAttributeMappingsDirect());
+    return createEntitiesFromResultSet(set, descriptor.getAttributeMappings());
   }
 
   /**
@@ -825,7 +817,7 @@ public class DBPersistenceManager
    * @param entityClass
    * @return
    */
-  public List find(String entityClass, List bindParamInfos)
+  public List<Entity> find(String entityClass, List<BindParamInfo> bindParamInfos)
   {
     ObjectPersistenceMapping persMapping = ObjectPersistenceMapping.getInstance();
     ClassMappingDescriptor descriptor = persMapping.findClassMappingDescriptor(entityClass);
@@ -833,7 +825,7 @@ public class DBPersistenceManager
     sql = constructWhereClause(sql, bindParamInfos);
     sql = constructOrderByClause(sql, descriptor);
     ResultSet set = executeSqlSelect(sql.toString(), bindParamInfos);
-    return createEntitiesFromResultSet(set, descriptor.getAttributeMappingsDirect());
+    return createEntitiesFromResultSet(set, descriptor.getAttributeMappings());
   }
 
   /**
@@ -845,7 +837,7 @@ public class DBPersistenceManager
    */
   public StringBuffer constructWhereClause(StringBuffer sql, BindParamInfo bindParamInfo)
   {
-    List bindParamInfos = new ArrayList();
+    List<BindParamInfo> bindParamInfos = new ArrayList<BindParamInfo>();
     bindParamInfos.add(bindParamInfo);
     return constructWhereClause(sql, bindParamInfos);
   }
@@ -858,7 +850,7 @@ public class DBPersistenceManager
    * @param bindParamInfo
    * @return
    */
-  public StringBuffer constructWhereClause(StringBuffer sql, List bindParamInfos)
+  public StringBuffer constructWhereClause(StringBuffer sql, List<BindParamInfo> bindParamInfos)
   {
     return constructWhereClause(sql, bindParamInfos, SQL_AND_OPERATOR);
   }
@@ -870,7 +862,7 @@ public class DBPersistenceManager
    * @param bindParamInfos
    * @return
    */
-  public StringBuffer constructWhereClause(StringBuffer sql, List bindParamInfos, String operator)
+  public StringBuffer constructWhereClause(StringBuffer sql, List<BindParamInfo> bindParamInfos, String operator)
   {
     if (bindParamInfos == null || bindParamInfos.size() == 0)
     {
@@ -883,7 +875,7 @@ public class DBPersistenceManager
       {
         sql.append(operator);
       }
-      BindParamInfo bp = (BindParamInfo) bindParamInfos.get(i);
+      BindParamInfo bp = bindParamInfos.get(i);
       if (bp.isCaseInsensitive())
       {
         sql.append("UPPER(");        
@@ -940,13 +932,12 @@ public class DBPersistenceManager
    * @param attributeMappings
    * @return
    */
-  public List createEntitiesFromResultSet(ResultSet resultSet, List attributeMappings)
+  public List<Entity> createEntitiesFromResultSet(ResultSet resultSet, List<AttributeMapping> attributeMappings)
   {
-    List entities = new ArrayList();
+    List<Entity> entities = new ArrayList<Entity>();
     try
     {
-      ClassMappingDescriptor classDescriptor =
-        ((AttributeMapping) attributeMappings.get(0)).getClassMappingDescriptor();
+      ClassMappingDescriptor classDescriptor = attributeMappings.get(0).getClassMappingDescriptor();
       List<AttributeMapping> keyMappings = classDescriptor.getPrimaryKeyAttributeMappings();
       Class entityClass = classDescriptor.getClazz();
       while (resultSet.next())
@@ -966,10 +957,9 @@ public class DBPersistenceManager
           entity = EntityUtils.getNewEntityInstance(classDescriptor.getClazz());
           entities.add(entity);
         }  
-        List selectMappings = classDescriptor.getAttributeMappings();
-        for (int i = 0; i < selectMappings.size(); i++)
+        List<AttributeMapping> selectMappings = classDescriptor.getAttributeMappings();
+        for (AttributeMapping mapping : selectMappings)
         {
-          AttributeMapping mapping = (AttributeMapping) selectMappings.get(i);
           // first handle onen to many mapping: does not have column value in result set
           if (mapping.isOneToManyMapping())
           {
@@ -1214,7 +1204,7 @@ public class DBPersistenceManager
         throw new AdfException("Could not find SQL Script: " + script, AdfException.ERROR);
       }
       BufferedReader bReader = new BufferedReader(new InputStreamReader(is));
-      List stmts = new ArrayList();
+      List<String> stmts = new ArrayList<String>();
       String strstmt = "";
       String ln = bReader.readLine();
       while (ln != null)
@@ -1240,7 +1230,7 @@ public class DBPersistenceManager
       for (int i = 0; i < stmts.size(); i++)
       {
         Statement pStmt = connection.createStatement();
-        String sql = (String) stmts.get(i);
+        String sql = stmts.get(i);
         sLog.severe("Processing SQL script "+script+", executing statement "+sql);
         try
         {
@@ -1339,34 +1329,31 @@ public class DBPersistenceManager
   {
     ObjectPersistenceMapping mapping = ObjectPersistenceMapping.getInstance();
     ClassMappingDescriptor descriptor = mapping.findClassMappingDescriptor(parentEntity.getClass().getName());
-    List attributeMappings = descriptor.getAttributeMappingsOneToMany();
-    for (int i = 0; i < attributeMappings.size(); i++)
+    List<AttributeMappingOneToMany> attributeMappings = descriptor.getAttributeMappingsOneToMany();
+    for (AttributeMappingOneToMany attrMapping : attributeMappings)
     {
-      AttributeMappingOneToMany attrMapping = (AttributeMappingOneToMany) attributeMappings.get(i);
       // only merge children of the one-to-many mapping does not have a method accessor. When it
       // has a method accessor, it is not a true parent-child relationship and the parent merge method is not
       // able to process the child entity
       if (attrMapping.getAccessorMethod()==null)
       {
-        List children = (List) parentEntity.getAttributeValue(attrMapping.getAttributeName());
-        for (int j = 0; j < children.size(); j++)
+        List<Entity> children = (List<Entity>) parentEntity.getAttributeValue(attrMapping.getAttributeName());
+        for (Entity child : children)
         {
-          Entity child = (Entity) children.get(j);
           mergeEntity(child, doCommit);
         }        
       }
     }
   }
 
-  public List findAllInParent(Class entityClass, Entity parent, String accessorAttribute)
+  public List<Entity> findAllInParent(Class entityClass, Entity parent, String accessorAttribute)
   {
     // first find the corresponding oneToManyMapping
     ClassMappingDescriptor parentDescriptor = ClassMappingDescriptor.getInstance(parent.getClass());
-    List mappings = parentDescriptor.getAttributeMappingsOneToMany();
+    List<AttributeMappingOneToMany> mappings = parentDescriptor.getAttributeMappingsOneToMany();
     AttributeMappingOneToMany oneToManyMapping = null;
-    for (int i = 0; i < mappings.size(); i++)
+    for (AttributeMappingOneToMany mapping : mappings)
     {
-      AttributeMappingOneToMany mapping = (AttributeMappingOneToMany) mappings.get(i);
       if (mapping.getAttributeName().equals(accessorAttribute))
       {
         oneToManyMapping = mapping;
@@ -1380,17 +1367,17 @@ public class DBPersistenceManager
     return findAllInParent(entityClass, parent, oneToManyMapping );
   }
 
-  public List findAllInParent(Class entityClass, Entity parent, AttributeMappingOneToMany oneToManyMapping)
+  public List<Entity> findAllInParent(Class entityClass, Entity parent, AttributeMappingOneToMany oneToManyMapping)
   {
     ClassMappingDescriptor parentDescriptor = ClassMappingDescriptor.getInstance(parent.getClass());
     ClassMappingDescriptor referenceDescriptor = ClassMappingDescriptor.getInstance(entityClass);
-    Map columnMappings = oneToManyMapping.getColumnMappings();
-    Iterator sourceColumns = columnMappings.keySet().iterator();
-    List bindParamInfos = new ArrayList();
+    Map<String,String> columnMappings = oneToManyMapping.getColumnMappings();
+    Iterator<String> sourceColumns = columnMappings.keySet().iterator();
+    List<BindParamInfo> bindParamInfos = new ArrayList<BindParamInfo>();
     while (sourceColumns.hasNext())
     {
-      String sourceColumn = (String) sourceColumns.next();
-      String targetColumn = (String) columnMappings.get(sourceColumn);
+      String sourceColumn = sourceColumns.next();
+      String targetColumn = columnMappings.get(sourceColumn);
       // lookup attribute mapping for the source column in referenceDescriptor
       AttributeMapping refAttrMapping = referenceDescriptor.findAttributeMappingByColumnName(sourceColumn);
       BindParamInfo bp = constructBindParamInfo(referenceDescriptor.getClazz(), refAttrMapping);
@@ -1407,11 +1394,10 @@ public class DBPersistenceManager
   public Entity getAsParent(Class entityClass, Entity child, String accessorAttribute)
   {
     ClassMappingDescriptor childDescriptor = ClassMappingDescriptor.getInstance(child.getClass());
-    List mappings = childDescriptor.getAttributeMappingsOneToOne();
+    List<AttributeMappingOneToOne> mappings = childDescriptor.getAttributeMappingsOneToOne();
     AttributeMappingOneToOne oneToOneMapping = null;
-    for (int i = 0; i < mappings.size(); i++)
+    for (AttributeMappingOneToOne mapping : mappings)
     {
-      AttributeMappingOneToOne mapping = (AttributeMappingOneToOne) mappings.get(i);
       if (mapping.getAttributeName().equals(accessorAttribute))
       {
         oneToOneMapping = mapping;
@@ -1429,13 +1415,13 @@ public class DBPersistenceManager
   {
     ClassMappingDescriptor childDescriptor = ClassMappingDescriptor.getInstance(child.getClass());
     ClassMappingDescriptor parentDescriptor = ClassMappingDescriptor.getInstance(entityClass);
-    Map columnMappings = oneToOneMapping.getColumnMappings();
-    Iterator sourceColumns = columnMappings.keySet().iterator();
-    List bindParamInfos = new ArrayList();
+    Map<String,String> columnMappings = oneToOneMapping.getColumnMappings();
+    Iterator<String> sourceColumns = columnMappings.keySet().iterator();
+    List<BindParamInfo> bindParamInfos = new ArrayList<BindParamInfo>();
     while (sourceColumns.hasNext())
     {
-      String sourceColumn = (String) sourceColumns.next();
-      String targetColumn = (String) columnMappings.get(sourceColumn);
+      String sourceColumn = sourceColumns.next();
+      String targetColumn = columnMappings.get(sourceColumn);
       // lookup attribute mapping for the source column in childDescriptor to get the FK value
       AttributeMapping attrMapping = childDescriptor.findAttributeMappingByColumnName(sourceColumn);
       Object value = child.getAttributeValue(attrMapping.getAttributeName());
@@ -1453,10 +1439,10 @@ public class DBPersistenceManager
     }
     if (bindParamInfos.size()>0)
     {
-      List entities= find(entityClass.getName(), bindParamInfos);      
+      List<Entity> entities= find(entityClass.getName(), bindParamInfos);      
       if (entities.size()>0)
       {
-        return (Entity) entities.get(0);
+        return entities.get(0);
       }
       else
       {
