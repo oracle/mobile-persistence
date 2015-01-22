@@ -9,7 +9,6 @@
  ******************************************************************************/
  package oracle.ateam.sample.mobile.v2.persistence.util;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

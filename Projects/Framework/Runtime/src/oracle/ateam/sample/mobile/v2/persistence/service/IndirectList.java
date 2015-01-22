@@ -24,7 +24,6 @@ import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
-import oracle.ateam.sample.mobile.v2.persistence.model.EntityList;
 
 
 /**

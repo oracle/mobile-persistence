@@ -43,21 +43,19 @@ public class PersistenceMappingNode
   @Override
   public GrammarProvider createGrammarProvider(JDevXmlContext context)
   {
-    System.err.println("************* PersistenceMappingNode Class Registered **************");
-    System.out.println("************* PersistenceMappingNode Class Registered **************");
+//    System.err.println("************* PersistenceMappingNode Class Registered **************");
     final GrammarProvider superGP = super.createGrammarProvider(context);
     final SchemaGrammarProvider sgp = new SchemaGrammarProvider(superGP);
     final URL url = Thread.currentThread().getContextClassLoader().getResource("xsd/persistenceMapping.xsd");
-    SchemaRegistryAddin.registerSchema(url,".xml");
-    XMLEditorAddin.register(PersistenceMappingNode.class,".xml",true,false);
-    XMLRecognizer.mapNamespaceElemToClass("http://www.oracle.com/ateam/mobile/persistenceMapping", "mobileObjectPersistence", PersistenceMappingNode.class);
-//    XMLRecognizer.mapRootElementToClass("mobileObjectPersistence", PersistenceMappingNode.class);
-//    XMLRecognizer.mapSchemaInstanceToClass("xsd/persistenceMapping.xsd","mobileObjectPersistence", PersistenceMappingNode.class);
-
 
     try
     {
+      // Need to close and re-open the mapping XML before code insight is available with code below.
+      // So, as a work around we also register the schema in AmpaAddin class and then it works right away 
       sgp.addSchema(url);
+//      SchemaRegistryAddin.registerSchema(url,".xml");
+      XMLEditorAddin.register(PersistenceMappingNode.class,".xml",true,false);
+//      XMLRecognizer.mapNamespaceElemToClass("http://www.oracle.com/ateam/mobile/persistenceMapping", "mobileObjectPersistence", PersistenceMappingNode.class);
     }
     catch (GrammarException e)
     {
@@ -70,10 +68,10 @@ public class PersistenceMappingNode
     * Overrides getChildren() defined in oracle.ide.model.Node to avoid lint warning.
     * @return null
     */
-   @Override
-   public Iterator<Element> getChildren()
-   {
-     return null;
-   }
+//   @Override
+//   public Iterator<Element> getChildren()
+//   {
+//     return null;
+//   }
 
 }

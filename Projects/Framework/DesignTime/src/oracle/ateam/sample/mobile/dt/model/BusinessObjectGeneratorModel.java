@@ -14,11 +14,17 @@ import java.util.List;
 
 import oracle.adfdt.model.objects.DataControl;
 
+import oracle.adfmf.common.util.McAppUtils;
+
 import oracle.ateam.sample.mobile.dt.controller.parser.DataControlDataObjectParser;
 
 import oracle.ateam.sample.mobile.dt.model.jaxb.MobileObjectPersistence;
 
+import oracle.ateam.sample.mobile.dt.util.FileUtils;
+
 import oracle.ide.Ide;
+
+import oracle.ide.model.Project;
 
 import oracle.javatools.db.DBObjectProvider;
 
@@ -48,16 +54,16 @@ public class BusinessObjectGeneratorModel {
   private boolean overwriteDataObjectClasses = true;
   private boolean overwriteServiceObjectClasses = false;
   private boolean enableUsageTracking = false;
-  private boolean useJDK_1_4_Style = false;
+  private boolean maf20Style = false;
 
-  public void setUseJDK_1_4_Style(boolean useJDK_1_4_Style)
+  public void setMaf20Style(boolean maf20Style)
   {
-    this.useJDK_1_4_Style = useJDK_1_4_Style;
+    this.maf20Style = maf20Style;
   }
 
-  public boolean isUseJDK_1_4_Style()
+  public boolean isMaf20Style()
   {
-    return useJDK_1_4_Style;
+    return maf20Style;
   }
 
   public void setExistingPersistenceMappingModel(MobileObjectPersistence existingPersistenceMappingModel)
@@ -99,6 +105,17 @@ public class BusinessObjectGeneratorModel {
   //   String defaultPackage = Ide.getActiveProject() project.getProperty(DEFAULT_PACKAGE_PROPERTY);
      setPackageName(defaultPackage+".model");  
      setServicePackageName(defaultPackage+".model.service");  
+     setMaf20Style(oldPersistenceMappingFileExists());
+   }
+   
+   private boolean oldPersistenceMappingFileExists()
+   {
+     Project appControllerProject = McAppUtils.getApplicationControllerProject(Ide.getActiveWorkspace()
+                                                                                       , null);
+     String fileName = "persistenceMapping.xml";
+     URL sourceURL = FileUtils.getSourceURL(appControllerProject, "META-INF", fileName);
+     String content = FileUtils.getStringFromInputStream(FileUtils.getInputStream(sourceURL));
+     return content!=null;
    }
 
   public void setDataControlName(String dataControlName)

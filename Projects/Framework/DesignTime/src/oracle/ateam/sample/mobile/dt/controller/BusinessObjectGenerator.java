@@ -92,7 +92,7 @@ public class BusinessObjectGenerator
     log.info("Added A-Team Mobile Persistence Libraries to "+appControllerProject.getShortLabel());
     VelocityInitializer vi = new VelocityInitializer();
     // wsm = web service model
-    vi.initVelocity("WSM");
+    vi.initVelocity("WSM",model.isMaf20Style());
     VelocityTemplateProcessor processor = new VelocityTemplateProcessor(vi);
 
     // generate data object Java class

@@ -6,6 +6,7 @@
   1.0           initial creation
  ******************************************************************************/
  package oracle.ateam.sample.mobile.v2.persistence.manager;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
@@ -22,31 +23,24 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
-
 import java.sql.Types;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-
 import java.util.Map;
-
-import oracle.adf.model.datacontrols.device.PreferenceScope;
 
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
 
-import oracle.adfmf.util.GenericType;
-
+import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.util.MessageUtils;
 import oracle.ateam.sample.mobile.v2.persistence.cache.EntityCache;
 import oracle.ateam.sample.mobile.v2.persistence.db.BindParamInfo;
 import oracle.ateam.sample.mobile.v2.persistence.db.DBConnectionFactory;
-import oracle.ateam.sample.mobile.v2.persistence.service.IndirectList;
-import oracle.ateam.sample.mobile.v2.persistence.service.ValueHolder;
-import oracle.ateam.sample.mobile.v2.persistence.service.ValueHolderInterface;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;
+import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingOneToMany;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingOneToOne;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
@@ -54,9 +48,6 @@ import oracle.ateam.sample.mobile.v2.persistence.metadata.ObjectPersistenceMappi
 import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
-import oracle.ateam.sample.mobile.util.ADFMobileLogger;
-import oracle.ateam.sample.mobile.util.MessageUtils;
-import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
 
 
 /**

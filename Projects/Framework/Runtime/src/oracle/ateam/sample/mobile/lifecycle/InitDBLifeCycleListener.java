@@ -7,17 +7,12 @@
 ******************************************************************************/
 package oracle.ateam.sample.mobile.lifecycle;
 
-import java.util.List;
-
 import oracle.adfmf.application.LifeCycleListener;
 
-import oracle.adfmf.framework.api.AdfmfJavaUtilities;
-
-import oracle.ateam.sample.mobile.persistence.db.DBConnectionFactory;
-import oracle.ateam.sample.mobile.persistence.manager.DBPersistenceManager;
-import oracle.ateam.sample.mobile.persistence.service.DataSynchManager;
-import oracle.ateam.sample.mobile.util.UsageTracker;
+import oracle.ateam.sample.mobile.v2.persistence.db.DBConnectionFactory;
+import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.util.UsageTracker;
 
 
 /**
@@ -36,7 +31,7 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
  * ddl.script=META-INF/hr.sql
  * </pre>
  *
- *  
+ *
  */
 public class InitDBLifeCycleListener
   implements LifeCycleListener

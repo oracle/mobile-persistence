@@ -398,7 +398,7 @@ public class ParentChildAccessorsPanel
       {
         if (childAccessorMethod==null)
         {
-          String suffix = model.isUseJDK_1_4_Style() ? "List" : "";
+          String suffix = model.isMaf20Style() ? "List" : "";
           childAccessorMethod = new DCMethod(childAccessorNameField.getText()+suffix,model.getConnectionName(), childAccessorMethodFieldRest.getText(), (String) childAccessorMethodRequestType.getSelectedItem());                      
         }
         childAccessorMethod.setParameterValueProviderDataObject(parent);

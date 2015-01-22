@@ -11,7 +11,6 @@ package oracle.ateam.sample.mobile.controller.bean;
 
 import oracle.adfmf.bindings.DataControl;
 import oracle.adfmf.bindings.dbf.AmxBindingContext;
-import oracle.adfmf.dc.bean.ConcreteJavaBeanObject;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
 import oracle.adfmf.framework.model.AdfELContext;
@@ -27,7 +26,7 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
  * like setCurrentEntityWithKey. This saves the burden of creating a managed bean just to invoke a data control
  * method using AdfmfUtilities.invokeDataControlMethod.
  *
- *  
+ *
  */
 public class DataControlBean
 {

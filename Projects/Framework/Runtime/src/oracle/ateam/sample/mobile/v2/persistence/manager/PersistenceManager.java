@@ -6,10 +6,10 @@
   1.0           initial creation
  ******************************************************************************/
  package oracle.ateam.sample.mobile.v2.persistence.manager;
+
 import java.util.List;
 
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
-import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 
 /**
  * Interface that provides basic CRUD operations for a given entity instance.

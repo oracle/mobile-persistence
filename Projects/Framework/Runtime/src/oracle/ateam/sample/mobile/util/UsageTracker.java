@@ -15,19 +15,14 @@ import java.util.Map;
 
 import oracle.adf.model.datacontrols.device.DeviceManager;
 import oracle.adf.model.datacontrols.device.DeviceManagerFactory;
-
 import oracle.adf.model.datacontrols.device.Location;
 
 import oracle.adfmf.dc.ws.rest.RestServiceAdapter;
 import oracle.adfmf.framework.api.AdfmfContainerUtilities;
-import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.api.JSONBeanSerializationHelper;
-import oracle.adfmf.framework.api.Model;
-import oracle.adfmf.framework.internal.AdfmfContainerUtilitiesInternal;
 
 import oracle.ateam.sample.mobile.Version;
-import oracle.ateam.sample.mobile.persistence.metadata.PersistenceConfig;
-import oracle.ateam.sample.mobile.persistence.service.EntityCRUDService;
+import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 
 /**
  * Class used to track the mobile app usage. In mobile-persistence-config, two endpoints can be configured: one to register

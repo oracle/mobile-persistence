@@ -1,4 +1,4 @@
-<extension id="oracle.ateam.mobile.persistence" version="12.1.3.1.14" 
+<extension id="oracle.ateam.mobile.persistence" version="12.1.3.1.16" 
            xmlns="http://jcp.org/jsr/198/extension-manifest" esdk-version="1.0">
   <name>A-Team Mobile Persistence Accelerator</name>
   <required-bundles>
@@ -157,7 +157,7 @@
             <properties>
               <property name="Name">A-Team Mobile Persistence Accelerator - Read Me</property>
             </properties>
-            <controller-class>oracle.ateam.sample.mobile.dt.MobileController</controller-class>
+            <!--<controller-class>oracle.ateam.sample.mobile.dt.MobileController</controller-class>-->
         </action>
       </actions> 
     
@@ -191,6 +191,11 @@
             <srcpath>oracle.ateam.mobile.persistence/Runtime-src.zip</srcpath>
             <docpath>oracle.ateam.mobile.persistence/Runtime-javadoc.zip</docpath>
       </library>    
+      <library name="A-Team Mobile Persistence Runtime MAF 2.0" deployed="true"  forceExtensionInitialization="true"   >
+            <classpath>oracle.ateam.mobile.persistence/RuntimeMaf20.jar</classpath>
+            <srcpath>oracle.ateam.mobile.persistence/RuntimeMaf20-src.zip</srcpath>
+            <docpath>oracle.ateam.mobile.persistence/RuntimeMaf20-javadoc.zip</docpath>
+      </library>    
     </libraries>
       
     </triggers>
@@ -208,6 +213,7 @@
     
     <jdeveloper-hook xmlns="http://xmlns.oracle.com/jdeveloper/1013/extension">
       <addins>
+        <addin>oracle.ateam.sample.mobile.dt.AmpaAddin</addin>
       </addins>
     </jdeveloper-hook>
   </hooks>  

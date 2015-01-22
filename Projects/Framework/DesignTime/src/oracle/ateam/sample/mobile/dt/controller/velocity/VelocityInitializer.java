@@ -26,11 +26,12 @@ public class VelocityInitializer
     super();
   }
 
-  public void initVelocity(String modelKey)
+  public void initVelocity(String modelKey, boolean maf20Style)
   {
     this.velocityEngine = new VelocityEngine();
     this.modelKey = modelKey;
-    String templatesBaseDir = Ide.getOracleHomeDirectory()+"/jdev/extensions/oracle.ateam.mobile.persistence/templates";
+    String suffix = maf20Style ? "/maf20" : "";
+    String templatesBaseDir = Ide.getOracleHomeDirectory()+"/jdev/extensions/oracle.ateam.mobile.persistence/templates"+suffix;
 
     velocityEngine.setProperty(VelocityEngine.FILE_RESOURCE_LOADER_PATH, templatesBaseDir);
     velocityEngine.setProperty(VelocityEngine.FILE_RESOURCE_LOADER_CACHE, "true");

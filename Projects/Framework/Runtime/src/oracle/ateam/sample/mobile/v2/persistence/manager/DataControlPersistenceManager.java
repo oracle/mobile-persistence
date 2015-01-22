@@ -6,23 +6,21 @@
   1.0           initial creation
  ******************************************************************************/
  package oracle.ateam.sample.mobile.v2.persistence.manager;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-
 import java.util.Map;
 
 import oracle.adfmf.dc.ws.soap.SoapGenericType;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
-import oracle.adfmf.framework.exception.AdfInvocationException;
-import oracle.adfmf.framework.exception.AdfInvocationRuntimeException;
 import oracle.adfmf.util.AttributeInfo;
 import oracle.adfmf.util.GenericType;
 
-import oracle.ateam.sample.mobile.v2.persistence.cache.EntityCache;
+import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.v2.persistence.db.BindParamInfo;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
@@ -32,15 +30,11 @@ import oracle.ateam.sample.mobile.v2.persistence.metadata.Method;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.MethodParameter;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ObjectPersistenceMapping;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
-import oracle.ateam.sample.mobile.v2.persistence.service.DataSynchAction;
-import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
-import oracle.ateam.sample.mobile.util.ADFMobileLogger;
-import oracle.ateam.sample.mobile.util.MessageUtils;
 
 
 /**
  * Implementation of persistence manager interface that provides basic CRUD operations using
- * a web service data control. This class uses the AdfmfJavaUtilities.invokeDataControlMethod method to 
+ * a web service data control. This class uses the AdfmfJavaUtilities.invokeDataControlMethod method to
  * invoke the web service. To be able to use this class, you first need to run the Web Service Data Control wizard
  * in JDeveloper, even if you do not intend to do drag-and-drop actions using the web service data control.
  * You also need to make sure that an instance of the data control is defined in the dataControlUsages

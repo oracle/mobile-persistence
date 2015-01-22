@@ -107,7 +107,7 @@ public class UIGenerator
 
     VelocityInitializer vi = new VelocityInitializer();
     // MPS: Mobile Persistence Sample
-    vi.initVelocity("MPS");
+    vi.initVelocity("MPS",false);
     processor = new VelocityTemplateProcessor(vi);
     PageDefGenerator pageDef = new PageDefGenerator(model, project, log);
     model.setPageDef(pageDef);

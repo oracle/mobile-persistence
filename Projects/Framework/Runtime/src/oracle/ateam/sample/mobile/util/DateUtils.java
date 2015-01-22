@@ -16,8 +16,6 @@ import java.util.Date;
 
 import oracle.adfmf.framework.exception.AdfException;
 
-import oracle.ateam.sample.mobile.persistence.metadata.PersistenceConfig;
-
 public class DateUtils
 {
   
