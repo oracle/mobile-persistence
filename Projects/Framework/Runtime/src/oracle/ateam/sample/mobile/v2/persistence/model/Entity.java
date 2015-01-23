@@ -28,7 +28,7 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
  *  Abstract class that must be extended by all data object classes that need to be persisted, either remotely or
  *  local on mobile device in SQLite database.
  */
-public abstract class Entity extends ChangeEventSupportable
+public abstract class Entity<E> extends ChangeEventSupportable
 {
 
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(Entity.class);

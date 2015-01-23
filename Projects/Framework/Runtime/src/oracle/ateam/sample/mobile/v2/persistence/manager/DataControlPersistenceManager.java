@@ -74,10 +74,10 @@ public class DataControlPersistenceManager
    * @param entityClass
    * @return
    */
-  public List<Entity> findAll(Class entityClass)
+  public <E extends Entity> List<E> findAll(Class entityClass)
   {
     sLog.fine("Executing findAll for entity "+entityClass.getName());
-    List<Entity> entities = new ArrayList<Entity>();
+    List<E> entities = new ArrayList<E>();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
     Method method = descriptor.getFindAllMethod();
     if (method ==null)
@@ -254,9 +254,9 @@ public class DataControlPersistenceManager
    * @param entityClass
    * @param deleteAllRows
    */
-  protected List<Entity> handleReadResponse(GenericType result, Class entityClass, String payloadElementName, List<BindParamInfo> parentBindParamInfos, boolean deleteAllRows)
+  protected <E extends Entity> List<E> handleReadResponse(GenericType result, Class entityClass, String payloadElementName, List<BindParamInfo> parentBindParamInfos, boolean deleteAllRows)
   {
-    List<Entity> entities = new ArrayList<Entity>();      
+    List<E> entities = new ArrayList<E>();      
     try
     {
       if (deleteAllRows)
@@ -276,7 +276,7 @@ public class DataControlPersistenceManager
   }
 
 
-  protected void findAndProcessPayloadElements(String elementName, GenericType result, Class entityClass, List<BindParamInfo> parentBindParamInfos, List<Entity> entities, Entity currentEntity)
+  protected <E extends Entity> void findAndProcessPayloadElements(String elementName, GenericType result, Class entityClass, List<BindParamInfo> parentBindParamInfos, List<E> entities, E currentEntity)
   {
     for (int i = 0; i < result.getAttributeCount(); i++)
     {
@@ -293,7 +293,7 @@ public class DataControlPersistenceManager
       // like "findDepartmentResponse" but in the DC palette it shows up as "result".
       if (payloadGenericType.getName().equals(elementName) || elementName==null || "result".equalsIgnoreCase(elementName))
       {
-        Entity entity = processPayloadElement(payloadGenericType,entityClass,parentBindParamInfos,currentEntity);        
+        E entity = processPayloadElement(payloadGenericType,entityClass,parentBindParamInfos,currentEntity);        
         if (entity!=null && !entities.contains(entity))
         {
           entities.add(entity);
@@ -316,7 +316,7 @@ public class DataControlPersistenceManager
    * @param currentEntity only has a value when this method called from handleWriteResponse 
    * @return
    */
-  protected Entity processPayloadElement(GenericType payloadGenericType,Class entityClass, List<BindParamInfo> parentBindParamInfos, Entity currentEntity)
+  protected <E extends Entity> E processPayloadElement(GenericType payloadGenericType,Class entityClass, List<BindParamInfo> parentBindParamInfos, E currentEntity)
   {
     List<BindParamInfo> bindParamInfos = new ArrayList<BindParamInfo>();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);    
@@ -372,7 +372,7 @@ public class DataControlPersistenceManager
     // get the primary key, and check the cache for existing entity instance with this key
     // if it exists, update this instance which is then always the same as currentEntity instance
     // otherwise, when currentEntity is not null, this means the PK has changed.
-    Entity entity = createOrUpdateEntityInstance(entityClass, bindParamInfos, currentEntity);
+    E entity = createOrUpdateEntityInstance(entityClass, bindParamInfos, currentEntity);
     
     // insert or update the row in the database.
     if (descriptor.isPersisted())
@@ -426,9 +426,9 @@ public class DataControlPersistenceManager
   }
 
 
-  public List<Entity> find(Class entityClass, String searchValue)
+  public <E extends Entity> List<E> find(Class entityClass, String searchValue)
   {
-    List<Entity> entities = new ArrayList<Entity>();
+    List<E> entities = new ArrayList<E>();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
     Method method = descriptor.getFindMethod();
     if (method ==null)
@@ -480,7 +480,7 @@ public class DataControlPersistenceManager
     }
   }
 
-  public List<Entity> find(Class entityClass, String searchValue, List<String> attrNamesToSearch)
+  public <E extends Entity> List<E> find(Class entityClass, String searchValue, List<String> attrNamesToSearch)
   {
     return Collections.EMPTY_LIST;
   }
@@ -516,10 +516,10 @@ public class DataControlPersistenceManager
   public void rollback()
   {
   }
-
-  public List<Entity> findAllInParent(Class childEntityClass, Entity parent, String accessorAttribute)
+  
+  public <E extends Entity> List<E> findAllInParent(Class childEntityClass, Entity parent, String accessorAttribute)
   {
-    List<Entity> entities = new ArrayList<Entity>();
+    List<E> entities = new ArrayList<E>();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(childEntityClass);
     Method method = descriptor.getFindAllInParentMethod(accessorAttribute);
     if (method ==null)

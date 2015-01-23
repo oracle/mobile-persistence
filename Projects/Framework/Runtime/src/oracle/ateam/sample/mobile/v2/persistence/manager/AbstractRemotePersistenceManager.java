@@ -174,7 +174,7 @@ public abstract class AbstractRemotePersistenceManager
 
   /**
    * This method creates BindParamInfo instances that populate attributes in a child entity that have been added to set up a parent-child relationship
-   * between two entities. The <parent-attribute> element in persistenceMapping.xml defines the parent entity attribute from
+   * between two entities. The parentAttribute element in persistence-mapping.xml defines the parent entity attribute from
    * which the value should be obtained and applied to the child attribute.
    * @param entityClass
    * @param parentBindParamInfos
@@ -297,16 +297,16 @@ public abstract class AbstractRemotePersistenceManager
    * entity. This is NOT the same instance as in the entity list!!!
    * @return
    */
-  protected Entity createOrUpdateEntityInstance(Class entityClass, List<BindParamInfo> bindParamInfos, Entity currentEntity)
+  protected <E extends Entity> E createOrUpdateEntityInstance(Class entityClass, List<BindParamInfo> bindParamInfos, E currentEntity)
   {
-    Entity newEntity = EntityUtils.getNewEntityInstance(entityClass);
+    E newEntity = EntityUtils.getNewEntityInstance(entityClass);
     for (BindParamInfo bpInfo : bindParamInfos)
     {
       newEntity.setAttributeValue(bpInfo.getAttributeName(), bpInfo.getValue());
     }
     // get the key of the new instance and check the cache, if an instance is already present in the cache
     // we need to update this instance and return it, instead of the new entity instance just created
-    Entity existingEntity = EntityCache.getInstance().findByUID(entityClass, EntityUtils.getEntityKey(newEntity));
+    E existingEntity = EntityCache.getInstance().findByUID(entityClass, EntityUtils.getEntityKey(newEntity));
     if (existingEntity != null)
     {
       // do not copy null values, currentInstance might contain attributes that are only saved

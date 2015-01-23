@@ -78,7 +78,7 @@ public class DataSynchronizer
         
       }
     }
-    synchManager.setDataSynchRunning(false); 
+    synchManager.setDataSynchRunning(false);       
     crudService.dataSynchFinished(getSucceededSynchActions(), getFailedSynchActions());
   }
 

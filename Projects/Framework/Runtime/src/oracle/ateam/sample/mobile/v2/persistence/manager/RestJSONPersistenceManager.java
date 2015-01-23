@@ -147,21 +147,21 @@ public class RestJSONPersistenceManager
     return StringUtils.substitute(json, "{\".null\":true}", "null");
   }
 
-  protected List<Entity> handleReadResponse(String jsonResponse, Class entityClass, String collectionElementName,
+  protected <E extends Entity> List<E> handleReadResponse(String jsonResponse, Class entityClass, String collectionElementName,
                                     String rowElementName, List<BindParamInfo> parentBindParamInfos, boolean deleteAllRows)
   {
     return handleResponse(jsonResponse, entityClass,collectionElementName,
                                     rowElementName,parentBindParamInfos, null, deleteAllRows);
   }
 
-  protected List<Entity> handleResponse(String jsonResponse, Class entityClass, String collectionElementName,
-                                    String rowElementName, List<BindParamInfo> parentBindParamInfos, Entity currentEntity, boolean deleteAllRows)
+  protected <E extends Entity> List<E> handleResponse(String jsonResponse, Class entityClass, String collectionElementName,
+                                    String rowElementName, List<BindParamInfo> parentBindParamInfos, E currentEntity, boolean deleteAllRows)
   {
     if (deleteAllRows)
     {
       getLocalPersistenceManager().deleteAllRows(entityClass);
     }
-    List<Entity> entities = new ArrayList<Entity>();
+    List<E> entities = new ArrayList<E>();
     if (!jsonResponse.startsWith("{") && !jsonResponse.startsWith("["))
     {
       return entities;
@@ -231,8 +231,8 @@ public class RestJSONPersistenceManager
   }
 
 
-  protected void findAndProcessPayloadElements(String rowElementName, Object collection, Class entityClass,
-                                               List<BindParamInfo> parentBindParamInfos, List<Entity> entities, Entity currentEntity)
+  protected <E extends Entity> void findAndProcessPayloadElements(String rowElementName, Object collection, Class entityClass,
+                                               List<BindParamInfo> parentBindParamInfos, List<E> entities, E currentEntity)
     throws JSONException
   {
     if (collection instanceof JSONArray)
@@ -269,7 +269,7 @@ public class RestJSONPersistenceManager
             throw new AdfException("JSON row element " + rowElementName + " is not of type JSONObject or JSONArray",AdfException.ERROR);
           }
         }
-        Entity entity = processPayloadElement(row, entityClass, parentBindParamInfos, currentEntity);
+        E entity = processPayloadElement(row, entityClass, parentBindParamInfos, currentEntity);
         if (entity!=null && !entities.contains(entity))
         {
           entities.add(entity);
@@ -278,7 +278,7 @@ public class RestJSONPersistenceManager
     }
     else if (collection instanceof JSONObject)
     {
-      Entity entity = processPayloadElement((JSONObject) collection, entityClass, parentBindParamInfos, currentEntity);
+      E entity = processPayloadElement((JSONObject) collection, entityClass, parentBindParamInfos, currentEntity);
       if (entity!=null && !entities.contains(entity))
       {
         entities.add(entity);
@@ -333,8 +333,8 @@ public class RestJSONPersistenceManager
     return null;
   }
 
-  protected Entity processPayloadElement(JSONObject row, Class entityClass, List<BindParamInfo> parentBindParamInfos,
-                                         Entity currentEntity)
+  protected <E extends Entity> E processPayloadElement(JSONObject row, Class entityClass, List<BindParamInfo> parentBindParamInfos,
+                                         E currentEntity)
     throws JSONException
   {
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
@@ -381,7 +381,7 @@ public class RestJSONPersistenceManager
     // get the primary key, and check the cache for existing entity instance with this key
     // if it exists, update this instance which is then always the same as currentEntity instance
     // otherwise, when currentEntity is not null, this means the PK has changed.
-    Entity entity = createOrUpdateEntityInstance(entityClass, bindParamInfos, currentEntity);
+    E entity = createOrUpdateEntityInstance(entityClass, bindParamInfos, currentEntity);
 
     if (descriptor.isPersisted())
     {

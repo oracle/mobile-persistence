@@ -632,7 +632,7 @@ public class DBPersistenceManager
     }
   }
 
-  public List<Entity> findAll(Class entityClass)
+  public <E extends Entity> List<E> findAll(Class entityClass)
   {
     return findAll(entityClass.getName());
   }
@@ -702,7 +702,7 @@ public class DBPersistenceManager
    * @param entityClass
    * @return
    */
-  public List<Entity> findAll(String entityClass)
+  public <E extends Entity> List<E> findAll(String entityClass)
   {
     return find(entityClass, null);
   }
@@ -738,7 +738,7 @@ public class DBPersistenceManager
    * @param searchValue
    * @return List of matching entity instances
    */
-  public List<Entity> find(Class entityClass, String searchValue)
+  public <E extends Entity> List<E> find(Class entityClass, String searchValue)
   {
     return find(entityClass, searchValue, null);
   }
@@ -757,7 +757,7 @@ public class DBPersistenceManager
    * will be searched on
    * @return List of matching entity instances
    */
-  public List<Entity> find(Class entityClass, String searchValue, List<String> attrNamesToSearch)
+  public <E extends Entity> List<E> find(Class entityClass, String searchValue, List<String> attrNamesToSearch)
   {
     ObjectPersistenceMapping persMapping = ObjectPersistenceMapping.getInstance();
     ClassMappingDescriptor descriptor = persMapping.findClassMappingDescriptor(entityClass.getName());
@@ -808,7 +808,7 @@ public class DBPersistenceManager
    * @param entityClass
    * @return
    */
-  public List<Entity> find(String entityClass, List<BindParamInfo> bindParamInfos)
+  public <E extends Entity> List<E> find(String entityClass, List<BindParamInfo> bindParamInfos)
   {
     ObjectPersistenceMapping persMapping = ObjectPersistenceMapping.getInstance();
     ClassMappingDescriptor descriptor = persMapping.findClassMappingDescriptor(entityClass);
@@ -923,9 +923,9 @@ public class DBPersistenceManager
    * @param attributeMappings
    * @return
    */
-  public List<Entity> createEntitiesFromResultSet(ResultSet resultSet, List<AttributeMapping> attributeMappings)
+  public <E extends Entity> List<E> createEntitiesFromResultSet(ResultSet resultSet, List<AttributeMapping> attributeMappings)
   {
-    List<Entity> entities = new ArrayList<Entity>();
+    List<E> entities = new ArrayList<E>();
     try
     {
       ClassMappingDescriptor classDescriptor = attributeMappings.get(0).getClassMappingDescriptor();
@@ -934,7 +934,7 @@ public class DBPersistenceManager
       while (resultSet.next())
       {
         Object[] keyValue = getAttributeValuesFromResultSet(resultSet, keyMappings, entityClass);
-        Entity entity = EntityCache.getInstance().findByUID(classDescriptor.getClazz(), keyValue);
+        E entity = EntityCache.getInstance().findByUID(classDescriptor.getClazz(), keyValue);
         boolean entityInCache = entity != null;
         if (entityInCache)
         {
@@ -1337,7 +1337,7 @@ public class DBPersistenceManager
     }
   }
 
-  public List<Entity> findAllInParent(Class entityClass, Entity parent, String accessorAttribute)
+  public <E extends Entity> List<E> findAllInParent(Class entityClass, Entity parent, String accessorAttribute)
   {
     // first find the corresponding oneToManyMapping
     ClassMappingDescriptor parentDescriptor = ClassMappingDescriptor.getInstance(parent.getClass());
@@ -1358,7 +1358,7 @@ public class DBPersistenceManager
     return findAllInParent(entityClass, parent, oneToManyMapping );
   }
 
-  public List<Entity> findAllInParent(Class entityClass, Entity parent, AttributeMappingOneToMany oneToManyMapping)
+  public <E extends Entity> List<E> findAllInParent(Class entityClass, Entity parent, AttributeMappingOneToMany oneToManyMapping)
   {
     ClassMappingDescriptor parentDescriptor = ClassMappingDescriptor.getInstance(parent.getClass());
     ClassMappingDescriptor referenceDescriptor = ClassMappingDescriptor.getInstance(entityClass);

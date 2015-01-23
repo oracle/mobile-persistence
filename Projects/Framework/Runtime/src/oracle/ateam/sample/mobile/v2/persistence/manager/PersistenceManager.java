@@ -32,11 +32,11 @@ public interface PersistenceManager
   
   void removeEntity(Entity entity, boolean doCommit);
 
-  List<Entity> findAll(Class entityClass);
+  <E extends Entity> List<E> findAll(Class entityClass);
 
-  List<Entity> find(Class entityClass, String searchValue);
+  <E extends Entity> List<E> find(Class entityClass, String searchValue);
 
-  List<Entity> find(Class entityClass, String searchValue, List<String> attrNamesToSearch);
+  <E extends Entity> List<E> find(Class entityClass, String searchValue, List<String> attrNamesToSearch);
   
   Entity findByKey(Class entityClass, Object[] key);
 

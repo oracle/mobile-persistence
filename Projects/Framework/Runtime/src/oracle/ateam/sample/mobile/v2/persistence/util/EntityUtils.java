@@ -257,11 +257,11 @@ public class EntityUtils
     return attrs;     
   }
 
-  public static Entity getNewEntityInstance(Class entityClass)
+  public static <E extends Entity> E getNewEntityInstance(Class entityClass)
   {
     try
     {
-      Entity entity = (Entity) entityClass.newInstance();
+      E entity = (E)entityClass.newInstance();
       return entity;
     }
     catch (InstantiationException e)

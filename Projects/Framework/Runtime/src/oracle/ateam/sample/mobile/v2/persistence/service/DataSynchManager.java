@@ -246,7 +246,7 @@ public class DataSynchManager
     }
     if (AdfmfJavaUtilities.isBackgroundThread())
     {
-      AdfmfJavaUtilities.flushDataChangeEvent();
+       AdfmfJavaUtilities.flushDataChangeEvent();
     }
   }
 

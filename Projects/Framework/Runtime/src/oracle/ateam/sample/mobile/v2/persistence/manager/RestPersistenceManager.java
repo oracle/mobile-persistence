@@ -617,9 +617,9 @@ public abstract class RestPersistenceManager
   }
 
 
-  public List<Entity> findAll(Class entityClass)
+  public <E extends Entity> List<E> findAll(Class entityClass)
   {
-    List<Entity> entities = new ArrayList<Entity>();
+    List<E> entities = new ArrayList<E>();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
     Method findAllMethod = descriptor.getFindAllMethod();
     if (findAllMethod == null)
@@ -652,9 +652,9 @@ public abstract class RestPersistenceManager
     return entities;
   }
 
-  public List<Entity> findAllInParent(Class childEntityClass, Entity parent, String accessorAttribute)
+  public <E extends Entity> List<E> findAllInParent(Class childEntityClass, Entity parent, String accessorAttribute)
   {
-    List<Entity> entities = new ArrayList<Entity>();
+    List<E> entities = new ArrayList<E>();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(childEntityClass);
     Method findAllInParentMethod = descriptor.getFindAllInParentMethod(accessorAttribute);
     if (findAllInParentMethod == null)
@@ -688,12 +688,12 @@ public abstract class RestPersistenceManager
     return entities;
   }
 
-  public List<Entity> find(Class entityClass, String searchValue)
+  public <E extends Entity> List<E> find(Class entityClass, String searchValue)
   {
     return Collections.EMPTY_LIST;
   }
 
-  public List<Entity> find(Class entityClass, String searchValue, List attrNamesToSearch)
+  public <E extends Entity> List<E> find(Class entityClass, String searchValue, List<String> attrNamesToSearch)
   {
     return Collections.EMPTY_LIST;
   }
@@ -804,11 +804,11 @@ public abstract class RestPersistenceManager
   protected abstract String getSerializedDataObject(Entity entity, String collectionElementName, String rowElementName,
                                                     List<String> attributesToExclude, boolean deleteRow);
 
-  protected abstract List<Entity> handleReadResponse(String restResponse, Class entityClass, String collectionElementName,
+  protected abstract <E extends Entity> List<E> handleReadResponse(String restResponse, Class entityClass, String collectionElementName,
                                              String rowElementName, List<BindParamInfo> parentBindParamInfos,
                                              boolean deleteLocalRowsOnFindAll);
 
-  protected abstract List<Entity> handleResponse(String restResponse, Class entityClass, String collectionElementName,
-                                             String rowElementName, List<BindParamInfo> parentBindParamInfos, Entity currentEntity,
+  protected abstract <E extends Entity> List<E> handleResponse(String restResponse, Class entityClass, String collectionElementName,
+                                             String rowElementName, List<BindParamInfo> parentBindParamInfos, E currentEntity,
                                              boolean deleteLocalRowsOnFindAll);
 }
