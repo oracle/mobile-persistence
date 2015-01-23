@@ -1,5 +1,5 @@
  /*******************************************************************************
-  Copyright © 2015, Oracle and/or its affiliates. All rights reserved.
+  Copyright ? 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
   08-jan-2015   Steven Davelaar
@@ -337,6 +337,11 @@ public class RestJSONPersistenceManager
                                          E currentEntity)
     throws JSONException
   {
+    if (row.keys()==null  || !row.keys().hasNext()) 
+    {
+        //this an empty JSON Object : "{}", do not create an entity instance
+        return null;
+    }
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
     List<BindParamInfo> bindParamInfos = new ArrayList<BindParamInfo>();
     // map contains mappign as key, and a list of instances as value

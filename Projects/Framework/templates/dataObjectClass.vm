@@ -3,11 +3,10 @@ package ${WSM.currentDataObject.packageName};
 #if (${WSM.currentDataObject.children.size()}>0)
 import java.util.Arrays;
 import java.util.List;
-import java.util.ArrayList;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
+import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 #end
 #if (${WSM.currentDataObject.parents.size()}>0)
-import oracle.ateam.sample.mobile.v2.persistence.service.ValueHolder;
 import oracle.ateam.sample.mobile.v2.persistence.service.ValueHolderInterface;
 #end
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
@@ -19,6 +18,9 @@ import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
   #foreach($child in ${WSM.currentDataObject.children})
     #if (${child.childDataObject.packageName}!=${WSM.currentDataObject.packageName})
       import ${child.childDataObject.fullyQualifiedClassName};
+    #end
+    #if ($child.methodAccessor)
+      import ${child.childDataObject.fullyQualifiedServiceClassName};
     #end
   #end
   #foreach($parent in ${WSM.currentDataObject.parents})
@@ -88,9 +90,14 @@ public class ${WSM.currentDataObject.className} extends Entity
 
   public void remove${child.childDataObject.className}(${child.childDataObject.className} ${child.childDataObject.classVariableName})
   {
-
+    #if ($child.methodAccessor)
+      ${child.childDataObject.serviceClassName} crudService = (${child.childDataObject.serviceClassName}) EntityUtils.  getEntityCRUDService(${child.childDataObject.classVariableName}.getClass());
+      crudService.remove${child.childDataObject.className}(${child.childDataObject.classVariableName});
+    #else
+      DBPersistenceManager pm = new DBPersistenceManager();
+      pm.removeEntity(${child.childDataObject.classVariableName}, true);
+    #end
   }
-
 
   #end
 

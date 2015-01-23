@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
  06-feb-2013   Steven Davelaar
@@ -148,6 +148,16 @@ public class UIDataObjectInfo
   public UIDataObjectInfo getParent()
   {
     return parent;
+  }
+
+  public UIDataObjectInfo getRootDataObject()
+  {
+    UIDataObjectInfo root = this;
+    while (root.getParent()!=null)
+    {
+      root = root.getParent();      
+    }
+    return root;
   }
 
   public void addChild(UIDataObjectInfo child)

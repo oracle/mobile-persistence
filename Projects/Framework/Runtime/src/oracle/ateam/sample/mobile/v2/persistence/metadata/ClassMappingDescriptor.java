@@ -1,5 +1,5 @@
  /*******************************************************************************
-  Copyright © 2015, Oracle and/or its affiliates. All rights reserved.
+  Copyright ? 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
   08-jan-2015   Steven Davelaar
@@ -554,7 +554,7 @@ public class ClassMappingDescriptor
 
   public Method getGetAsParentMethod(String accessorAttribute)
   {
-    List<XmlAnyDefinition> xmlMethods = getMethodNodes(FIND_ALL_IN_PARENT_METHOD);
+    List<XmlAnyDefinition> xmlMethods = getMethodNodes(GET_AS_PARENT_METHOD);
     Method method = null;
     for (XmlAnyDefinition xmlMethod : xmlMethods)
     {  

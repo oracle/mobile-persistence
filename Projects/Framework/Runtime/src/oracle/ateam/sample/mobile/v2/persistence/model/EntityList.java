@@ -1,3 +1,10 @@
+ /*******************************************************************************
+  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+   
+  $revision_history$
+  08-jan-2015   Steven Davelaar
+  1.0           initial creation
+ ******************************************************************************/
 package oracle.ateam.sample.mobile.v2.persistence.model;
 
 
@@ -32,12 +39,8 @@ public class EntityList<E extends Entity>
     // if this is a new entity, then call the add[EntityName] method on the service class or parent entity
     if (EntityUtils.primaryKeyIsNull(element))
     {
-      Class beanClass = element.getClass();
-      String typeName = element.getClass().getName();
-      String addMethodName = "add" + typeName.substring(typeName.lastIndexOf(".") + 1);
-      Class[] paramTypes = new Class[] { int.class, beanClass };
-      Object[] params = new Object[] { new Integer(index), element};
-      Utility.invokeIfPossible(crudService, addMethodName, paramTypes, params);        
+      // call the add[EntityName] method on the service class
+      EntityUtils.invokeAddMethod(crudService, index, element);
     }
   }
 
@@ -47,13 +50,8 @@ public class EntityList<E extends Entity>
     E element = super.remove(index);
     if (element!=null)
     {
-      // call the remove[EntityName] method on the service class or parent entity
-      Class beanClass = element.getClass();
-      String typeName = element.getClass().getName();
-      String removeMethodName = "remove" + typeName.substring(typeName.lastIndexOf(".") + 1);
-      Class[] paramTypes = new Class[] { beanClass };
-      Object[] params = new Object[] { element};
-      Utility.invokeIfPossible(crudService, removeMethodName, paramTypes, params);        
+      // call the remove[EntityName] method on the service class
+      EntityUtils.invokeRemoveMethod(crudService, element);
     }
     return element;
   }

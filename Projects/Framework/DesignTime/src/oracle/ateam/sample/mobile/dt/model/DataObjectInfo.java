@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
  06-feb-2013   Steven Davelaar
@@ -133,6 +133,7 @@ public class DataObjectInfo
     {
       getAttributeDefs().get(0).setKeyAttribute(true);      
     }
+    setPersisted(true);
   }
 
   public DataObjectInfo(String name, String accessorPath)
@@ -452,7 +453,9 @@ public class DataObjectInfo
   }
 
   /**
-   * Returns parent data object if the parent is also selected for generation
+   * Returns parent data object if the parent is also selected for generation.
+   * Only returns a value when the child data objects are included in the parent
+   * data object payload, and not retrieved through separate WS call
    * @return
    */
   public DataObjectInfo getParent()

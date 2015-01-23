@@ -1,5 +1,5 @@
  /*******************************************************************************
-  Copyright © 2015, Oracle and/or its affiliates. All rights reserved.
+  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
   20-jan-2015   Steven Davelaar
@@ -48,23 +48,26 @@ public class EntityUtils
   public static Method getSetMethod(Class entityClass, String attrName, boolean valueHolder)
   {
     String methodName = "set" + attrName.substring(0, 1).toUpperCase() + attrName.substring(1);
-    Class type = getJavaType(entityClass,attrName);
+    Class type = getJavaType(entityClass, attrName);
     if (valueHolder)
     {
-      methodName = methodName+"Holder";
+      methodName = methodName + "Holder";
       type = ValueHolderInterface.class;
     }
     // valueHolder is protected mehod, so pass false as last arg in that case!
-    return getMethod(entityClass, methodName, new Class[]{ type }, !valueHolder);
+    return getMethod(entityClass, methodName, new Class[]
+  {
+    type
+  }, !valueHolder);
   }
 
   public static Class getJavaType(Class entityClass, String attrName)
   {
-    Method getter = getGetMethod(entityClass,attrName);
+    Method getter = getGetMethod(entityClass, attrName);
     if (getter == null)
     {
-      throw new AdfException(" No getter method found for attribute " + attrName + " in class " +
-                                 entityClass.getName(),AdfException.ERROR);
+      throw new AdfException(" No getter method found for attribute " + attrName + " in class " + entityClass.getName(),
+                             AdfException.ERROR);
     }
     return getter.getReturnType();
   }
@@ -91,56 +94,59 @@ public class EntityUtils
         Method[] methods = entityClass.getDeclaredMethods();
         for (int i = 0; i < methods.length; i++)
         {
-          Method method = methods[i];          
+          Method method = methods[i];
           if (method.getName().equals(methodName))
           {
             found = method;
             break;
           }
         }
-        if (found==null)
+        if (found == null)
         {
-          throw new AdfException("Cannot find method "+methodName+" in "+entityClass.getName(),AdfException.ERROR);                  
+          throw new AdfException("Cannot find method " + methodName + " in " + entityClass.getName(),
+                                 AdfException.ERROR);
         }
         else
         {
           return found;
-        }        
+        }
       }
       else
       {
-        throw new AdfException("Cannot find public method "+methodName+" in "+entityClass.getName(),AdfException.ERROR);        
+        throw new AdfException("Cannot find public method " + methodName + " in " + entityClass.getName(),
+                               AdfException.ERROR);
       }
     }
   }
 
-  public static Object convertColumnValueToAttributeTypeIfNeeded( Class entityClass, String attrName, Object columnValue)
+  public static Object convertColumnValueToAttributeTypeIfNeeded(Class entityClass, String attrName, Object columnValue)
   {
     Object rawValue = columnValue;
-    if (rawValue==null)
+    if (rawValue == null)
     {
       return null;
     }
     Object convertedValue = rawValue;
-    Class attrType = EntityUtils.getJavaType(entityClass,attrName);
-    if (attrType==Object.class)
+    Class attrType = EntityUtils.getJavaType(entityClass, attrName);
+    if (attrType == Object.class)
     {
       return rawValue;
     }
-    else if (attrType==String.class)
+    else if (attrType == String.class)
     {
       return rawValue.toString();
     }
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
     if (columnValue instanceof String && attrType.isAssignableFrom(Date.class))
     {
-      return DateUtils.convertToDate(attrType, (String) columnValue, descriptor.getDateFormat(), descriptor.getDateTimeFormat());
+      return DateUtils.convertToDate(attrType, (String) columnValue, descriptor.getDateFormat(),
+                                     descriptor.getDateTimeFormat());
     }
     boolean conversionNeeded = true;
     boolean valueHolder = columnValue instanceof ValueHolderInterface;
-    if (columnValue==null || attrType.isAssignableFrom(columnValue.getClass()) || valueHolder)
+    if (columnValue == null || attrType.isAssignableFrom(columnValue.getClass()) || valueHolder)
     {
-      conversionNeeded = false;      
+      conversionNeeded = false;
     }
     try
     {
@@ -171,7 +177,7 @@ public class EntityUtils
             {
               stringConstructor = constructor;
             }
-            else if (constructor.getParameterTypes()[0] == Long.TYPE && rawValue.getClass()==Long.class)
+            else if (constructor.getParameterTypes()[0] == Long.TYPE && rawValue.getClass() == Long.class)
             {
               longConstructor = constructor;
             }
@@ -180,40 +186,49 @@ public class EntityUtils
         if (properTypeConstructor != null)
         {
           convertedValue = properTypeConstructor.newInstance(new Object[]
-                { rawValue });
+          {
+            rawValue
+          });
         }
         else if (longConstructor != null)
         {
           convertedValue = longConstructor.newInstance(new Object[]
-                { rawValue });
+          {
+            rawValue
+          });
         }
         else if (stringConstructor != null)
         {
           convertedValue = stringConstructor.newInstance(new Object[]
-                { rawValue.toString() });
+          {
+            rawValue.toString()
+          });
         }
         else
         {
           throw new AdfException(" No proper constructor found to instantiate attribute value for " + attrName +
-                                     " with type " + attrType + " in class " + entityClass.getName() +
-                                     " and raw value of type " + rawValue.getClass().getName(),AdfException.ERROR);
+                                 " with type " + attrType + " in class " + entityClass.getName() +
+                                 " and raw value of type " + rawValue.getClass().getName(), AdfException.ERROR);
         }
       }
     }
     catch (InstantiationException e)
     {
-      throw new AdfException("Error creating instance for attribute " + attrName + " of type "+attrType.getName()+ " in class " +
-                                 entityClass.getName() +" with value "+rawValue+ ": " + e.getLocalizedMessage(),AdfException.ERROR);
+      throw new AdfException("Error creating instance for attribute " + attrName + " of type " + attrType.getName() +
+                             " in class " + entityClass.getName() + " with value " + rawValue + ": " +
+                             e.getLocalizedMessage(), AdfException.ERROR);
     }
     catch (IllegalAccessException e)
     {
-      throw new AdfException("Error creating instance for attribute " + attrName + " of type "+attrType.getName()+ " in class " +
-                                 entityClass.getName() +" with value "+rawValue+ ": " + e.getLocalizedMessage(),AdfException.ERROR);
+      throw new AdfException("Error creating instance for attribute " + attrName + " of type " + attrType.getName() +
+                             " in class " + entityClass.getName() + " with value " + rawValue + ": " +
+                             e.getLocalizedMessage(), AdfException.ERROR);
     }
     catch (InvocationTargetException e)
     {
-      throw new AdfException("Error creating instance for attribute " + attrName + " of type "+attrType.getName()+ " in class " +
-                                 entityClass.getName() +" with value "+rawValue+ ": " + e.getLocalizedMessage(),AdfException.ERROR);
+      throw new AdfException("Error creating instance for attribute " + attrName + " of type " + attrType.getName() +
+                             " in class " + entityClass.getName() + " with value " + rawValue + ": " +
+                             e.getLocalizedMessage(), AdfException.ERROR);
     }
     return convertedValue;
   }
@@ -230,50 +245,52 @@ public class EntityUtils
     ObjectPersistenceMapping mapping = ObjectPersistenceMapping.getInstance();
     ClassMappingDescriptor descriptor = mapping.findClassMappingDescriptor(entityClass.getName());
     List<String> keyAttrs = descriptor.getPrimaryKeyAttributeNames();
-    return keyAttrs;     
+    return keyAttrs;
   }
-  
+
   public static Object[] getEntityKey(Entity entity)
   {
     List<String> keyAttrs = getEntityKeyAttributes(entity.getClass());
     Object[] keyValues = new Object[keyAttrs.size()];
     for (int i = 0; i < keyAttrs.size(); i++)
     {
-      keyValues[i] =  entity.getAttributeValue(keyAttrs.get(i));   
+      keyValues[i] = entity.getAttributeValue(keyAttrs.get(i));
     }
     return keyValues;
   }
-    
-  public static Map<String,Object> getEntityAttributeValues(Entity entity)
+
+  public static Map<String, Object> getEntityAttributeValues(Entity entity)
   {
     ObjectPersistenceMapping mapping = ObjectPersistenceMapping.getInstance();
     ClassMappingDescriptor descriptor = mapping.findClassMappingDescriptor(entity.getClass().getName());
     List<AttributeMappingDirect> attrMappings = descriptor.getAttributeMappingsDirect();
-    HashMap<String,Object> attrs = new HashMap<String,Object>();
-    for (AttributeMappingDirect attrMapping : attrMappings)
+    HashMap<String, Object> attrs = new HashMap<String, Object>();
+    for (AttributeMappingDirect attrMapping: attrMappings)
     {
       attrs.put(attrMapping.getAttributeName(), entity.getAttributeValue(attrMapping.getAttributeName()));
     }
-    return attrs;     
+    return attrs;
   }
 
   public static <E extends Entity> E getNewEntityInstance(Class entityClass)
   {
     try
     {
-      E entity = (E)entityClass.newInstance();
+      E entity = (E) entityClass.newInstance();
       return entity;
     }
     catch (InstantiationException e)
     {
-      throw new AdfException("Error creating instance for class"+entityClass.getName()+": "+e.getLocalizedMessage(),AdfException.ERROR);
+      throw new AdfException("Error creating instance for class" + entityClass.getName() + ": " +
+                             e.getLocalizedMessage(), AdfException.ERROR);
     }
     catch (IllegalAccessException e)
     {
-      throw new AdfException("Error creating instance for class"+entityClass.getName()+": "+e.getLocalizedMessage(),AdfException.ERROR);
+      throw new AdfException("Error creating instance for class" + entityClass.getName() + ": " +
+                             e.getLocalizedMessage(), AdfException.ERROR);
     }
   }
-  
+
   /**
    * Compares two entity keys, returns true if they are the same
    * @param key1
@@ -283,11 +300,11 @@ public class EntityUtils
   public static boolean compareKeys(Object[] key1, Object[] key2)
   {
     boolean same = true;
-    if (key1.length==key2.length)
+    if (key1.length == key2.length)
     {
       for (int i = 0; i < key1.length; i++)
       {
-        if (key1[i]==null ||  !key1[i].equals(key2[i]))
+        if (key1[i] == null || !key1[i].equals(key2[i]))
         {
           same = false;
           break;
@@ -305,26 +322,26 @@ public class EntityUtils
   {
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entity.getClass());
     PersistenceManager pm = getLocalPersistenceManager(descriptor);
-    generatePrimaryKeyValue(pm,entity,increment);
+    generatePrimaryKeyValue(pm, entity, increment);
   }
-  
+
   public static boolean primaryKeyIsNull(Entity entity)
   {
     boolean pknull = true;
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entity.getClass());
     List<AttributeMapping> keyMappings = descriptor.getPrimaryKeyAttributeMappings();
-    for (AttributeMapping keyMapping : keyMappings)
+    for (AttributeMapping keyMapping: keyMappings)
     {
-      String attrName = keyMapping.getAttributeName();      
-      if (entity.getAttributeValue(attrName)!=null)
+      String attrName = keyMapping.getAttributeName();
+      if (entity.getAttributeValue(attrName) != null)
       {
         pknull = false;
       }
     }
     return pknull;
   }
-  
-  public static void generatePrimaryKeyValue(PersistenceManager pm,Entity entity, int increment)
+
+  public static void generatePrimaryKeyValue(PersistenceManager pm, Entity entity, int increment)
   {
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entity.getClass());
     if (!descriptor.isPersisted() || !descriptor.isAutoIncrementPrimaryKey())
@@ -332,47 +349,64 @@ public class EntityUtils
       return;
     }
     List<AttributeMapping> keyMappings = descriptor.getPrimaryKeyAttributeMappings();
-    for (AttributeMapping keyMapping : keyMappings)
+    for (AttributeMapping keyMapping: keyMappings)
     {
       String attrName = keyMapping.getAttributeName();
-      Class attrType = EntityUtils.getJavaType(entity.getClass(),attrName);
+      Class attrType = EntityUtils.getJavaType(entity.getClass(), attrName);
       if (attrType.isAssignableFrom(Date.class))
       {
-        entity.setAttributeValue(attrName, new Date());                   
+        entity.setAttributeValue(attrName, new Date());
         continue;
       }
-      Object columnValue = pm.getMaxValue(entity.getClass(),attrName);
+      Object columnValue = pm.getMaxValue(entity.getClass(), attrName);
       // set to "1" for now, we need to prepopulate otherwise we get errors because of ADF Mobile bug
-      columnValue = columnValue==null ? "1" : columnValue;
+      columnValue = columnValue == null? "1": columnValue;
       Object value = EntityUtils.convertColumnValueToAttributeTypeIfNeeded(entity.getClass(), attrName, columnValue);
       if (value instanceof Integer)
       {
-         int intValue = ((Integer)value).intValue();
-         entity.setAttributeValue(attrName, new Integer(intValue+increment));           
+        int intValue = ((Integer) value).intValue();
+        entity.setAttributeValue(attrName, new Integer(intValue + increment));
       }
       else if (value instanceof Long)
       {
-         long longValue = ((Long)value).longValue();
-         entity.setAttributeValue(attrName, new Long(longValue+increment));           
+        long longValue = ((Long) value).longValue();
+        entity.setAttributeValue(attrName, new Long(longValue + increment));
       }
       else if (value instanceof Double)
       {
-         double doubleValue = ((Double)value).doubleValue();         
-         entity.setAttributeValue(attrName, new Double(doubleValue+increment));           
+        double doubleValue = ((Double) value).doubleValue();
+        entity.setAttributeValue(attrName, new Double(doubleValue + increment));
       }
       else if (value instanceof BigDecimal)
       {
-         BigDecimal bdValue = ((BigDecimal)value).add(new BigDecimal(increment+""));
-         entity.setAttributeValue(attrName, bdValue);           
+        BigDecimal bdValue = ((BigDecimal) value).add(new BigDecimal(increment + ""));
+        entity.setAttributeValue(attrName, bdValue);
       }
       else if (value instanceof String)
       {
         // set to "0" for now, we need to prepopulate otherwise we get errors because of ADF Mobile bug
-         entity.setAttributeValue(attrName, "0");           
+        entity.setAttributeValue(attrName, "0");
       }
-      
+
     }
 
+  }
+
+  /**
+   * Retrieve instance of EntityCRUDService for a specific class. We first try to retrieve the instance
+   * through the associated data control, but this data control might not exist. In that case, we simply
+   * instantiate a new instance.
+   * @param clazz
+   * @return
+   */
+  public static EntityCRUDService getEntityCRUDService(Class clazz)
+  {
+    ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(clazz);
+    if (descriptor != null)
+    {
+      return getEntityCRUDService(descriptor);
+    }
+    return null;
   }
 
   /**
@@ -385,7 +419,7 @@ public class EntityUtils
   public static EntityCRUDService getEntityCRUDService(ClassMappingDescriptor descriptor)
   {
     String serviceClassName = descriptor.getCRUDServiceClassName();
-    if (serviceClassName==null)
+    if (serviceClassName == null)
     {
       return null;
     }
@@ -394,32 +428,35 @@ public class EntityUtils
       (AmxBindingContext) AdfmfJavaUtilities.getAdfELContext().evaluateVariable(AmxBindingContext.BINDINGCONTEXT_SCOPE_NAME);
     int lastDot = serviceClassName.lastIndexOf(".");
     String dcName = serviceClassName.substring(lastDot + 1);
-  // getDataControlById throws exception when DC does not exist
-  //    DataControl dc = (DataControl) bc.getDataControlById(dcName);
+    // getDataControlById throws exception when DC does not exist
+    //    DataControl dc = (DataControl) bc.getDataControlById(dcName);
     DataControl dc = (DataControl) bc.get(dcName);
-    EntityCRUDService service =null;
+    EntityCRUDService service = null;
     // first try to lookup the crud service through its data control, if it doesn't exist, just
     // instantiate the class
-    if (dc==null)
+    if (dc == null)
     {
-    //        MessageUtils.handleError("Cannot find data control usage for "+dcName+ " in DataBindings.cpx, unable to populate "+this.mapping.getAttributeName()+" child accessor");
-      try   
+      //        MessageUtils.handleError("Cannot find data control usage for "+dcName+ " in DataBindings.cpx, unable to populate "+this.mapping.getAttributeName()+" child accessor");
+      try
       {
-        Class serviceClass =  Utility.loadClass(serviceClassName);
-//        Class serviceClass = Class.forName(serviceClassName, false, Thread.currentThread().getContextClassLoader());
+        Class serviceClass = Utility.loadClass(serviceClassName);
+        //        Class serviceClass = Class.forName(serviceClassName, false, Thread.currentThread().getContextClassLoader());
         service = (EntityCRUDService) serviceClass.newInstance();
       }
       catch (InstantiationException e)
       {
-        throw new AdfException("Error creating instance for class"+serviceClassName+": "+e.getLocalizedMessage(),AdfException.ERROR);
+        throw new AdfException("Error creating instance for class" + serviceClassName + ": " + e.getLocalizedMessage(),
+                               AdfException.ERROR);
       }
       catch (IllegalAccessException e)
       {
-        throw new AdfException("Error creating instance for class"+serviceClassName+": "+e.getLocalizedMessage(),AdfException.ERROR);
+        throw new AdfException("Error creating instance for class" + serviceClassName + ": " + e.getLocalizedMessage(),
+                               AdfException.ERROR);
       }
       catch (ClassNotFoundException e)
       {
-        throw new AdfException("Error creating instance for class"+serviceClassName+": "+e.getLocalizedMessage(),AdfException.ERROR);
+        throw new AdfException("Error creating instance for class" + serviceClassName + ": " + e.getLocalizedMessage(),
+                               AdfException.ERROR);
       }
     }
     else
@@ -428,42 +465,79 @@ public class EntityUtils
     }
     return service;
   }
-  
+
   public static DBPersistenceManager getLocalPersistenceManager(ClassMappingDescriptor descriptor)
   {
     // do not obtain persistence manager through new service instance, ight
     // trgger unwanted (remote) findAll
-//    EntityCRUDService service = getEntityCRUDService(descriptor);
-//    if (service!=null)
-//    {
-//      return service.getLocalPersistenceManager();      
-//    }
-    DBPersistenceManager pm = null;  
-    String className =  descriptor.getLocalPersistenceManagerClassName();
-    if (className==null)
+    //    EntityCRUDService service = getEntityCRUDService(descriptor);
+    //    if (service!=null)
+    //    {
+    //      return service.getLocalPersistenceManager();
+    //    }
+    DBPersistenceManager pm = null;
+    String className = descriptor.getLocalPersistenceManagerClassName();
+    if (className == null)
     {
       // might not be set for child entity
       className = DBPersistenceManager.class.getName();
     }
-      try   
-      {
-        Class pmClass =  Utility.loadClass(className);
-//        Class pmClass = Class.forName(className, false, Thread.currentThread().getContextClassLoader());
-        pm = (DBPersistenceManager) pmClass.newInstance();
-      }
-      catch (InstantiationException e)
-      {
-        throw new AdfException("Error creating instance for class"+className+": "+e.getLocalizedMessage(),AdfException.ERROR);
-      }
-      catch (IllegalAccessException e)
-      {
-        throw new AdfException("Error creating instance for class"+className+": "+e.getLocalizedMessage(),AdfException.ERROR);
-      }
-      catch (ClassNotFoundException e)
-      {
-        throw new AdfException("Error creating instance for class"+className+": "+e.getLocalizedMessage(),AdfException.ERROR);
-      }      
+    try
+    {
+      Class pmClass = Utility.loadClass(className);
+      //        Class pmClass = Class.forName(className, false, Thread.currentThread().getContextClassLoader());
+      pm = (DBPersistenceManager) pmClass.newInstance();
+    }
+    catch (InstantiationException e)
+    {
+      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
+                             AdfException.ERROR);
+    }
+    catch (IllegalAccessException e)
+    {
+      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
+                             AdfException.ERROR);
+    }
+    catch (ClassNotFoundException e)
+    {
+      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
+                             AdfException.ERROR);
+    }
     return pm;
   }
-  
+
+
+
+  /**
+   * Calls the add[EntityName] method using reflection in the EntityCRUDService subclass for
+   * the specified entity. The method takes two arguments, the index and the entity instance.
+   * @param crudService
+   * @param entity
+   */
+  public static void invokeAddMethod(EntityCRUDService crudService, int index, Entity entity)
+  {
+    Class beanClass = entity.getClass();
+    String typeName = entity.getClass().getName();
+    String addMethodName = "add" + typeName.substring(typeName.lastIndexOf(".") + 1);
+    Class[] paramTypes = new Class[] { int.class, beanClass };
+    Object[] params = new Object[] { new Integer(index), entity};
+    Utility.invokeIfPossible(crudService, addMethodName, paramTypes, params);        
+  }
+
+
+  /**
+   * Calls the remove[EntityName] method using reflection in the EntityCRUDService subclass for
+   * the specified entity. The method takes one argument, the entity instance.
+   * @param crudService
+   * @param entity
+   */
+  public static void invokeRemoveMethod(EntityCRUDService crudService, Entity entity)
+  {
+    Class beanClass = entity.getClass();
+    String typeName = entity.getClass().getName();
+    String removeMethodName = "remove" + typeName.substring(typeName.lastIndexOf(".") + 1);
+    Class[] paramTypes = new Class[] { beanClass };
+    Object[] params = new Object[] { entity};
+    Utility.invokeIfPossible(crudService, removeMethodName, paramTypes, params);        
+  }
 }

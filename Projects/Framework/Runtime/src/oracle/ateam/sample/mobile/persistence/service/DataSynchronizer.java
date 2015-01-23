@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
  01-jan-2015   Steven Davelaar

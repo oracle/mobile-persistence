@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
  06-feb-2013   Steven Davelaar
@@ -92,7 +92,7 @@ public class PageDefGenerator
     throws java.beans.PropertyVetoException
   {
 //    createDataSynchIterator(dataObject);
-    String attrName = "has"+dataObject.getName()+"DataSynchActions";
+    String attrName = "has"+dataObject.getRootDataObject().getName()+"DataSynchActions";
     createValueBinding(attrName, dataControlName + "Iterator", attrName);
   }
 
@@ -357,7 +357,7 @@ public class PageDefGenerator
   {
     // if we set type to "boolean", it is still generated as java.lang.Boolean, so we changed the typ
     // on the synchronize method to java.lang.Boolean
-    String methodName = "synchronize"+dataObject.getName();
+    String methodName = "synchronize"+dataObject.getRootDataObject().getName();
     createMethodBinding(methodName, methodName, true,
                         createNamedDataList("inBackground", "java.lang.Boolean", "true"));
     return methodName;
