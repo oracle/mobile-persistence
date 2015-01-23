@@ -145,7 +145,10 @@ public class PersistenceMappingLoader
     doi.setPersisted(descriptor.isPersisted());
     doi.setGenerate(true);
     String manager = descriptor.getCrudServiceClass().getRemotePersistenceManager();
-    doi.setXmlPayload(manager.toUpperCase().indexOf("JSON")==-1);
+    if (manager!=null)
+    {
+      doi.setXmlPayload(manager.toUpperCase().indexOf("JSON")==-1);      
+    }
     doi.setCollection(true);
     for (DirectMapping dm : descriptor.getAttributeMappings().getDirectMapping())
     {
@@ -165,6 +168,8 @@ public class PersistenceMappingLoader
       method.setIsFindAllMethod(true);
       doi.setFindAllMethod(method);
       doi.setDeleteLocalRows(methods.getFindAllMethod().isDeleteLocalRows());
+      doi.setPayloadListElementName(method.getPayloadElementName());
+      doi.setPayloadRowElementName(method.getPayloadRowElementName());
     }
     method = createMethod(doi,methods.getFindMethod());
     if (method!=null)
@@ -201,7 +206,7 @@ public class PersistenceMappingLoader
     doi.setMergeMethod(method);
     method = createMethod(doi,methods.getRemoveMethod());
     doi.setDeleteMethod(method);
-
+    doi.setCrudMethodsInitialized(true);
     return doi;
   }
 
@@ -262,6 +267,9 @@ public class PersistenceMappingLoader
       }
       else
       {
+        // set parent data object in child so this child does not show up on CRUD methods panel, because
+        // it has no service class
+        child.setParent(dataObjectInfo);
         ai.setChildAccessorPayloadName(mapping.getPayloadAttributeName());
       }
       for (ForeignKeyColumnReference fkref : mapping.getForeignKeyColumnReference())

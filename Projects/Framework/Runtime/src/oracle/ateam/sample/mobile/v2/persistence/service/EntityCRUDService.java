@@ -150,7 +150,7 @@ public abstract class EntityCRUDService<E extends Entity>
    * for example by adding a default filter.
    * @return
    */
-  protected List executeLocalFindAll()
+  protected List<E> executeLocalFindAll()
   {
     return getLocalPersistenceManager().findAll(getEntityClass());
   }
@@ -163,7 +163,7 @@ public abstract class EntityCRUDService<E extends Entity>
    * the persistenceMapping.xml is set to true
    * @return
    */
-  protected List executeRemoteFindAll()
+  protected List<E> executeRemoteFindAll()
   {
     return remotePersistenceManager.findAll(getEntityClass());
   }
@@ -176,7 +176,7 @@ public abstract class EntityCRUDService<E extends Entity>
    * the persistenceMapping.xml is set to true
    * @return
    */
-  protected List executeRemoteFindAllInParent(Entity parent, String accessorAttribute)
+  protected List<E> executeRemoteFindAllInParent(Entity parent, String accessorAttribute)
   {
     return remotePersistenceManager.findAllInParent(getEntityClass(), parent, accessorAttribute);
   }
@@ -189,7 +189,7 @@ public abstract class EntityCRUDService<E extends Entity>
    * the persistenceMapping.xml is set to true
    * @return
    */
-  protected List executeRemoteFind(String searchValue)
+  protected List<E> executeRemoteFind(String searchValue)
   {
     return remotePersistenceManager.find(getEntityClass(), searchValue);
   }
@@ -213,7 +213,7 @@ public abstract class EntityCRUDService<E extends Entity>
    * be performed. By default, all String attributes are searchable.
    * @return
    */
-  protected List getQuickSearchAttributeNames()
+  protected List<String> getQuickSearchAttributeNames()
   {
     return null;
   }
@@ -300,7 +300,7 @@ public abstract class EntityCRUDService<E extends Entity>
    * @param succeededDataSynchActions
    * @param failedDataSynchActions
    */
-  protected void dataSynchFinished(List succeededDataSynchActions, List failedDataSynchActions)
+  protected void dataSynchFinished(List<DataSynchAction> succeededDataSynchActions, List<DataSynchAction> failedDataSynchActions)
   {
     refreshEntityList(getEntityList());
     if (isDoRemoteWriteInBackground())
@@ -518,15 +518,7 @@ public abstract class EntityCRUDService<E extends Entity>
 
   /**
    * Return the current list of entities. Method is protected to prevent it from showing
-   * up in data control palette. You should add a public method to your subclass that converts this list
-   * into a typed array, like this:
-   * <pre>
-   public Department[] getDepartments()
-   {
-     Department[] departments =(Department[]) getEntityList().toArray(new Department[getEntityList().size()]);
-     return departments;
-   }
-   * </pre>
+   * up in data control palette. You can override in yourt cncrete service and cast it to the actual type
    * @return
    */
   protected List<E> getEntityList()
@@ -607,7 +599,7 @@ public abstract class EntityCRUDService<E extends Entity>
           // auto synch any pending actions first, pass false for inBackground because
           // we are already running in background thread
           getDataSynchManager().synchronize(false);
-          List entities = executeRemoteFindAll();
+          List<E> entities = executeRemoteFindAll();
           if (entities != null)
           {
             // when an error occurs (for example server not available, the method returns null
@@ -624,7 +616,7 @@ public abstract class EntityCRUDService<E extends Entity>
       // auto synch any pending actions first, pass false for inBackground because
       // we want to proces pending actions before we do remote read
       getDataSynchManager().synchronize(false);
-      List entities = executeRemoteFindAll();
+      List<E> entities = executeRemoteFindAll();
       if (entities != null)
       {
         // when an error occurs (for example server not available, the method returns null
@@ -664,7 +656,7 @@ public abstract class EntityCRUDService<E extends Entity>
           // auto synch any pending actions first, pass false for inBackground because
           // we are already running in background thread
           getDataSynchManager().synchronize(false);
-          List entities = executeRemoteFindAllInParent(parent, accessorAttribute);
+          List<E> entities = executeRemoteFindAllInParent(parent, accessorAttribute);
           if (entities != null)
           {
             // when an error occurs (for example server not available, the method returns null
@@ -681,7 +673,7 @@ public abstract class EntityCRUDService<E extends Entity>
       // auto synch any pending actions first, pass false for inBackground because
       // we want to proces pending actions before we do remote read
       getDataSynchManager().synchronize(false);
-      List entities = executeRemoteFindAllInParent(parent, accessorAttribute);
+      List<E> entities = executeRemoteFindAllInParent(parent, accessorAttribute);
       if (entities != null)
       {
         // when an error occurs (for example server not available, the method returns null
@@ -721,7 +713,7 @@ public abstract class EntityCRUDService<E extends Entity>
           // auto synch any pending actions first, pass false for inBackground because
           // we are already running in background thread
           getDataSynchManager().synchronize(false);
-          List entities = executeRemoteFind(searchValue);
+          List<E> entities = executeRemoteFind(searchValue);
           if (entities != null)
           {
             // when an error occurs (for example server not available, the method returns null
@@ -738,7 +730,7 @@ public abstract class EntityCRUDService<E extends Entity>
       // auto synch any pending actions first, pass false for inBackground because
       // we want to proces pending actions before we do remote read
       getDataSynchManager().synchronize(false);
-      List entities = executeRemoteFind(searchValue);
+      List<E> entities = executeRemoteFind(searchValue);
       if (entities != null)
       {
         // when an error occurs (for example server not available, the method returns null
@@ -830,7 +822,7 @@ public abstract class EntityCRUDService<E extends Entity>
   {
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entity.getClass());
     List mappings = descriptor.getAttributeMappingsDirect();
-    List attrNames = new ArrayList();
+    List<String> attrNames = new ArrayList<String>();
     for (int i = 0; i < mappings.size(); i++)
     {
       AttributeMappingDirect mapping = (AttributeMappingDirect) mappings.get(i);

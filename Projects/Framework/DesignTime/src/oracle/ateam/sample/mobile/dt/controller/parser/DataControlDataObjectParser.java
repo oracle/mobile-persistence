@@ -189,7 +189,10 @@ public class DataControlDataObjectParser
       if (entry instanceof OperationDefinition)
       {
         OperationDefinition method = (OperationDefinition) entry;
-        methods.put(method.getName(),new DCMethod(method));          
+        if (!method.getName().endsWith("_parameters"))
+        {
+          methods.put(method.getName(),new DCMethod(method));                    
+        }
       }
     }  
     DefinitionContainer  accessors = (DefinitionContainer) dataControlBean.getAccessorDefinitions();
@@ -200,7 +203,10 @@ public class DataControlDataObjectParser
       if (entry instanceof AccessorDefinition)
       {
         AccessorDefinition accessor = (AccessorDefinition) entry;
-        methods.put(accessor.getName(),new DCMethod(accessor));          
+        if (!accessor.getName().endsWith("_parameters"))
+        {
+          methods.put(accessor.getName(),new DCMethod(accessor));          
+        }
       }
     }  
     return methods;

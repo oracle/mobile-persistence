@@ -398,7 +398,7 @@ public class ParentChildAccessorsPanel
       {
         if (childAccessorMethod==null)
         {
-          String suffix = model.isUseJDK_1_4_Style() ? "List" : "";
+          String suffix = model.isMaf20Style() ? "List" : "";
           childAccessorMethod = new DCMethod(childAccessorNameField.getText()+suffix,model.getConnectionName(), childAccessorMethodFieldRest.getText(), (String) childAccessorMethodRequestType.getSelectedItem());                      
         }
         childAccessorMethod.setParameterValueProviderDataObject(parent);
@@ -430,7 +430,7 @@ public class ParentChildAccessorsPanel
     {  
       child.addFindAllInParentMethod(childAccessorMethod);            
       accessorInfo.setChildAccessorMethod(childAccessorMethod);
-      accessorInfo.setChildAccessorPayloadName(childAccessorPayloadNameField.getText());  
+      accessorInfo.setChildAccessorPayloadName(StringUtils.convertEmptyStringToNull(childAccessorPayloadNameField.getText()));  
       accessorInfo.setChildAccessorName(childAccessorNameField.getText());            
       // add as new child if this accessor instance is not already added
       // note that we cant just pass in edit or new mode to this method to determine whether we

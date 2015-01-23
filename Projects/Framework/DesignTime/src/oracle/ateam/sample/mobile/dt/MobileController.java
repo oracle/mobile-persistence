@@ -36,7 +36,7 @@ public class MobileController
     {
       showDoc();      
     }
-    return false;
+    return true;
   }
 
   public boolean showDoc() 

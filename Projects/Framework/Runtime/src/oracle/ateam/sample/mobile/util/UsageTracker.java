@@ -15,19 +15,14 @@ import java.util.Map;
 
 import oracle.adf.model.datacontrols.device.DeviceManager;
 import oracle.adf.model.datacontrols.device.DeviceManagerFactory;
-
 import oracle.adf.model.datacontrols.device.Location;
 
 import oracle.adfmf.dc.ws.rest.RestServiceAdapter;
 import oracle.adfmf.framework.api.AdfmfContainerUtilities;
-import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.api.JSONBeanSerializationHelper;
-import oracle.adfmf.framework.api.Model;
-import oracle.adfmf.framework.internal.AdfmfContainerUtilitiesInternal;
 
 import oracle.ateam.sample.mobile.Version;
-import oracle.ateam.sample.mobile.persistence.metadata.PersistenceConfig;
-import oracle.ateam.sample.mobile.persistence.service.EntityCRUDService;
+import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 
 /**
  * Class used to track the mobile app usage. In mobile-persistence-config, two endpoints can be configured: one to register
@@ -110,7 +105,7 @@ public class UsageTracker
 //    return true;    
   }
 
-  protected Map getBasePayload()
+  protected Map<String,Object> getBasePayload()
   {
     // device info
     String networkStatus = DeviceManagerFactory.getDeviceManager().getNetworkStatus();
@@ -124,7 +119,7 @@ public class UsageTracker
     String appVendor = AdfmfContainerUtilities.getApplicationInformation().getVendor();
     String appVersion = AdfmfContainerUtilities.getApplicationInformation().getVersion();
 
-    Map payload = new HashMap();
+    Map<String,Object> payload = new HashMap<String,Object>();
     payload.put("appId", appId);
     payload.put("appVersion", appVersion);
     String appstoreAppId = PersistenceConfig.getPropertyValue("tracking.appstore.appid");
@@ -143,7 +138,7 @@ public class UsageTracker
       Location loc = getLocation();
       if (loc != null)
       {
-        Map locMap = new HashMap();
+        Map<String,String> locMap = new HashMap<String,String>();
         payload.put("location", locMap);
         locMap.put("lat", loc.getLatitude() + "");
         locMap.put("lng", loc.getLongitude() + "");

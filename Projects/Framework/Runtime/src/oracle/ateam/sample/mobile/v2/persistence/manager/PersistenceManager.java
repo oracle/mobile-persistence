@@ -6,10 +6,10 @@
   1.0           initial creation
  ******************************************************************************/
  package oracle.ateam.sample.mobile.v2.persistence.manager;
+
 import java.util.List;
 
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
-import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 
 /**
  * Interface that provides basic CRUD operations for a given entity instance.
@@ -32,11 +32,11 @@ public interface PersistenceManager
   
   void removeEntity(Entity entity, boolean doCommit);
 
-  List findAll(Class entityClass);
+  <E extends Entity> List<E> findAll(Class entityClass);
 
-  List find(Class entityClass, String searchValue);
+  <E extends Entity> List<E> find(Class entityClass, String searchValue);
 
-  List find(Class entityClass, String searchValue, List attrNamesToSearch);
+  <E extends Entity> List<E> find(Class entityClass, String searchValue, List<String> attrNamesToSearch);
   
   Entity findByKey(Class entityClass, Object[] key);
 

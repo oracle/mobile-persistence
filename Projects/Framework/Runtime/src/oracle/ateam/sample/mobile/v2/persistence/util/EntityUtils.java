@@ -2,12 +2,13 @@
   Copyright © 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  20-jan-2015   Steven Davelaar
+  1.1           Fixed bug in getLocalPersistenceManager, local pm might not be set against (child) descriptor
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
  package oracle.ateam.sample.mobile.v2.persistence.util;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -31,6 +32,7 @@ import oracle.ateam.sample.mobile.util.DateUtils;
 import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.manager.PersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;
+import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ObjectPersistenceMapping;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
@@ -242,25 +244,24 @@ public class EntityUtils
     return keyValues;
   }
     
-  public static Map getEntityAttributeValues(Entity entity)
+  public static Map<String,Object> getEntityAttributeValues(Entity entity)
   {
     ObjectPersistenceMapping mapping = ObjectPersistenceMapping.getInstance();
     ClassMappingDescriptor descriptor = mapping.findClassMappingDescriptor(entity.getClass().getName());
-    List attrMappings = descriptor.getAttributeMappingsDirect();
-    HashMap attrs = new HashMap();
-    for (int i = 0; i < attrMappings.size(); i++)
+    List<AttributeMappingDirect> attrMappings = descriptor.getAttributeMappingsDirect();
+    HashMap<String,Object> attrs = new HashMap<String,Object>();
+    for (AttributeMappingDirect attrMapping : attrMappings)
     {
-      AttributeMapping attrMapping = (AttributeMapping) attrMappings.get(i);
       attrs.put(attrMapping.getAttributeName(), entity.getAttributeValue(attrMapping.getAttributeName()));
     }
     return attrs;     
   }
 
-  public static Entity getNewEntityInstance(Class entityClass)
+  public static <E extends Entity> E getNewEntityInstance(Class entityClass)
   {
     try
     {
-      Entity entity = (Entity) entityClass.newInstance();
+      E entity = (E)entityClass.newInstance();
       return entity;
     }
     catch (InstantiationException e)
@@ -439,6 +440,11 @@ public class EntityUtils
 //    }
     DBPersistenceManager pm = null;  
     String className =  descriptor.getLocalPersistenceManagerClassName();
+    if (className==null)
+    {
+      // might not be set for child entity
+      className = DBPersistenceManager.class.getName();
+    }
       try   
       {
         Class pmClass =  Utility.loadClass(className);
@@ -460,19 +466,4 @@ public class EntityUtils
     return pm;
   }
   
-  public static Entity[] getEntityListAsCorrectlyTypedArray(List entities, Class entityClass)
-  {
-      int size = entities!=null ? entities.size() : 0;
-      Entity[] value = (Entity[]) Array.newInstance(entityClass, size);
-      for (int i = 0; i < size; i++)
-      {
-        Object e = entities.get(i);
-        if (e instanceof Entity)
-        {
-          value[i] = (Entity)e;          
-        }
-      }
-      return value;
-  }
-
 }

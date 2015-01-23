@@ -10,28 +10,26 @@ package oracle.ateam.sample.mobile.v2.persistence.manager;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import java.util.Map;
 
-import oracle.adfmf.framework.exception.AdfException;
 import oracle.adfmf.java.beans.PropertyChangeListener;
 import oracle.adfmf.java.beans.PropertyChangeSupport;
 
+import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.util.UsageTracker;
 import oracle.ateam.sample.mobile.v2.persistence.cache.EntityCache;
 import oracle.ateam.sample.mobile.v2.persistence.db.BindParamInfo;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;
-import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingOneToOne;
+import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ObjectPersistenceMapping;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
-import oracle.ateam.sample.mobile.util.UsageTracker;
-import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 
 /**
  * Abstract class that provides generic implementation of some of the methods of the
  * PersistenceManager interface that can be used by concrete subclasses.
- * The Persistence manager interface provides basic CRUD operations for a given entity instance. 
+ * The Persistence manager interface provides basic CRUD operations for a given entity instance.
  */
 public abstract class AbstractPersistenceManager implements PersistenceManager
 
@@ -46,11 +44,11 @@ public abstract class AbstractPersistenceManager implements PersistenceManager
    * @param entity
    * @return
    */
-  protected List getPrimaryKeyBindParamInfo(Entity entity)
+  protected List<BindParamInfo> getPrimaryKeyBindParamInfo(Entity entity)
   {
     ObjectPersistenceMapping mapping = ObjectPersistenceMapping.getInstance();
     ClassMappingDescriptor descriptor = mapping.findClassMappingDescriptor(entity.getClass().getName());
-    List bindParamInfos = new ArrayList();
+    List<BindParamInfo> bindParamInfos = new ArrayList<BindParamInfo>();
     List<AttributeMapping> keyMappings = descriptor.getPrimaryKeyAttributeMappings();
     for (AttributeMapping keyMapping : keyMappings)
     {
@@ -66,11 +64,11 @@ public abstract class AbstractPersistenceManager implements PersistenceManager
    * @param entity
    * @return
    */
-  protected List getPrimaryKeyBindParamInfo(Class entityClass)
+  protected List<BindParamInfo> getPrimaryKeyBindParamInfo(Class entityClass)
   {
     ObjectPersistenceMapping mapping = ObjectPersistenceMapping.getInstance();
     ClassMappingDescriptor descriptor = mapping.findClassMappingDescriptor(entityClass.getName());
-    List bindParamInfos = new ArrayList();
+    List<BindParamInfo> bindParamInfos = new ArrayList<BindParamInfo>();
     List<AttributeMapping> keyMappings = descriptor.getPrimaryKeyAttributeMappings();
     for (AttributeMapping keyMapping : keyMappings)
     {
@@ -121,26 +119,25 @@ public abstract class AbstractPersistenceManager implements PersistenceManager
    * @param entity
    * @return
    */
-   public List getBindParamInfos(Entity entity)
+   public List<BindParamInfo> getBindParamInfos(Entity entity)
    {
      return getBindParamInfos(entity,false,false);
    }
 
-  public List getBindParamInfos(Entity entity, boolean keyValuesOnly)
+  public List<BindParamInfo> getBindParamInfos(Entity entity, boolean keyValuesOnly)
   {
     return getBindParamInfos(entity,keyValuesOnly,false);
   }
 
-  public List getBindParamInfos(Entity entity, boolean keyValuesOnly, boolean persistedOnly)
+  public List<BindParamInfo> getBindParamInfos(Entity entity, boolean keyValuesOnly, boolean persistedOnly)
   {
-    List bindParamInfos = new ArrayList();
+    List<BindParamInfo> bindParamInfos = new ArrayList<BindParamInfo>();
     String entityClass = entity.getClass().getName();
     ObjectPersistenceMapping mapping = ObjectPersistenceMapping.getInstance();
     ClassMappingDescriptor descriptor = mapping.findClassMappingDescriptor(entityClass);
-    List attributeMappings = descriptor.getAttributeMappingsDirect();
-    for (int i = 0; i < attributeMappings.size(); i++)
+    List<AttributeMappingDirect> attributeMappings = descriptor.getAttributeMappingsDirect();
+    for (AttributeMappingDirect attrMapping : attributeMappings)
     {
-      AttributeMapping attrMapping = (AttributeMapping) attributeMappings.get(i);
       if ((!keyValuesOnly || attrMapping.isPrimaryKeyMapping())  
            && (!persistedOnly || attrMapping.isPersisted()))
       {
@@ -275,17 +272,16 @@ public abstract class AbstractPersistenceManager implements PersistenceManager
    * @param bindParamInfos
    * @return
    */
-  protected boolean isAllPrimaryKeyBindParamInfosPopulated(ClassMappingDescriptor descriptor, List bindParamInfos)
+  protected boolean isAllPrimaryKeyBindParamInfosPopulated(ClassMappingDescriptor descriptor, List<BindParamInfo> bindParamInfos)
   {
     List<String> attrs = descriptor.getPrimaryKeyAttributeNames();
     boolean OK = true;
-    for (int i = 0; i < attrs.size(); i++)
+    for (String attr : attrs)
     {
       boolean attrPopulated = false;
-      for (int j = 0; j < bindParamInfos.size(); j++)
+      for (BindParamInfo bpInfo : bindParamInfos)
       {
-        BindParamInfo bpInfo = (BindParamInfo) bindParamInfos.get(j);
-        if (bpInfo.getAttributeName().equals(attrs.get(i)) && bpInfo.getValue() != null)
+        if (bpInfo.getAttributeName().equals(attr) && bpInfo.getValue() != null)
         {
           attrPopulated = true;
           break;

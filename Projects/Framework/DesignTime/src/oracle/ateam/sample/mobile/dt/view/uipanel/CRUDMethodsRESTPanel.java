@@ -271,8 +271,8 @@ public class CRUDMethodsRESTPanel
     {
       if (doi.getParent()==null)
       {
-        dataObjectMap.put(doi.getClassName()+"Service", doi);
-        dataObjectNames.add(doi.getClassName()+"Service");        
+        dataObjectMap.put(doi.getServiceClassName(), doi);
+        dataObjectNames.add(doi.getServiceClassName());        
       }
     }
     doilist.setModel(new DefaultComboBoxModel(dataObjectNames.toArray()));

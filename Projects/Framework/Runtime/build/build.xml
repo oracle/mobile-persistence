@@ -75,13 +75,27 @@
   </target>
 
    <target name="runtimejar" depends="compile, copy">
-     <!-- create the jheadstart runtime jar -->
+     <!-- create the ampa runtime jar files, we create a separate jar (and associetd JDev library) which only holds the old persistence and util package
+          that were used with MAF 2.0. This way, we don't get the old MAF20 classes whow up with new projects-->
      <jar destfile="${runtime.deploy.jar}">
        <!-- put the version information in the manifest file as well -->
        <manifest>
          <attribute name="ATeam-Mobile-Persistence-Accelerator-Version" value="${version.number}"/>
        </manifest>
-       <fileset dir="${runtime.output.dir}" />
+       <fileset dir="${runtime.output.dir}" >
+         <exclude name="oracle/ateam/sample/mobile/persistence/**/*"/>
+         <exclude name="oracle/ateam/sample/mobile/security/**/*"/>
+       </fileset>
+     </jar>
+     <jar destfile="${runtime.maf20.deploy.jar}">
+       <!-- put the version information in the manifest file as well -->
+       <manifest>
+         <attribute name="ATeam-Mobile-Persistence-Accelerator-Version" value="${version.number}"/>
+       </manifest>
+       <fileset dir="${runtime.output.dir}" >
+         <include name="oracle/ateam/sample/mobile/persistence/**/*"/>
+         <include name="oracle/ateam/sample/mobile/security/**/*"/>
+       </fileset>
      </jar>
      <delete dir="${runtime.output.dir}"/>
    </target>
@@ -95,6 +109,12 @@
        <include name="**/*.java"/>
        <include name="**/*.xml"/>
        <include name="readme.txt"/>
+       <exclude name="oracle/ateam/sample/mobile/persistence/**/*"/>
+       <exclude name="oracle/ateam/sample/mobile/security/**/*"/>
+     </zip>
+     <zip destfile="${runtime.maf20.deploy.src.zip}" basedir="${runtime.source.dir}">
+       <include name="oracle/ateam/sample/mobile/persistence/**/*"/>
+       <include name="oracle/ateam/sample/mobile/security/**/*"/>
      </zip>
    </target>
 
@@ -110,7 +130,14 @@
       <!-- zip the javadoc, and put it in the deployment directory -->
      <!-- create the deploy directory if it doesn't exist-->
      <mkdir dir="${runtime.deploy.dir}"/>
-      <zip destfile="${runtime.javadoc.zip}" basedir="${runtime.javadoc.dir}"/>
+      <zip destfile="${runtime.javadoc.zip}" basedir="${runtime.javadoc.dir}">
+       <exclude name="oracle/ateam/sample/mobile/persistence/**/*"/>
+       <exclude name="oracle/ateam/sample/mobile/security/**/*"/>
+      </zip>
+      <zip destfile="${runtime.maf20.javadoc.zip}" basedir="${runtime.javadoc.dir}">
+       <include name="oracle/ateam/sample/mobile/persistence/**/*"/>
+       <include name="oracle/ateam/sample/mobile/security/**/*"/>
+      </zip>
    </target>
 
   <target name="stage" description="Deploy JDeveloper profiles" depends="runtimejar,sourcezipfile, javadoc">

@@ -59,7 +59,7 @@ public class RestXMLPersistenceManager extends RestPersistenceManager
     return getSerializedDataObject(entity, collectionElementName, rowElementName,null,deleteRow);
   } 
 
-  protected String getSerializedDataObject(Entity entity, String collectionElementName, String rowElementName, List attributesToExclude, boolean deleteRow)
+  protected String getSerializedDataObject(Entity entity, String collectionElementName, String rowElementName, List<String> attributesToExclude, boolean deleteRow)
   {
     StringBuffer xml = new StringBuffer();
     xml.append(getStartTag(collectionElementName));
@@ -67,15 +67,18 @@ public class RestXMLPersistenceManager extends RestPersistenceManager
     {
       xml.append(getStartTag(rowElementName,deleteRow));      
     }
-    Map keyValuePairs = getPayloadKeyValuePairs(entity,attributesToExclude);
-    Iterator keys = keyValuePairs.keySet().iterator();
+    Map<String,Object>  keyValuePairs = getPayloadKeyValuePairs(entity,attributesToExclude);
+    Iterator<String> keys = keyValuePairs.keySet().iterator();
     while (keys.hasNext())
     {
-      String attrName = (String) keys.next();
-      String value = (String) keyValuePairs.get(attrName);
-      xml.append(getStartTag(attrName));
-      xml.append(value);
-      xml.append(getEndTag(attrName));
+      String attrName = keys.next();
+      Object value = keyValuePairs.get(attrName);
+      if (value!=null)
+      {
+        xml.append(getStartTag(attrName));
+        xml.append(value);
+        xml.append(getEndTag(attrName));        
+      }
     }
     if (rowElementName!=null)
     {
@@ -85,17 +88,17 @@ public class RestXMLPersistenceManager extends RestPersistenceManager
     return xml.toString();
   }
 
-  protected List handleReadResponse(String xmlResponse, Class entityClass, String collectionElementName,
+  protected List<Entity> handleReadResponse(String xmlResponse, Class entityClass, String collectionElementName,
                                     String rowElementName, List parentBindParamInfos, boolean deleteAllRows)
   {
     return handleResponse(xmlResponse, entityClass,collectionElementName,
                                     rowElementName,parentBindParamInfos, null, deleteAllRows);
   }
 
-  protected List handleResponse(String xmlResponse, Class entityClass, String collectionElementName,
+  protected List<Entity> handleResponse(String xmlResponse, Class entityClass, String collectionElementName,
                                     String rowElementName, List parentBindParamInfos, Entity currentEntity, boolean deleteAllRows)  
   {
-    List entities = new ArrayList();
+    List<Entity> entities = new ArrayList<Entity>();
     if (deleteAllRows)
     {
       getLocalPersistenceManager().deleteAllRows(entityClass);
@@ -120,7 +123,7 @@ public class RestXMLPersistenceManager extends RestPersistenceManager
       MessageUtils.handleError("Expected collection element name "+collectionElementName+ " not found in payload.");
       return entities;
     }
-    List rows = collectionNode.getChildDefinitions(rowElementName);
+    List<XmlAnyDefinition> rows = collectionNode.getChildDefinitions(rowElementName);
     if (rows!=null)
     {
       findAndProcessPayloadElements(rows,entityClass,parentBindParamInfos, entities, currentEntity);      
@@ -148,16 +151,14 @@ public class RestXMLPersistenceManager extends RestPersistenceManager
   protected XmlAnyDefinition findCollectionElement(XmlAnyDefinition node, String collectionElementName)
   {
 
-    List elementNames = StringUtils.stringToList(collectionElementName, ".");
+    List<String> elementNames = StringUtils.stringToList(collectionElementName, ".");
     XmlAnyDefinition currentNode = node;
-    for (int i = 0; i < elementNames.size(); i++)
+    for (String elementName : elementNames)
     {
-      String elementName = (String) elementNames.get(i); 
-      List kids = node.getChildren();
+      List<XmlAnyDefinition> kids = node.getChildren();
       boolean found = false;
-      for (int j = 0; j < kids.size(); j++)
+      for (XmlAnyDefinition kid : kids)
       {
-        XmlAnyDefinition kid = (XmlAnyDefinition) kids.get(j);
         if (elementName.equals(kid.getElementName()))
         {
           currentNode = kid;
@@ -196,11 +197,10 @@ public class RestXMLPersistenceManager extends RestPersistenceManager
 //    return element;
   }
   
-  protected void findAndProcessPayloadElements(List rows, Class entityClass, List parentBindParamInfos, List entities, Entity currentEntity)
+  protected void findAndProcessPayloadElements(List<XmlAnyDefinition> rows, Class entityClass, List parentBindParamInfos, List<Entity> entities, Entity currentEntity)
   {
-    for (int i = 0; i < rows.size(); i++)
+    for (XmlAnyDefinition row : rows)
     {
-      XmlAnyDefinition row = (XmlAnyDefinition) rows.get(i);
       Entity entity = processPayloadElement(row, entityClass, parentBindParamInfos, currentEntity);
       if (entity!=null)
       {
@@ -209,16 +209,15 @@ public class RestXMLPersistenceManager extends RestPersistenceManager
     }
   }
 
-  protected Entity processPayloadElement(XmlAnyDefinition row,Class entityClass, List parentBindParamInfos, Entity currentEntity)
+  protected Entity processPayloadElement(XmlAnyDefinition row,Class entityClass, List<BindParamInfo> parentBindParamInfos, Entity currentEntity)
   {
-    List bindParamInfos = new ArrayList();
+    List<BindParamInfo> bindParamInfos = new ArrayList<BindParamInfo>();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);    
-    List attrMappings = descriptor.getAttributeMappings();
+    List<AttributeMapping> attrMappings = descriptor.getAttributeMappings();
     // map contains mapping as key, and a list of child instances as value
-    Map oneToManyMappings = new HashMap();
-    for (int j = 0; j < attrMappings.size(); j++)
+    Map<AttributeMappingOneToMany,List<XmlAnyDefinition>> oneToManyMappings = new HashMap<AttributeMappingOneToMany,List<XmlAnyDefinition>>();
+    for (AttributeMapping mapping : attrMappings)
     {
-      AttributeMapping mapping = (AttributeMapping) attrMappings.get(j);
       String elemName = mapping.getAttributeNameInPayload();
       if (elemName==null)
       {
@@ -280,14 +279,14 @@ public class RestXMLPersistenceManager extends RestPersistenceManager
     {
       AttributeMappingOneToMany mapping = (AttributeMappingOneToMany) mappings.next(); 
       Class refClass = mapping.getReferenceClassMappingDescriptor().getClazz();
-      List children = (List) oneToManyMappings.get(mapping);
-      List childEntities = new ArrayList();
+      List<XmlAnyDefinition> children = oneToManyMappings.get(mapping);
+      List<Entity> childEntities = new ArrayList<Entity>();
       if (children.size()>0)
       {
-        List currentChildEntities = null;
+        List<Entity> currentChildEntities = null;
         if (currentEntity!=null)
         {
-          currentChildEntities = (List) currentEntity.getAttributeValue(mapping.getAttributeName());
+          currentChildEntities = (List<Entity>) currentEntity.getAttributeValue(mapping.getAttributeName());
           if (currentChildEntities.size()!=children.size())
           {
             // this should never happen, because current entity child list is send as payload for write action
@@ -298,11 +297,11 @@ public class RestXMLPersistenceManager extends RestPersistenceManager
         }
         for (int i = 0; i < children.size(); i++)
         {
-          XmlAnyDefinition childRow = (XmlAnyDefinition) children.get(i);
+          XmlAnyDefinition childRow = children.get(i);
             // recursive call to populate DB with child entity row. Note that
             // multiple child rows are NOT wrapped in own GenericType, instead each
             // child instance is just an additional attribute of type GenericType
-            Entity currentChildEntity = (Entity) (currentChildEntities!=null ? currentChildEntities.get(i) : null);
+            Entity currentChildEntity = currentChildEntities!=null ? currentChildEntities.get(i) : null;
             Entity childEntity = processPayloadElement(childRow, refClass, bindParamInfos,currentChildEntity);
             childEntities.add(childEntity);
         }

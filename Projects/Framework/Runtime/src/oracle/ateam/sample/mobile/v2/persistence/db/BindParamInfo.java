@@ -33,7 +33,7 @@ public class BindParamInfo
 {
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(BindParamInfo.class);
 
-  private static Map typeMapping = new HashMap();  
+  private static Map<Class,Integer> typeMapping = new HashMap<Class,Integer>();  
 
   static
   {

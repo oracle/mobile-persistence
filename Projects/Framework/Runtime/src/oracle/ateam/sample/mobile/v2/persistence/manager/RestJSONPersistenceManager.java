@@ -8,36 +8,24 @@
 package oracle.ateam.sample.mobile.v2.persistence.manager;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.api.JSONBeanSerializationHelper;
 import oracle.adfmf.framework.exception.AdfException;
 import oracle.adfmf.json.JSONArray;
-import oracle.adfmf.json.JSONObject;
 import oracle.adfmf.json.JSONException;
+import oracle.adfmf.json.JSONObject;
 
-import oracle.adfmf.util.AttributeInfo;
-import oracle.adfmf.util.GenericType;
-
-import oracle.ateam.sample.mobile.v2.persistence.cache.EntityCache;
+import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.util.StringUtils;
 import oracle.ateam.sample.mobile.v2.persistence.db.BindParamInfo;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;
-import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingOneToMany;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
-import oracle.ateam.sample.mobile.v2.persistence.metadata.Method;
-import oracle.ateam.sample.mobile.v2.persistence.metadata.MethodParameter;
-import oracle.ateam.sample.mobile.v2.persistence.metadata.ObjectPersistenceMapping;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
-import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
-import oracle.ateam.sample.mobile.util.ADFMobileLogger;
-import oracle.ateam.sample.mobile.util.MessageUtils;
-import oracle.ateam.sample.mobile.util.StringUtils;
 
 
 /**
@@ -83,26 +71,26 @@ public class RestJSONPersistenceManager
    * @param deleteRow
    * @return JSON-formatted string containing the serialized entity instance
    */
-  protected String getSerializedDataObject(Entity entity, String elementName, String rowElementName, List attributesToExclude, boolean deleteRow)
+  protected String getSerializedDataObject(Entity entity, String elementName, String rowElementName, List<String> attributesToExclude, boolean deleteRow)
   {
-    Map keyValuePairs = getPayloadKeyValuePairs(entity,attributesToExclude);
-    Map entityInstance = null;
+    Map<String,Object> keyValuePairs = getPayloadKeyValuePairs(entity,attributesToExclude);
+    Map<String,Object> entityInstance = null;
     if (rowElementName != null)
     {
       String[] elements = StringUtils.stringToStringArray(rowElementName, ".");
-      Map row = null;
+      Map<String,Object> row = null;
       // start with last element
       for (int i = elements.length - 1; i >= 0; i--)
       {
         String element = elements[i];
         if (row == null)
         {
-          row = new HashMap();
+          row = new HashMap<String,Object>();
           row.put(element, keyValuePairs);
         }
         else
         {
-          HashMap container = new HashMap();
+          HashMap<String,Object> container = new HashMap<String,Object>();
           container.put(element, row);
           row = container;
         }
@@ -116,9 +104,9 @@ public class RestJSONPersistenceManager
     String json = "";
     try
     {
-      if (elementName != null)
+      if (elementName != null && !"".equals(elementName.trim()))
       {
-        List rows = new ArrayList();
+        List<Map<String,Object>> rows = new ArrayList<Map<String,Object>>();
         rows.add(entityInstance);
         if ("root".equals(elementName))
         {
@@ -127,7 +115,7 @@ public class RestJSONPersistenceManager
         }
         else
         {
-          Map root = new HashMap();
+          Map<String,Object> root = new HashMap<String,Object>();
           root.put(elementName, rows);
           json = JSONBeanSerializationHelper.toJSON(root).toString();
         }
@@ -159,21 +147,21 @@ public class RestJSONPersistenceManager
     return StringUtils.substitute(json, "{\".null\":true}", "null");
   }
 
-  protected List handleReadResponse(String jsonResponse, Class entityClass, String collectionElementName,
-                                    String rowElementName, List parentBindParamInfos, boolean deleteAllRows)
+  protected <E extends Entity> List<E> handleReadResponse(String jsonResponse, Class entityClass, String collectionElementName,
+                                    String rowElementName, List<BindParamInfo> parentBindParamInfos, boolean deleteAllRows)
   {
     return handleResponse(jsonResponse, entityClass,collectionElementName,
                                     rowElementName,parentBindParamInfos, null, deleteAllRows);
   }
 
-  protected List handleResponse(String jsonResponse, Class entityClass, String collectionElementName,
-                                    String rowElementName, List parentBindParamInfos, Entity currentEntity, boolean deleteAllRows)
+  protected <E extends Entity> List<E> handleResponse(String jsonResponse, Class entityClass, String collectionElementName,
+                                    String rowElementName, List<BindParamInfo> parentBindParamInfos, E currentEntity, boolean deleteAllRows)
   {
     if (deleteAllRows)
     {
       getLocalPersistenceManager().deleteAllRows(entityClass);
     }
-    List entities = new ArrayList();
+    List<E> entities = new ArrayList<E>();
     if (!jsonResponse.startsWith("{") && !jsonResponse.startsWith("["))
     {
       return entities;
@@ -243,8 +231,8 @@ public class RestJSONPersistenceManager
   }
 
 
-  protected void findAndProcessPayloadElements(String rowElementName, Object collection, Class entityClass,
-                                               List parentBindParamInfos, List entities, Entity currentEntity)
+  protected <E extends Entity> void findAndProcessPayloadElements(String rowElementName, Object collection, Class entityClass,
+                                               List<BindParamInfo> parentBindParamInfos, List<E> entities, E currentEntity)
     throws JSONException
   {
     if (collection instanceof JSONArray)
@@ -281,7 +269,7 @@ public class RestJSONPersistenceManager
             throw new AdfException("JSON row element " + rowElementName + " is not of type JSONObject or JSONArray",AdfException.ERROR);
           }
         }
-        Entity entity = processPayloadElement(row, entityClass, parentBindParamInfos, currentEntity);
+        E entity = processPayloadElement(row, entityClass, parentBindParamInfos, currentEntity);
         if (entity!=null && !entities.contains(entity))
         {
           entities.add(entity);
@@ -290,7 +278,7 @@ public class RestJSONPersistenceManager
     }
     else if (collection instanceof JSONObject)
     {
-      Entity entity = processPayloadElement((JSONObject) collection, entityClass, parentBindParamInfos, currentEntity);
+      E entity = processPayloadElement((JSONObject) collection, entityClass, parentBindParamInfos, currentEntity);
       if (entity!=null && !entities.contains(entity))
       {
         entities.add(entity);
@@ -345,18 +333,17 @@ public class RestJSONPersistenceManager
     return null;
   }
 
-  protected Entity processPayloadElement(JSONObject row, Class entityClass, List parentBindParamInfos,
-                                         Entity currentEntity)
+  protected <E extends Entity> E processPayloadElement(JSONObject row, Class entityClass, List<BindParamInfo> parentBindParamInfos,
+                                         E currentEntity)
     throws JSONException
   {
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
-    List bindParamInfos = new ArrayList();
+    List<BindParamInfo> bindParamInfos = new ArrayList<BindParamInfo>();
     // map contains mappign as key, and a list of instances as value
-    Map oneToManyMappings = new HashMap();
-    List attrMappings = descriptor.getAttributeMappings();
-    for (int j = 0; j < attrMappings.size(); j++)
+    Map<AttributeMappingOneToMany,Object> oneToManyMappings = new HashMap<AttributeMappingOneToMany,Object>();
+    List<AttributeMapping> attrMappings = descriptor.getAttributeMappings();
+    for (AttributeMapping mapping : attrMappings)
     {
-      AttributeMapping mapping = (AttributeMapping) attrMappings.get(j);
       String attrNameInPayload = mapping.getAttributeNameInPayload();
       if (attrNameInPayload == null)
       {
@@ -394,7 +381,7 @@ public class RestJSONPersistenceManager
     // get the primary key, and check the cache for existing entity instance with this key
     // if it exists, update this instance which is then always the same as currentEntity instance
     // otherwise, when currentEntity is not null, this means the PK has changed.
-    Entity entity = createOrUpdateEntityInstance(entityClass, bindParamInfos, currentEntity);
+    E entity = createOrUpdateEntityInstance(entityClass, bindParamInfos, currentEntity);
 
     if (descriptor.isPersisted())
     {
@@ -437,13 +424,13 @@ public class RestJSONPersistenceManager
         childrenCount = 1;
       }
 
-      List childEntities = new ArrayList();
+      List<Entity> childEntities = new ArrayList<Entity>();
       if (childrenCount > 0)
       {
-        List currentChildEntities = null;
+        List<Entity> currentChildEntities = null;
         if (currentEntity != null)
         {
-          currentChildEntities = (List) currentEntity.getAttributeValue(mapping.getAttributeName());
+          currentChildEntities = (List<Entity>) currentEntity.getAttributeValue(mapping.getAttributeName());
           if (currentChildEntities.size() != childrenCount)
           {
             // this should never happen, because current entity child list is send as payload for write action
@@ -460,7 +447,7 @@ public class RestJSONPersistenceManager
             // recursive call to populate DB with child entity row. Note that
             // multiple child rows are NOT wrapped in own GenericType, instead each
             // child instance is just an additional attribute of type GenericType
-            Entity currentChildEntity = (Entity) (currentChildEntities != null? currentChildEntities.get(i): null);
+            Entity currentChildEntity = currentChildEntities != null? currentChildEntities.get(i): null;
             Entity childEntity =
               processPayloadElement((JSONObject) rawValue, refClass, bindParamInfos, currentChildEntity);
             childEntities.add(childEntity);
@@ -475,30 +462,5 @@ public class RestJSONPersistenceManager
     }
     return entity;
   }
-
-
-  public static void main(String[] args)
-  {
-    String json =
-      "{\"DepartmentsView\":[{\"DepartmentId\":\"60\",\"DepartmentName\":\"dep60\"},{\"DepartmentId\":\"8\",\"DepartmentName\":\"NewDepartment888\"}]}";
-    String json2 = "{\"DepartmentId\":\"60\",\"DepartmentName\":\"dep60\"}";
-    HashMap map = new HashMap();
-    try
-    {
-      JSONObject aap = (JSONObject) JSONBeanSerializationHelper.fromJSON(JSONObject.class, json);
-      JSONArray rows = (JSONArray) aap.get("DepartmentsView");
-      for (int i = 0; i < rows.length(); i++)
-      {
-        JSONObject row = (JSONObject) rows.get(i);
-        String[] names = row.getNames(row);
-        System.err.println(row);
-      }
-    }
-    catch (Exception e)
-    {
-      e.printStackTrace();
-    }
-  }
-
 
 }

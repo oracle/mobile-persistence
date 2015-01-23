@@ -22,7 +22,8 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 public class EntityCache
 {
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(EntityCache.class);
-  private Map cache = new HashMap();
+//  private  Map<Class<? extends Entity>,Map<EntityKey,? extends Entity>> cache = new HashMap();
+  private  Map<Class,Map> cache = new HashMap<Class,Map>();
   private static EntityCache instance;
   
   public EntityCache()
@@ -47,9 +48,10 @@ public class EntityCache
    * Adds an entity to the cache if no entity with same key does exists yet in the cache
    * @param entity
    */
-  public void addEntity(Entity entity)
+  public <E extends Entity> void addEntity(E entity)
   {
-     Map entityCache = findOrCreateEntityCache(entity.getClass());
+     Class entityClass =entity.getClass();
+     Map<EntityKey,E> entityCache = findOrCreateEntityCache(entityClass);
      entityCache.put(new EntityKey(EntityUtils.getEntityKey(entity)), entity);
   }
 
@@ -57,43 +59,44 @@ public class EntityCache
    * Addes a list of entities to the cache.
    * @param entities
    */
-  public void addEntities(List entities)
+  public <E extends Entity> void addEntities(List<E> entities)
   {
     if (entities.size()>0)
     {
       Class entityClass = entities.get(0).getClass();
-      Map entityCache = findOrCreateEntityCache(entityClass);
-      for (int i = 0; i < entities.size(); i++)
+      Map<EntityKey,E> entityCache = findOrCreateEntityCache(entityClass);
+      for (E entity : entities)
       {
-        Entity entity = (Entity) entities.get(i);
         entityCache.put(new EntityKey(EntityUtils.getEntityKey(entity)), entity);
       }
     }
   }
 
-  public void removeEntity(Entity entity)
+  public <E extends Entity> void removeEntity(E entity)
   {
-     Map entityCache = findOrCreateEntityCache(entity.getClass());
-     entityCache.remove(new EntityKey(EntityUtils.getEntityKey(entity)));
+    Map<EntityKey,E> entityCache = null;
+    Class cls = entity.getClass();
+    Map<EntityCache.EntityKey, E> cache = findOrCreateEntityCache(cls);
+    entityCache.remove(new EntityKey(EntityUtils.getEntityKey(entity)));
   }
 
-  public Map findOrCreateEntityCache(Class entityClass)
+  public <E extends Entity> Map<EntityKey,E> findOrCreateEntityCache(Class<E> entityClass)
   {
-     Map entityCache = (Map) cache.get(entityClass);
+    Map<EntityKey,E> entityCache = (Map<EntityKey, E>) cache.get(entityClass);
      if (entityCache==null)
      {
-       entityCache = new HashMap();
+       entityCache = new HashMap<EntityKey,E>();
        cache.put(entityClass, entityCache);
      }
      return entityCache;
   }
 
-  public Entity findByUID(Class entityClass, Object[] uid)
+  public <E extends Entity> E findByUID(Class entityClass, Object[] uid)
   {
      Map entityCache = (Map) cache.get(entityClass);
      if (entityCache!=null)
      {
-       return (Entity) entityCache.get(new EntityKey(uid));         
+       return (E)entityCache.get(new EntityKey(uid));         
      }
      return null;
   }
@@ -112,7 +115,7 @@ public class EntityCache
    */
   public void clear(Class entityClass)
   {
-    Map entityCache = (Map) cache.get(entityClass);
+    Map entityCache = cache.get(entityClass);
     if (entityCache!=null)
     {
       entityCache.clear();

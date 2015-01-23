@@ -21,6 +21,7 @@ import oracle.adfmf.framework.exception.AdfException;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.MethodHeaderParameterImpl;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.OAuthConfig;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.v2.persistence.metadata.MethodHeaderParameter;
 
 /**
  *  Helper class for implementing OAuth security
@@ -78,10 +79,10 @@ public class OAuthTokenManager
     return authToken;
   }
 
-  public List getOAuthHeaderParams(String oauthConfigName)
+  public List<MethodHeaderParameter> getOAuthHeaderParams(String oauthConfigName)
   {
     OAuthConfig oauthConfig = OAuthConfig.getInstance(oauthConfigName);
-    List headerParams = new ArrayList();
+    List<MethodHeaderParameter> headerParams = new ArrayList<MethodHeaderParameter>();
     OAuthToken authToken = getAccessToken(oauthConfig);
     MethodHeaderParameterImpl authHeader = new MethodHeaderParameterImpl(HEADER_AUTHORIZATION);
     authHeader.setValue(AUTH_KEYWORD_BEARER + " " + authToken.getAccess_token());

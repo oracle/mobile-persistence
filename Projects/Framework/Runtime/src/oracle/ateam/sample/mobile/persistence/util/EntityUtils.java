@@ -2,6 +2,10 @@
  Copyright ? 2014, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 20-jan-2015   Steven Davelaar
+ 1.5           Fixed bug in getLocalPersistenceManager, local pm might not be set against (child) descriptor
+ 27-dec-2014   Steven Davelaar
+ 1.4           added method  getEntityListAsCorrectlyTypedArray
  27-dec-2014   Steven Davelaar
  1.4           added method  getEntityListAsCorrectlyTypedArray
  15-sep-2014   Steven Davelaar
@@ -438,6 +442,11 @@ public class EntityUtils
 //    }
     DBPersistenceManager pm = null;  
     String className =  descriptor.getLocalPersistenceManagerClassName();
+    if (className==null)
+    {
+      // might not be set for child entity
+      className = oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager.class.getName();
+    }
       try   
       {
         Class pmClass =  Utility.loadClass(className);

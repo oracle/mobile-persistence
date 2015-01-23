@@ -11,9 +11,9 @@ import java.util.List;
 
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 
-import oracle.ateam.sample.mobile.persistence.service.DataSynchAction;
-import oracle.ateam.sample.mobile.persistence.service.DataSynchManager;
-import oracle.ateam.sample.mobile.persistence.service.EntityCRUDService;
+import oracle.ateam.sample.mobile.v2.persistence.service.DataSynchAction;
+import oracle.ateam.sample.mobile.v2.persistence.service.DataSynchManager;
+import oracle.ateam.sample.mobile.v2.persistence.service.EntityCRUDService;
 import oracle.ateam.sample.mobile.util.MessageUtils;
 
 public class DataSynchService extends EntityCRUDService
