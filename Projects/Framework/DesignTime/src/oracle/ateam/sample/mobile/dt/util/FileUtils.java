@@ -118,8 +118,9 @@ public class FileUtils
       tb.removeToEnd(0);
       tb.append(content.toCharArray());
       tb.endEdit();
-      node.save();
+      node.save();  
       node.releaseTextBuffer();
+      node.markDirty(true);  
     }
     catch (IllegalAccessException e)
     {
