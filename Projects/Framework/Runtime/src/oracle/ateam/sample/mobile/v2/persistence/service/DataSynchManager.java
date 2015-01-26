@@ -18,20 +18,21 @@ import oracle.adfmf.framework.api.JSONBeanSerializationHelper;
 import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.model.ChangeEventSupportable;
 import oracle.ateam.sample.mobile.util.MessageUtils;
+import oracle.ateam.sample.mobile.util.TaskExecutor;
 
 
 /**
  * Class that manages remote data synchronization actions for a specific EntityCRUDService.
  * If a remote persistence manager is configured in the EntityCRUDService instance, and the create, update or remove
- * operation on the remote persistence manager fails, for example because the device is offline or the remote server is not reachable, 
+ * operation on the remote persistence manager fails, for example because the device is offline or the remote server is not reachable,
  * or the specific REST service is not running or the REST service call returns an error, then this failed remote transaction is registered
  * as a pending data synchronization action in this manager.
  * By calling the synchronize method in this class, a new attempt is made to synchronize the pending data synch actions.
  * When the application is closed or abandoned, the pending data synch actions are persisted to a table in
- * the SQLite database. 
+ * the SQLite database.
  * This persistence is implemented in method saveSynchActionsToDB(). When a new instance of the DataSynchManager is created,
  * typically when the entity CRUD service class is instantiated, the persisted data synch actions will be loaded again.
- * 
+ *
  */
 public class DataSynchManager
   extends ChangeEventSupportable
@@ -98,15 +99,7 @@ public class DataSynchManager
     DataSynchronizer syncher = new DataSynchronizer(this, payload);
 //   we now clear a synch action after succesfull processing in DataSynchronizer class
 //    clearDataSynchActions();
-    if (inBackground)
-    {
-      Thread thread = new Thread(syncher);
-      thread.start();
-    }
-    else
-    {
-      syncher.run();
-    }
+    TaskExecutor.getInstance().execute(inBackground,syncher);
   }
 
   protected String toJSON(DataSynchPayload payload)

@@ -54,6 +54,7 @@ import oracle.ateam.sample.mobile.persistence.util.EntityUtils;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.MessageUtils;
 import oracle.ateam.sample.mobile.util.StringUtils;
+import oracle.ateam.sample.mobile.util.TaskExecutor;
 
 
 /**
@@ -62,8 +63,8 @@ import oracle.ateam.sample.mobile.util.StringUtils;
  * per entity in the persistenceMapping.xml file.
  * When both a local and remote persistence manager are configured,
  * then when the findAll method is called for the first time, it wll synchronize the local database with the
- * remote data source. In persistenceMapping.xml, you can also specify whether the remote CRUD actions are performed 
- * in the background so the user can continue to work with his mobile app, or whether he needs to wait until 
+ * remote data source. In persistenceMapping.xml, you can also specify whether the remote CRUD actions are performed
+ * in the background so the user can continue to work with his mobile app, or whether he needs to wait until
  * the remote action has completed.
  *
  */
@@ -528,22 +529,11 @@ public abstract class EntityCRUDService
     }
     if (remotePersistenceManager != null && isOnline())
     {
-      if (isDoRemoteWriteInBackground())
-      {
-        Runnable runnable = new Runnable()
-        {
-          public void run()
-          {
-            remotePersistenceManager.commmit();
-          }
-        };
-        Thread thread = new Thread(runnable);
-        thread.start();
-      }
-      else
-      {
-        remotePersistenceManager.commmit();
-      }
+      TaskExecutor.getInstance().execute(isDoRemoteWriteInBackground()
+          , () -> {
+                    remotePersistenceManager.commmit();
+                  });    
+
     }
   }
 
@@ -560,22 +550,10 @@ public abstract class EntityCRUDService
     }
     if (remotePersistenceManager != null && isOnline())
     {
-      if (isDoRemoteWriteInBackground())
-      {
-        Runnable runnable = new Runnable()
-        {
-          public void run()
-          {
-            remotePersistenceManager.rollback();
-          }
-        };
-        Thread thread = new Thread(runnable);
-        thread.start();
-      }
-      else
-      {
-        remotePersistenceManager.rollback();
-      }
+      TaskExecutor.getInstance().execute(isDoRemoteWriteInBackground()
+          , () -> {
+                    remotePersistenceManager.rollback();
+                  });    
     }
     EntityCache.getInstance().clear(getEntityClass());
   }
@@ -660,39 +638,18 @@ public abstract class EntityCRUDService
       return;
     }
     setRemoteFindAllExecuted(true);
-    if (isDoRemoteReadInBackground())
-    {
-      Runnable runnable = new Runnable()
-      {
-        public void run()
-        {
-          // auto synch any pending actions first, pass false for inBackground because
-          // we are already running in background thread
-          getDataSynchManager().synchronize(false);
-          List entities = executeRemoteFindAll();
-          if (entities != null)
-          {
-            // when an error occurs (for example server not available, the method returns null
-            setEntityList(entities);
-            AdfmfJavaUtilities.flushDataChangeEvent();
-          }
-        }
-      };
-      Thread thread = new Thread(runnable);
-      thread.start();
-    }
-    else
-    {
-      // auto synch any pending actions first, pass false for inBackground because
-      // we want to proces pending actions before we do remote read
-      getDataSynchManager().synchronize(false);
-      List entities = executeRemoteFindAll();
-      if (entities != null)
-      {
-        // when an error occurs (for example server not available, the method returns null
-        setEntityList(entities);
-      }
-    }
+    TaskExecutor.getInstance().execute(isDoRemoteReadInBackground()
+        , () -> {
+                  // auto synch any pending actions first, pass false for inBackground because
+                  // we are already running in background thread
+                  getDataSynchManager().synchronize(false);
+                  List entities = executeRemoteFindAll();
+                  if (entities != null)
+                  {
+                    // when an error occurs (for example server not available, the method returns null
+                    setEntityList(entities);
+                  }
+                });    
   }
 
   /**
@@ -717,39 +674,18 @@ public abstract class EntityCRUDService
       sLog.fine("Cannot execute doRemoteFindAllInParent, no network connection");
       return;
     }
-    if (isDoRemoteReadInBackground())
-    {
-      Runnable runnable = new Runnable()
-      {
-        public void run()
-        {
-          // auto synch any pending actions first, pass false for inBackground because
-          // we are already running in background thread
-          getDataSynchManager().synchronize(false);
-          List entities = executeRemoteFindAllInParent(parent, accessorAttribute);
-          if (entities != null)
-          {
-            // when an error occurs (for example server not available, the method returns null
-            setEntityList(entities);
-          }
-          AdfmfJavaUtilities.flushDataChangeEvent();
-        }
-      };
-      Thread thread = new Thread(runnable);
-      thread.start();
-    }
-    else
-    {
-      // auto synch any pending actions first, pass false for inBackground because
-      // we want to proces pending actions before we do remote read
-      getDataSynchManager().synchronize(false);
-      List entities = executeRemoteFindAllInParent(parent, accessorAttribute);
-      if (entities != null)
-      {
-        // when an error occurs (for example server not available, the method returns null
-        setEntityList(entities);
-      }
-    }
+    TaskExecutor.getInstance().execute(isDoRemoteWriteInBackground()
+        , () -> {
+                  // auto synch any pending actions first, pass false for inBackground because
+                  // we are already running in background thread
+                  getDataSynchManager().synchronize(false);
+                  List entities = executeRemoteFindAllInParent(parent, accessorAttribute);
+                  if (entities != null)
+                  {
+                    // when an error occurs (for example server not available, the method returns null
+                    setEntityList(entities);
+                  }
+                });    
   }
 
   /**
@@ -774,39 +710,19 @@ public abstract class EntityCRUDService
       sLog.fine("Cannot execute doRemoteFind, no network connection");
       return;
     }
-    if (isDoRemoteReadInBackground())
-    {
-      Runnable runnable = new Runnable()
-      {
-        public void run()
-        {
-          // auto synch any pending actions first, pass false for inBackground because
-          // we are already running in background thread
-          getDataSynchManager().synchronize(false);
-          List entities = executeRemoteFind(searchValue);
-          if (entities != null)
-          {
-            // when an error occurs (for example server not available, the method returns null
-            setEntityList(entities);
-          }
-          AdfmfJavaUtilities.flushDataChangeEvent();
-        }
-      };
-      Thread thread = new Thread(runnable);
-      thread.start();
-    }
-    else
-    {
-      // auto synch any pending actions first, pass false for inBackground because
-      // we want to proces pending actions before we do remote read
-      getDataSynchManager().synchronize(false);
-      List entities = executeRemoteFind(searchValue);
-      if (entities != null)
-      {
-        // when an error occurs (for example server not available, the method returns null
-        setEntityList(entities);
-      }
-    }
+    TaskExecutor.getInstance().execute(isDoRemoteReadInBackground()
+        , () -> {
+                  // auto synch any pending actions first, pass false for inBackground because
+                  // we are already running in background thread
+                  getDataSynchManager().synchronize(false);
+                  List entities = executeRemoteFind(searchValue);
+                  if (entities != null)
+                  {
+                    // when an error occurs (for example server not available, the method returns null
+                    setEntityList(entities);
+                  }
+                });    
+
   }
 
   protected void setDoRemoteReadInBackground(boolean doRemoteReadInBackground)

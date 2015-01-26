@@ -95,16 +95,21 @@ public class BusinessObjectGenerator
     vi.initVelocity("WSM",model.isMaf20Style());
     VelocityTemplateProcessor processor = new VelocityTemplateProcessor(vi);
 
-    // generate data object Java class
     for (DataObjectInfo doi: model.getSelectedDataObjects())
     {
-      model.setCurrentDataObject(doi);
       // set fully qualified package name if new data object using generator options wizard page setting
+      // we need to do this in separate loop because parentr data object class might need inport of child service class
       if (!doi.isExisting())
       {
         doi.setPackageName(model.getPackageName());        
         doi.setServicePackageName(model.getServicePackageName());
       }
+    }
+
+    // generate data object Java class
+    for (DataObjectInfo doi: model.getSelectedDataObjects())
+    {
+      model.setCurrentDataObject(doi);
       URL sourceURL = FileUtils.getSourceURL(project, doi.getPackageName(), doi.getClassName() + ".java");
       if (!FileUtils.fileExists(sourceURL) || model.isOverwriteDataObjectClasses())
       {

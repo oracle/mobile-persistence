@@ -24,6 +24,7 @@ import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.util.TaskExecutor;
 
 
 /**
@@ -224,25 +225,19 @@ public class IndirectList<E extends Entity>
       boolean inBackground = service.isDoRemoteReadInBackground();
       if (inBackground)
       {
-        Runnable runnable = new Runnable()
-        {
-          public void run()
-          {
-            DBPersistenceManager pm = EntityUtils.getLocalPersistenceManager(referenceDescriptor);
-            List oldList = pm.findAllInParent(referenceDescriptor.getClazz(), entity, mapping);   
-            // we don't want the child service to start another backgrounf thread, so we temporarily switch
-            // off background read
-            service.setDoRemoteReadInBackground(false);        
-            service.doRemoteFindAllInParent(entity,mapping.getAttributeName());        
-            service.setDoRemoteReadInBackground(true);        
-            List newList = service.getEntityList(); 
-            delegate = newList;
-            entity.refreshChildEntityList(oldList, newList, referenceDescriptor.getClazz(), mapping.getAttributeName());
-            AdfmfJavaUtilities.flushDataChangeEvent();
-          }
-        };
-        Thread thread = new Thread(runnable);
-        thread.start();        
+        TaskExecutor.getInstance().execute(true
+            , () -> {
+                      DBPersistenceManager pm = EntityUtils.getLocalPersistenceManager(referenceDescriptor);
+                      List oldList = pm.findAllInParent(referenceDescriptor.getClazz(), entity, mapping);   
+                      // we don't want the child service to start another backgrounf thread, so we temporarily switch
+                      // off background read
+                      service.setDoRemoteReadInBackground(false);        
+                      service.doRemoteFindAllInParent(entity,mapping.getAttributeName());        
+                      service.setDoRemoteReadInBackground(true);        
+                      List newList = service.getEntityList(); 
+                      delegate = newList;
+                      entity.refreshChildEntityList(oldList, newList, referenceDescriptor.getClazz(), mapping.getAttributeName());
+                    });    
       }
       else
       {
