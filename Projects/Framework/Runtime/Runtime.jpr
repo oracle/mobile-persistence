@@ -109,7 +109,7 @@
    </hash>
    <hash n="oracle.jdeveloper.ant.AntRunConfiguration"/>
    <hash n="oracle.jdeveloper.compiler.ant.AntConfiguration">
-      <value n="makeTarget" v="clean"/>
+      <value n="makeTarget" v="stage"/>
       <url n="projectBuildfile" path="build/build.xml"/>
       <list n="targetList">
          <string v="clean"/>
