@@ -2,6 +2,8 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 26-jan-2015   Steven Davelaar
+ 1.1           Shut down task executor thread pool in deactive method
  06-feb-2013   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -12,6 +14,7 @@ import oracle.adfmf.application.LifeCycleListener;
 import oracle.ateam.sample.mobile.v2.persistence.db.DBConnectionFactory;
 import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.util.UsageTracker;
 
 
@@ -70,20 +73,13 @@ public class InitDBLifeCycleListener
   }
 
   /**
-   * This method closes the DB connection if needed.
+   * This method closes the DB connection if needed, and shuts down the single thread pool
+   * used to execute background tasks.
    */
   public void deactivate()
   {
     DBConnectionFactory.closeConnectionIfNeeded();
-//    List syncManagers = DataSynchManager.getRegisteredDataSynchManagers();
-//    if (syncManagers!=null)
-//    {
-//      for (int i = 0; i < syncManagers.size(); i++)
-//      {
-//        DataSynchManager dsm = (DataSynchManager) syncManagers.get(i);
-//        dsm.saveSynchActionsToFile();
-//      }
-//    }  
+    TaskExecutor.getInstance().shutDown();
   }
 
 }

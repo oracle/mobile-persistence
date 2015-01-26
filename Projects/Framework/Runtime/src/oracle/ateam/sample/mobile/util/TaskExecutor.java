@@ -101,11 +101,6 @@ public class TaskExecutor
           setRunning(false);
           AdfmfJavaUtilities.flushDataChangeEvent();
           sLog.fine("No more background tasks running in TaskExecutor: "+size);
-          ThreadPoolExecutor executorDone = executor;
-          // clear executor member so any new tasks submitted will get new thread pool
-          executor = null;
-          // shut down thread pool so we don't have idle thread running
-          executorDone.shutdown();
         };
       Thread t = new Thread(r2);
       t.start();
@@ -139,4 +134,15 @@ public class TaskExecutor
     return running;
   }
 
+  /**
+   *  Shuts down the thread pool gracefully, first executing any pending tasks
+   */
+  public void shutDown()
+  { 
+    if (executor!=null)
+    {
+      executor.shutdown();
+      executor = null;
+    }
+  }
 }
