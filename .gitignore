@@ -4,3 +4,9 @@
 **/dist/**
 **/javadoc/**
 **/stage/**
+Projects/Framework/.data
+Projects/Framework/DesignTime/classes
+Projects/Framework/DesignTime/deploy
+Projects/Framework/Runtime/deploy
+Projects/Framework/Runtime/javadoc
+Projects/Framework/stage
