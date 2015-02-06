@@ -76,6 +76,7 @@ public class DataObjectInfo
   private boolean xmlPayload = true;
   private boolean persisted = false;
   private boolean existing = false;
+  private String jsonSchema;
 
 //  Map<AttributeInfo,AttributeInfo> parentAttrMappings = new HashMap<AttributeInfo,AttributeInfo>();
     
@@ -562,6 +563,20 @@ public class DataObjectInfo
     return children;
   }
 
+  public DataObjectInfo findChildDataObject(String dataObjectName)
+  {
+    DataObjectInfo child = null;
+    for (AccessorInfo ai : getAllChildren())
+    {
+      if (ai.getChildDataObject().getName().equals(dataObjectName))
+      {
+        child = ai.getChildDataObject();;
+        break;
+      }
+    }
+    return child;
+  }
+
   public void initCrudMethodsIfNeeded(Map<String, DCMethod> crudMethods)
   {
     if (!crudMethodsInitialized)
@@ -959,4 +974,13 @@ public class DataObjectInfo
     return root;
   }
 
+  public void setJsonSchema(String jsonSchema)
+  {
+    this.jsonSchema = jsonSchema;
+  }
+
+  public String getJsonSchema()
+  {
+    return jsonSchema;
+  }
 }

@@ -207,7 +207,8 @@ public class ADFBCDescribeDataObjectParser
 
   private void createChildAccessor(DataObjectInfo parentDataObject, Map parentDesc, DataObjectInfo doi, String uri)
   {
-    DCMethod childAccessorMethod = new DCMethod(doi.getName()+"List",connectionName, uri, "GET");
+//    DCMethod childAccessorMethod = new DCMethod(doi.getName()+"List",connectionName, uri, "GET");
+    DCMethod childAccessorMethod = new DCMethod(doi.getName(),connectionName, uri, "GET");
     childAccessorMethod.setParameterValueProviderDataObject(parentDataObject);
     // we assume payload structure is same as one used to discover dthe data objects
     childAccessorMethod.setPayloadElementName(doi.getPayloadListElementName());

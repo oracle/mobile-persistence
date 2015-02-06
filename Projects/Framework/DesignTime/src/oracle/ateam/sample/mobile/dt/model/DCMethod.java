@@ -278,7 +278,7 @@ public class DCMethod
       {
         String payloadName = param.getName();
         AttributeInfo attr = parameterValueProviderDataObject.getAttributeDefByPayloadName(payloadName);
-        if (attr!=null && (isIsWriteMethod() || isIsFindAllInParentMethod()))
+        if (attr!=null && (isIsWriteMethod() || isIsFindAllInParentMethod() || isIsGetCanonicalMethod()))
         {
           // we have a match, set this attribute as value provider
           param.setValueProvider(DCMethodParameter.DATA_OBJECT_ATTRIBUTE);
