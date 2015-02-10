@@ -19,7 +19,7 @@ public class MethodParamsTableModel
 {
   
   private String[] colHeaders = 
-  { "Name","Value Provider","Data Object Attribute","Literal Value"};
+  { "Name","Value Provider","Data Object Attribute","Value"};
   private List<DCMethodParameter> params;
   private boolean nameUpdateable;
   

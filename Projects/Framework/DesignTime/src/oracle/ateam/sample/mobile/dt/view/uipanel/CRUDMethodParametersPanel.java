@@ -77,7 +77,7 @@ public class CRUDMethodParametersPanel
   JLabel instruction = new JLabel("Specify how the parameters of the CRUD methods must be populated");
   JLabel methodLabel = new JLabel("CRUD Method");
   JComboBox methodList = new JComboBox();
-  JCheckBox sendSerializedDO = new JCheckBox("Send Serialized Data Object as Payload?");
+  JCheckBox sendSerializedDO = new JCheckBox("Send Serialized Data Object as Payload");
   JPanel restSpecificPanel = new JPanel();
   JButton addButton = new JButton("Add");
   JButton removeButton = new JButton("Remove");
@@ -164,7 +164,7 @@ public class CRUDMethodParametersPanel
     methodsMap.clear();
     for (DataObjectInfo doi: dois)
     {
-      if (doi.getParent()==null)
+      if (doi.isGenerateServiceClass())
       {
         addMethod(doi.getFindAllMethod(), methodsMap, methodNames);
         addMethod(doi.getFindMethod(), methodsMap, methodNames);
@@ -219,6 +219,7 @@ public class CRUDMethodParametersPanel
     if (model.isRestfulWebService())
     {
       instruction.setText(restInstruction);
+      methodLabel.setText("CRUD Resource");
       tc.getWizardCallbacks().wizardUpdateTitle("CRUD Resource Parameters", Boolean.TRUE);
     }
     else

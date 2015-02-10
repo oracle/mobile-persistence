@@ -17,12 +17,11 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import oracle.ateam.sample.mobile.dt.exception.ParseException;
 import oracle.ateam.sample.mobile.dt.model.AccessorInfo;
 import oracle.ateam.sample.mobile.dt.model.AttributeInfo;
 import oracle.ateam.sample.mobile.dt.model.DCMethod;
 import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
-
-import oracle.ide.panels.TraversalException;
 
 import oracle.xml.parser.v2.XMLElement;
 import oracle.xml.parser.v2.XMLText;
@@ -53,7 +52,6 @@ public class XMLExampleDataObjectParser
   }
 
   public void parse(DCMethod method, String response, DataObjectInfo dataObjectInfo, List<DataObjectInfo> dataObjectInfos)
-    throws TraversalException
   {
     this.dataObjectInfos = dataObjectInfos;
     Document doc;
@@ -73,12 +71,12 @@ public class XMLExampleDataObjectParser
     catch (SAXException e)
     {
       e.printStackTrace();
-      throw new TraversalException("Error parsing XML payload: " + e.getLocalizedMessage());
+      throw new ParseException("Error parsing XML payload: " + e.getLocalizedMessage());
     }
     catch (IOException e)
     {
       e.printStackTrace();
-      throw new TraversalException("Error parsing XML payload: " + e.getLocalizedMessage());
+      throw new ParseException("Error parsing XML payload: " + e.getLocalizedMessage());
     }
   }
 

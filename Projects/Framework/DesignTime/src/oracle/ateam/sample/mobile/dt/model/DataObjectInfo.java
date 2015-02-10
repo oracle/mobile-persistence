@@ -563,6 +563,20 @@ public class DataObjectInfo
     return children;
   }
 
+  public AccessorInfo findChildAccessor(String accessorAttributeName)
+  {
+    AccessorInfo child = null;
+    for (AccessorInfo ai : getAllChildren())
+    {
+      if (ai.getChildAccessorName().equals(accessorAttributeName))
+      {
+        child = ai;
+        break;
+      }
+    }
+    return child;
+  }
+
   public DataObjectInfo findChildDataObject(String dataObjectName)
   {
     DataObjectInfo child = null;
@@ -982,5 +996,18 @@ public class DataObjectInfo
   public String getJsonSchema()
   {
     return jsonSchema;
+  }
+  
+  public boolean isGenerateServiceClass()
+  {
+    return getFindAllMethod()!= null
+    || getFindMethod()!=null
+    || getGetCanonicalMethod()!=null
+    || getFindAllInParentMethods().size()>0
+    || getGetAsParentMethods().size()>0
+    || getCreateMethod()!=null
+    || getUpdateMethod()!=null
+    || getMergeMethod()!=null
+    || getDeleteMethod()!=null;
   }
 }

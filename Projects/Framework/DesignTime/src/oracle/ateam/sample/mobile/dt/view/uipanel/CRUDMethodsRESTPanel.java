@@ -54,8 +54,8 @@ public class CRUDMethodsRESTPanel
 
   private BusinessObjectGeneratorModel model;
 
-  JLabel instruction = new JLabel("Set CRUD Resources for each service object");
-  JLabel doiLabel = new JLabel("Service Object");
+  JLabel instruction = new JLabel("Set CRUD Resources for each data object");
+  JLabel doiLabel = new JLabel("Data Object");
   JComboBox doilist = new JComboBox();
   transient Map<String,DataObjectInfo> dataObjectMap = new HashMap<String, DataObjectInfo>();
   transient Map<String,DCMethod> methodMap = new HashMap<String, DCMethod>();
@@ -269,11 +269,13 @@ public class CRUDMethodsRESTPanel
     List<String> dataObjectNames = new ArrayList<String>();
     for (DataObjectInfo doi: dois)
     {
-      if (doi.getParent()==null)
-      {
-        dataObjectMap.put(doi.getServiceClassName(), doi);
-        dataObjectNames.add(doi.getServiceClassName());        
-      }
+// show all data objects, maybe they want to add inde[pendt CRUD methods for a child data object that is retrieved 
+// together withs its parent. And we also need to be able to set sort order and payload format!      
+//      if (doi.getParent()==null)
+//      {
+        dataObjectMap.put(doi.getClassName(), doi);
+        dataObjectNames.add(doi.getClassName());        
+//      }
     }
     doilist.setModel(new DefaultComboBoxModel(dataObjectNames.toArray()));
   }
@@ -370,7 +372,7 @@ public class CRUDMethodsRESTPanel
     initMethodAndRequestTypeFields(method,getCanonicalField, getCanonicalRequestType,"GET");
 
     method = currentDataObject.getCreateMethod();
-    initMethodAndRequestTypeFields(method,createField, createRequestType,"PUT");
+    initMethodAndRequestTypeFields(method,createField, createRequestType,"POST");
 
     method = currentDataObject.getUpdateMethod();
     initMethodAndRequestTypeFields(method,updateField, updateRequestType,"PUT");

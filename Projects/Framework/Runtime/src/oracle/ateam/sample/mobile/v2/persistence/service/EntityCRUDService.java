@@ -404,8 +404,9 @@ public abstract class EntityCRUDService<E extends Entity>
 
   /**
    * Removes an entity using the configured local and remote persistence managers.
-   * Note that the entity is ALREADY removed from the entity list
-   * because this method is (indirectly) called through overridden remove method in EntityList
+   * Note that this method assumes that the entity is ALREADY removed from the entity list
+   * because this method is typically (indirectly) called through overridden remove method in EntityList
+   * which fires when using the standard Remove operation in the data control palette. 
    * @param entity
    */
   protected void removeEntity(Entity entity)
@@ -798,9 +799,18 @@ public abstract class EntityCRUDService<E extends Entity>
     return value!=null ? value.booleanValue() : false;
   }
 
+  /**
+   * If the entity is new, we remove the entity from the entity list. If it is an existing entity, we
+   * refresh the attribute values with the values as stored in the corresponding row in the local database
+   * @param entity
+   */
   protected void resetEntity(Entity entity)
   {
-    if (getLocalPersistenceManager() != null)
+    if (entity.getIsNewEntity())
+    {
+      getEntityList().remove(entity);
+    }
+    else if (getLocalPersistenceManager() != null)
     {
       getLocalPersistenceManager().resetEntity(entity);
     }

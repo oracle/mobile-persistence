@@ -7,11 +7,10 @@
 ******************************************************************************/
 package oracle.ateam.sample.mobile.dt.controller.parser;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 import java.math.BigDecimal;
@@ -19,19 +18,20 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import oracle.adfinternal.model.adapter.url.URLUtil;
+
+import oracle.ateam.sample.mobile.dt.exception.ParseException;
 import oracle.ateam.sample.mobile.dt.model.AccessorInfo;
-import oracle.ateam.sample.mobile.dt.model.AttributeInfo;
 import oracle.ateam.sample.mobile.dt.model.DCMethod;
 import oracle.ateam.sample.mobile.dt.model.DCMethodParameter;
 import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
 import oracle.ateam.sample.mobile.dt.model.HeaderParam;
 import oracle.ateam.sample.mobile.dt.util.StringUtils;
 
-import oracle.ide.panels.TraversalException;
+import oracle.ide.net.URLFileSystem;
 
 import org.raml.model.Action;
 import org.raml.model.ActionType;
@@ -40,6 +40,7 @@ import org.raml.model.ParamType;
 import org.raml.model.Raml;
 import org.raml.model.Resource;
 import org.raml.model.Response;
+import org.raml.model.parameter.Header;
 import org.raml.model.parameter.QueryParameter;
 import org.raml.model.parameter.UriParameter;
 import org.raml.parser.rule.ValidationResult;
@@ -56,29 +57,26 @@ public class RAMLParser
   private List<HeaderParam> headerParams;
   private String connectionName;
   private String connectionUri;
-  private String ramlContent;
+  private String ramlFile;
   private boolean flattenNestedObjects;
   private List<Map<String, String>> schemas;
 
-  public RAMLParser(String ramlContent, String connectionName, String connectionUri,
+  public RAMLParser(String ramlFile, String connectionName, String connectionUri,
                               List<HeaderParam> headerParams, boolean flattenNestedObjects)
   {
     super();
     this.connectionName = connectionName;
     this.connectionUri = connectionUri;
     this.headerParams = headerParams;
-    this.ramlContent = ramlContent;
+    this.ramlFile = ramlFile;
     this.flattenNestedObjects = flattenNestedObjects;
   }
 
   public List<DataObjectInfo> run()
-    throws TraversalException
   {
     //        String newFileContent = fileContent.replaceAll("\t", "  ");
     //        is = new ByteArrayInputStream(newFileContent.getBytes());
-    InputStream is = new ByteArrayInputStream(ramlContent.getBytes());
-
-    Raml raml = getRamlDocument(is);
+    Raml raml = getRamlDocument();
     String contentType = raml.getMediaType();
     HeaderParam contentTypeParam = new HeaderParam();
     contentTypeParam.setName("Content-Type");
@@ -92,6 +90,11 @@ public class RAMLParser
     for (Resource resource: resources.values())
     {
       createDataObject(resource, null, null);
+    }
+    // clean up attr names
+    for (DataObjectInfo doi: dataObjectInfos)
+    {
+      doi.cleanUpAttrNames();
     }
     return dataObjectInfos;
   }
@@ -110,18 +113,22 @@ public class RAMLParser
     return schemaFound;
   }
 
-  protected Raml getRamlDocument(InputStream is)
+  protected Raml getRamlDocument()
   {
+    InputStream is = null;
     try
     {
-      Raml raml = new RamlDocumentBuilder().build(is);
+      File file = new File(ramlFile);
+      is = new FileInputStream(file);
+      String resourceLocation = "file:///"+file.getParent()+"/";
+      Raml raml = new RamlDocumentBuilder().build(is, resourceLocation);
       return raml;
     }
     catch (ScannerException e)
     {
       // something is wrong, validate the raml and report back the errors
-      List<ValidationResult> results = RamlValidationService.createDefault().validate(is);
       StringBuffer errors = new StringBuffer("");
+      List<ValidationResult> results = RamlValidationService.createDefault().validate(is);
       for (ValidationResult result: results)
       {
         errors.append("line" + result.getLine() + ", column " + result.getStartColumn() + ": " + result.getMessage() +
@@ -130,9 +137,21 @@ public class RAMLParser
       if (errors.toString().startsWith("line-1, column -1: Invalid RAML"))
       {
         // report the execption problem, says more than validation in this case
-        throw new RuntimeException("RAML is invalid: \n" + e.getProblem());        
+        if (e instanceof ScannerException)
+        {
+          throw new ParseException("RAML is invalid: \n" + ((ScannerException)e).getProblem());                  
+        }
       }
-      throw new RuntimeException("RAML is invalid: \n" + errors);
+      throw new ParseException("RAML is invalid: \n" + errors);
+    }
+    catch (RuntimeException e2)
+    {
+      // TODO: Add catch code
+      throw new ParseException("Cannot read RAML: \n" + e2.getLocalizedMessage());
+    }
+    catch (FileNotFoundException e)
+    {
+      throw new ParseException("Cannot find RAML file: \n" + e.getLocalizedMessage());
     }
   }
 
@@ -148,7 +167,6 @@ public class RAMLParser
   }
 
   private void createDataObject(Resource resource, DataObjectInfo parentDataObject, Resource parentResource)
-    throws TraversalException
   {
     String name = extractResourceNameFromUriPath(resource);
     // name can be null when it is  top-level resource consisting of only a slask, or only uri params
@@ -174,7 +192,6 @@ public class RAMLParser
   }
 
   private void processNestedResources(Resource resource, DataObjectInfo parentDataObject, DataObjectInfo doi)
-    throws oracle.ide.panels.TraversalException
   {
     Map<String, Resource> nestedResources = resource.getResources();
     for (Resource nestedResource : nestedResources.values())
@@ -195,7 +212,6 @@ public class RAMLParser
   }
 
   private void processResourceActions(Resource resource, DataObjectInfo doi, DataObjectInfo parentDataObject, boolean isNestedResource)
-    throws oracle.ide.panels.TraversalException
   {
     Map<ActionType, Action> actions = resource.getActions();
     for (ActionType actionType: actions.keySet())
@@ -213,7 +229,6 @@ public class RAMLParser
   }
 
   private void processGETResponse(Resource resource, DataObjectInfo doi, DataObjectInfo parentDataObject, Action action, boolean isCanonical)
-    throws TraversalException
   {
     Map<String, Response> responses = action.getResponses();
     Response responseToProcess = null;
@@ -261,6 +276,7 @@ public class RAMLParser
       }
       DCMethod getMethod = new DCMethod(this.connectionName, resource.getUri(), "GET");
       addQueryParameters(action, getMethod);
+      addHeaders(action, getMethod);
           
       // if example payload or schema is parsed to set attributes, than the data object payload list element and
       // payload row element attributes have the correct values for this method.
@@ -319,8 +335,23 @@ public class RAMLParser
     }
   }
 
+  private void addHeaders(Action action, DCMethod method)
+  {
+    Map<String, Header> headers = action.getHeaders();
+    for (String headerName : headers.keySet())
+    {
+      Header header = headers.get(headerName);
+      HeaderParam param = new HeaderParam();
+      param.setName(headerName);
+      if (header.getDefaultValue()!=null)
+      {
+        param.setValue(header.getDefaultValue());        
+      }
+      method.addHeaderParam(param);        
+    }
+  }
+
   private void processNonGETRequest(Resource resource, DataObjectInfo doi, DataObjectInfo parentDataObject, Action action)
-    throws TraversalException
   {
     if (action.hasBody())
     {
@@ -351,6 +382,7 @@ public class RAMLParser
     String requestType = action.getType().name().toUpperCase();
     DCMethod method = new DCMethod(this.connectionName, resource.getUri(), requestType);
     addQueryParameters(action, method);
+    addHeaders(action, method);
 
     // if example payload or schema is parsed to set attributes, than the data object payload list element and
     // payload row element attributes have the correct values for this method.
@@ -383,6 +415,40 @@ public class RAMLParser
   {
     String uri = childResource.getRelativeUri();
     // replace all params and their enclosing curly brackets with emmpty string
+    Map<String, UriParameter> params = childResource.getUriParameters();
+    for (String paramName : params.keySet())
+    {
+      uri = StringUtils.substitute(uri, "{"+paramName+"}", "");
+    }
+    // find a string after a slash, starting with the last slash. Whena struing is found, this
+    // is the candidate bresource name
+    String resourceName = null;
+    while (uri.lastIndexOf("/")>-1)
+    {
+      int lastSlashPos = uri.lastIndexOf("/");
+      if (uri.length()>lastSlashPos+1)
+      {
+        resourceName = uri.substring(lastSlashPos+1);
+        break;
+      }
+      else if (lastSlashPos>0)
+      {
+        // reduce uri to part before this slash
+        uri = uri.substring(0,lastSlashPos);
+      }
+      else
+      {
+        break;
+      }
+      
+    }    
+    return resourceName;
+  }
+
+  private boolean checkPathOnlyContainsParams(Resource childResource)
+  {
+    String uri = childResource.getRelativeUri();
+    // replace all params and their enclosing curly brackets with emmpty string
     // also replace "/" with empty string, the remainder is the name, which can be 
     // an empty string if path consists entirely of uri params
     uri = StringUtils.substitute(uri, "/", "");
@@ -393,14 +459,9 @@ public class RAMLParser
     }
     if (uri.trim().equals(""))
     {
-      return null;
+      uri=null;
     }
-    return uri;
-  }
-
-  private boolean checkPathOnlyContainsParams(Resource childResource)
-  {
-    return extractResourceNameFromUriPath(childResource)==null;
+    return uri==null;
   }
 }
 

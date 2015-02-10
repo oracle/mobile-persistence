@@ -18,11 +18,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import oracle.ateam.sample.mobile.dt.exception.ParseException;
 import oracle.ateam.sample.mobile.dt.model.AccessorInfo;
 import oracle.ateam.sample.mobile.dt.model.AttributeInfo;
 import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
 
-import oracle.ide.panels.TraversalException;
 
 public class JSONExampleDataObjectParser
 {
@@ -32,7 +32,6 @@ public class JSONExampleDataObjectParser
   private boolean flattenNestedObjects = false;
 
   public void parse(String response, DataObjectInfo root, boolean flattenNestedObjects, List<DataObjectInfo> dataObjectInfos)
-    throws TraversalException
   {
     this.flattenNestedObjects = flattenNestedObjects;
     this.dataObjectInfos = dataObjectInfos;
@@ -41,7 +40,7 @@ public class JSONExampleDataObjectParser
       HashMap map = gson.fromJson(response, HashMap.class);
       if (map == null)
       {
-        throw new TraversalException("Response JSON payload is invalid: " + response);
+        throw new ParseException("Response JSON payload is invalid: " + response);
       }
       processMap(map, root,"");
     }
@@ -60,7 +59,7 @@ public class JSONExampleDataObjectParser
       {
         // TODO: Add catch code
         jse.printStackTrace();
-        throw new TraversalException("Error parsing JSON payload " + response + ": " + jse.getLocalizedMessage());
+        throw new ParseException("Error parsing JSON payload " + response + ": " + jse.getLocalizedMessage());
       }
     }
   }

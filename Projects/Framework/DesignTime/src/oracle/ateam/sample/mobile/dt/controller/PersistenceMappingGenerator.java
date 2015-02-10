@@ -127,7 +127,7 @@ public class PersistenceMappingGenerator
       classMappingDescriptor.setCrudServiceClass(service);
       service.setClassName(dataObject.getRootDataObject().getFullyQualifiedServiceClassName());
       service.setAutoIncrementPrimaryKey(true);
-      if (dataObject.getParent() == null)
+      if (dataObject.isGenerateServiceClass())
       {
         String remotePersistenceManager = null;
         if (model.isWebServiceDataControl())

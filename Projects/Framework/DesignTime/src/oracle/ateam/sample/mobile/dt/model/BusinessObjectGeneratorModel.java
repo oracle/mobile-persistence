@@ -10,7 +10,10 @@ package oracle.ateam.sample.mobile.dt.model;
 import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+
+import java.util.Map;
 
 import oracle.adfdt.model.objects.DataControl;
 
@@ -42,7 +45,7 @@ public class BusinessObjectGeneratorModel {
     private String packageName ;
     private String servicePackageName;
     private String className;
-    private List<DataObjectInfo> dataObjectInfos;
+  private List<DataObjectInfo> dataObjectInfos;
     private DataObjectInfo currentDataObject;
     private String sqlFileContent = "";
     private List<String> existingDescriptorMappings = new ArrayList<String>();
@@ -158,16 +161,47 @@ public class BusinessObjectGeneratorModel {
   public List<DataObjectInfo> getSelectedDataObjects()
   {
     List<DataObjectInfo> dois = new ArrayList<DataObjectInfo>();
+    Map<String, DataObjectInfo> dataObjectMap = new HashMap<String, DataObjectInfo>();
     for (DataObjectInfo doi : getDataObjectInfos())
     {
       if (doi.isGenerate())
       {
-        dois.add(doi);
+        DataObjectInfo dataObjectWithSameClassName = dataObjectMap.get(doi.getClassName());
+        if (dataObjectWithSameClassName!=null)
+        {
+          // DataObjectInfo with same name already exist, merged the two!
+          // if one is an existing data object, then we merge the other one, if both are new
+          // it doesn't matter'. If both are existing we do not merge (they must live in different
+          // packages otherwise this would not be possible)
+          if (doi.isExisting() && dataObjectWithSameClassName.isExisting())
+          {
+            dois.add(doi);          
+          }
+          else if (doi.isExisting())
+          {
+            // we need to remove the existing entry from the list, and add the new one, because the new
+            // already exists in persistence-mapping.xml
+            mergeDataObjects(doi,dataObjectWithSameClassName);            
+            dois.remove(dataObjectWithSameClassName);
+            dois.add(doi);
+            dataObjectMap.put(doi.getClassName(),doi);
+          }
+          else
+          {
+            mergeDataObjects(dataObjectWithSameClassName,doi);                        
+          }
+        }
+        else
+        {
+          dois.add(doi);          
+          dataObjectMap.put(doi.getClassName(),doi);
+        }
       }
     }
     return dois;
   }
 
+  
 
   public void setDataControl(DataControl dataControl)
   {
@@ -337,5 +371,73 @@ public class BusinessObjectGeneratorModel {
   public List<HeaderParam> getHeaderParams()
   {
     return headerParams;
+  }
+
+  private void mergeDataObjects(DataObjectInfo keep, DataObjectInfo merge)
+  {
+    for (AttributeInfo attr : merge.getAttributeDefs())
+    {
+      if (keep.getAttributeDef(attr.getAttrName())==null)
+      {
+        attr.setParentDataObject(keep);
+        keep.addAttribute(attr);
+      }
+    }
+    if (keep.getFindAllMethod()==null)
+    {
+      keep.setFindAllMethod(merge.getFindAllMethod());
+    }
+    if (keep.getFindMethod()==null)
+    {
+      keep.setFindMethod(merge.getFindMethod());
+    }
+    if (keep.getGetCanonicalMethod()==null)
+    {
+      keep.setGetCanonicalMethod(merge.getGetCanonicalMethod());
+    }
+    if (keep.getCreateMethod()==null)
+    {
+      keep.setCreateMethod(merge.getCreateMethod());
+    }
+    if (keep.getUpdateMethod()==null)
+    {
+      keep.setUpdateMethod(merge.getUpdateMethod());
+    }
+    if (keep.getMergeMethod()==null)
+    {
+      keep.setMergeMethod(merge.getMergeMethod());
+    }
+    if (keep.getDeleteMethod()==null)
+    {
+      keep.setDeleteMethod(merge.getDeleteMethod());
+    }
+    // move child accessors to "keep" data object"
+    for (AccessorInfo accessor : merge.getAllChildren())
+    {
+      if (keep.findChildAccessor(accessor.getChildAccessorName())==null)
+      {
+        accessor.setParentDataObject(keep);
+        keep.addChild(accessor);
+      }
+    }
+    // loop over all other data objects, and check if they have a child accessor with the "merge"
+    // data object as child. If so, move the pointer from "merge" to "keep" data object
+    // NOTE: we should not loop over getSelectedDataObjectInfo, would cause infinite loop
+    // as this method is called from getSelectedDataObjectInfos
+    for (DataObjectInfo doi : this.getDataObjectInfos())
+    {
+      for (AccessorInfo accessor : doi.getAllChildren())
+      {
+        if (accessor.getChildDataObject()==merge)
+        {
+          accessor.setChildDataObject(keep);
+          // if there is a child accessor method, we also need to add that "find-in=parent method to "keep" doi!
+          if (accessor.getChildAccessorMethod()!=null)
+          {
+            keep.addFindAllInParentMethod(accessor.getChildAccessorMethod());
+          }          
+        }
+      }
+    }
   }
 }

@@ -7,14 +7,20 @@
 ******************************************************************************/
 package oracle.ateam.sample.mobile.dt.view.uipanel;
 
+import com.sun.org.apache.xpath.internal.operations.String;
+
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -47,7 +53,7 @@ public class DataObjectsPanel
 {
   JScrollPane scrollPane =
     new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-  MultiLineText instruction = new MultiLineText("Select data objects for generation and set class names. Check the 'Persist' checkbox to enable persistence of the data object to the on-device SQLite database for data access in offline mode.");
+  MultiLineText instruction = new MultiLineText("Select data objects for generation and set class names. Data objects with the same class name will be merged into one data object. Check the 'Persist' checkbox to enable persistence of the data object to the on-device SQLite database for data access in offline mode.");
   GenericTable table = null;
   JCheckBox showCollectionAccessorsOnly = new JCheckBox("Show collection accessors only?");
   private JButton addButton = new JButton("Add");
@@ -188,4 +194,5 @@ public class DataObjectsPanel
       createDataObjectsTable(model.getDataObjectInfos());      
     }
   }
+
 }

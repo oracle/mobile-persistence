@@ -5,7 +5,7 @@
  06-feb-2013   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
-package oracle.ateam.sample.mobile.dt.controller.parser;
+package oracle.ateam.sample.mobile.dt.controller;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,6 +24,9 @@ import oracle.adf.model.connection.rest.RestConnection;
 
 import oracle.adfdtinternal.model.adapter.webservice.utils.RestUtil;
 
+import oracle.ateam.sample.mobile.dt.controller.parser.ADFBCDescribeDataObjectParser;
+import oracle.ateam.sample.mobile.dt.controller.parser.JSONExampleDataObjectParser;
+import oracle.ateam.sample.mobile.dt.controller.parser.XMLExampleDataObjectParser;
 import oracle.ateam.sample.mobile.dt.model.AccessorInfo;
 import oracle.ateam.sample.mobile.dt.model.DCMethod;
 import oracle.ateam.sample.mobile.dt.model.DCMethodParameter;
@@ -35,7 +38,7 @@ import oracle.ide.panels.TraversalException;
 
 import sun.misc.BASE64Encoder;
 
-public class RESTResourceDataObjectParser
+public class RESTResourcesProcessor
 {
   private List<DataObjectInfo> dataObjectInfos = new ArrayList<DataObjectInfo>();
   private Map<String,String> pathParams = new HashMap<String,String>();
@@ -45,7 +48,7 @@ public class RESTResourceDataObjectParser
   private List<DCMethod> resources;
   private boolean flattenNestedObjects;
 
-  public RESTResourceDataObjectParser(List<DCMethod> resources, String connectionName, String connectionUri, List<HeaderParam> headerParams, Map<String,String> pathParams, boolean flattenNestedObjects)
+  public RESTResourcesProcessor(List<DCMethod> resources, String connectionName, String connectionUri, List<HeaderParam> headerParams, Map<String,String> pathParams, boolean flattenNestedObjects)
   {
     super();
     this.resources = resources;
@@ -55,6 +58,7 @@ public class RESTResourceDataObjectParser
     this.pathParams = pathParams;
     this.flattenNestedObjects = flattenNestedObjects;
   }
+
 
   public List<DataObjectInfo> run()
     throws TraversalException
@@ -103,11 +107,11 @@ public class RESTResourceDataObjectParser
         {
           throw new TraversalException("Response payload is empty for " + urlString);
         }
-        if (samplePayloadSet && response.startsWith("#%RAML")) {
-            RAMLParser processor = new RAMLParser(response, connectionName, connectionUri, headerParams,flattenNestedObjects);
-            dataObjectInfos = processor.run();
-            continue;
-        }
+//        if (samplePayloadSet && response.startsWith("#%RAML")) {
+//            RAMLParser processor = new RAMLParser(response, connectionName, connectionUri, headerParams,flattenNestedObjects);
+//            dataObjectInfos = processor.run();
+//            continue;
+//        }
         else if (urlString.endsWith("/describe"))
         {
           ADFBCDescribeDataObjectParser processor =

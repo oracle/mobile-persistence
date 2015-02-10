@@ -118,9 +118,8 @@ public class BusinessObjectGenerator
         FileUtils.formatJavaFile(project, sourceURL);
         log.info("Data object class "+doi.getFullyQualifiedClassName() + ".java"+" created in "+project.getShortLabel());        
       }
-      if (doi.getParent()==null)
+      if (doi.isGenerateServiceClass())
       {
-        // top-level node, generate service class
         sourceURL = FileUtils.getSourceURL(project, doi.getServicePackageName(), doi.getServiceClassName() + ".java");
         if (!FileUtils.fileExists(sourceURL) || model.isOverwriteServiceObjectClasses())
         {

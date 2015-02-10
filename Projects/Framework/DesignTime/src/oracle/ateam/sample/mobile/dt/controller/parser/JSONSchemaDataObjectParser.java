@@ -15,15 +15,14 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import oracle.ateam.sample.mobile.dt.exception.ParseException;
 import oracle.ateam.sample.mobile.dt.model.AccessorInfo;
 import oracle.ateam.sample.mobile.dt.model.AttributeInfo;
 import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
 
-import oracle.ide.panels.TraversalException;
 
 public class JSONSchemaDataObjectParser
 {
@@ -45,7 +44,6 @@ public class JSONSchemaDataObjectParser
 
   public void parse(String schema, DataObjectInfo root, boolean flattenNestedObjects,
                     List<DataObjectInfo> dataObjectInfos)
-    throws TraversalException
   {
     this.flattenNestedObjects = flattenNestedObjects;
     this.dataObjectInfos = dataObjectInfos;
@@ -57,7 +55,7 @@ public class JSONSchemaDataObjectParser
     catch (Exception jse)
     {
       jse.printStackTrace();
-      throw new TraversalException("Error parsing JSON Schema" + schema + ": " + jse.getLocalizedMessage());
+      throw new ParseException("Error parsing JSON Schema" + schema + ": " + jse.getLocalizedMessage());
     }
   }
 

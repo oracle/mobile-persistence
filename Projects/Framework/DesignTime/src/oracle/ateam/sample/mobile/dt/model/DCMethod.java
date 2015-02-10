@@ -153,6 +153,18 @@ public class DCMethod
     params.add(param);
   }
 
+  /**
+   * Add header param if it doesnt exist yet
+   * @param param
+   */
+  public void addHeaderParam(HeaderParam param)
+  {
+    if (!headerParams.contains(param))
+    {
+      headerParams.add(param);      
+    }
+  }
+
   public List<DCMethodParameter> getParams()
   {
     return params;
