@@ -60,6 +60,8 @@ public class DataObjectInfo
   private DCMethod findAllMethod;
   private List<DCMethod> findAllInParentMethods = new ArrayList<DCMethod>();
   private List<DCMethod> getAsParentMethods = new ArrayList<DCMethod>();
+  private List<DCMethod> customMethods = new ArrayList<DCMethod>();
+
   private DCMethod findMethod;
   private DCMethod getCanonicalMethod;
   private DCMethod createMethod;
@@ -1008,6 +1010,21 @@ public class DataObjectInfo
     || getCreateMethod()!=null
     || getUpdateMethod()!=null
     || getMergeMethod()!=null
-    || getDeleteMethod()!=null;
+    || getDeleteMethod()!=null
+    || getCustomMethods().size()>0;  
+  }
+
+  public List<DCMethod> getCustomMethods()
+  {
+    return customMethods;
+  }
+
+  public void addCustomMethod(DCMethod method)
+  {
+    if (method!=null)
+    {
+      customMethods.add(method);
+      method.setDataObject(this);    
+    }
   }
 }

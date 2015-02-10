@@ -107,7 +107,7 @@ public class BusinessObjectsFromRestWSWizard extends Wizard
       step = new Step("CRUD Resources", CRUDMethodsRESTPanel.class, null);
       builder.newState(STATE_CRUD_METHOD, step, STATE_CRUD_METHOD_PARAMS,false);
 
-      step = new Step("CRUD Resource Parameters", CRUDMethodParametersPanel.class, null);
+      step = new Step("Resource Details", CRUDMethodParametersPanel.class, null);
       builder.newState(STATE_CRUD_METHOD_PARAMS, step, STATE_OPTIONS,false);
 
       step = new Step("Generator Settings", GeneratorSettingsPanel.class, null);

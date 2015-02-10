@@ -303,8 +303,9 @@ public class RAMLParser
         }
         else
         {
-          AccessorInfo childAccessor = new AccessorInfo(parentDataObject, doi);
+          AccessorInfo childAccessor = new AccessorInfo(parentDataObject, doi,false);
           doi.addFindAllInParentMethod(getMethod);
+          getMethod.setAccessorAttribute(extractResourceNameFromUriPath(resource));
           getMethod.setParameterValueProviderDataObject(parentDataObject);
           childAccessor.setChildAccessorMethod(getMethod);
           childAccessor.setChildAccessorName(doi.getName());  

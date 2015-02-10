@@ -206,7 +206,16 @@ public class PersistenceMappingLoader
     doi.setMergeMethod(method);
     method = createMethod(doi,methods.getRemoveMethod());
     doi.setDeleteMethod(method);
+    for (Method customMethod : methods.getCustomMethod())
+    {
+        method = createMethod(doi,customMethod);
+        method.setAccessorAttribute(customMethod.getName());
+        doi.getCustomMethods().add(method);    
+    }
+
     doi.setCrudMethodsInitialized(true);
+
+
     return doi;
   }
 

@@ -292,7 +292,18 @@ public class PersistenceMappingGenerator
       }
       setMethodPropertiesAndParams(jaxbMethod, dataObject.getDeleteMethod());
     }
-
+    for (DCMethod customMethod: dataObject.getCustomMethods())
+    {
+      Method jaxbMethod = findMethod(methods.getCustomMethod(), customMethod.getAccessorAttribute());
+      if (jaxbMethod == null)
+      {
+        jaxbMethod = objectFactory.createMethod();
+        methods.getCustomMethod().add(jaxbMethod);
+        // new method, set default header params
+        setHeaderParams(jaxbMethod);
+      }
+      setMethodPropertiesAndParams(jaxbMethod, customMethod);
+    }
 
   }
 
@@ -416,6 +427,10 @@ public class PersistenceMappingGenerator
   private Method findMethod(List<Method> methods, String name)
   {
     Method found = null;
+    if (methods==null)
+    {
+      return null;
+    }
     for (Method method: methods)
     {
       if (method.getName().equals(name))

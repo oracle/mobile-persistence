@@ -401,6 +401,12 @@ public class ParentChildAccessorsPanel
           String suffix = model.isMaf20Style() ? "List" : "";
           childAccessorMethod = new DCMethod(childAccessorNameField.getText()+suffix,model.getConnectionName(), childAccessorMethodFieldRest.getText(), (String) childAccessorMethodRequestType.getSelectedItem());                      
         }
+        else
+        {
+          // update existing DC method with new values from dialog
+          childAccessorMethod.setAccessorAttribute(childAccessorNameField.getText()); 
+          childAccessorMethod.setRequestType((String) childAccessorMethodRequestType.getSelectedItem());
+        }
         childAccessorMethod.setParameterValueProviderDataObject(parent);
         // we assume payload structure is same as one used to discover the data objects
         // We ONLY do this for new methods, we should preserve the values manually set in persistence-mapping
@@ -415,6 +421,12 @@ public class ParentChildAccessorsPanel
         if (parentAccessorMethod==null)
         {
           parentAccessorMethod = new DCMethod(parentAccessorNameField.getText(),model.getConnectionName(), parentAccessorMethodFieldRest.getText(), (String) parentAccessorMethodRequestType.getSelectedItem());                      
+        }
+        else
+        {
+          // update existing DC method with new values from dialog
+          parentAccessorMethod.setAccessorAttribute(parentAccessorNameField.getText()); 
+          parentAccessorMethod.setRequestType((String) parentAccessorMethodRequestType.getSelectedItem());
         }
         parentAccessorMethod.setParameterValueProviderDataObject(child);
         // we assume payload structure is same as one used to discover dthe data objects

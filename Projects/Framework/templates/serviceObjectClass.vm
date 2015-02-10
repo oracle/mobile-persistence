@@ -35,45 +35,45 @@ public class ${WSM.currentDataObject.serviceClassName}
   }
 
    /**
-     * This method is automatically called when using the Create operation on the ${WSM.currentDataObject.className.toLowerCase()} collection
-     * in the data control palette. It gets a new ${WSM.currentDataObject.className.toLowerCase()} instance as argument and adds this instance to the 
-     * ${WSM.currentDataObject.className.toLowerCase()} list. 
+     * This method is automatically called when using the Create operation on the ${WSM.currentDataObject.classVariableName} collection
+     * in the data control palette. It gets a new ${WSM.currentDataObject.classVariableName} instance as argument and adds this instance to the 
+     * ${WSM.currentDataObject.classVariableName} list. 
      * Do NOT drag and drop this method from the data control palette, use the Create operation instead to ensure 
-     * that iterator binding and ${WSM.currentDataObject.className.toLowerCase()} list stay in sync.
+     * that iterator binding and ${WSM.currentDataObject.classVariableName} list stay in sync.
      * @param index
-     * @param ${WSM.currentDataObject.className.toLowerCase()}
+     * @param ${WSM.currentDataObject.classVariableName}
      */
-    public void add${WSM.currentDataObject.className}(int index, ${WSM.currentDataObject.className} ${WSM.currentDataObject.className.toLowerCase()})
+    public void add${WSM.currentDataObject.className}(int index, ${WSM.currentDataObject.className} ${WSM.currentDataObject.classVariableName})
     {
-      addEntity(index, ${WSM.currentDataObject.className.toLowerCase()});
+      addEntity(index, ${WSM.currentDataObject.classVariableName});
     }
 
     /**
-     * This method is automatically called when using the Delete operation on the ${WSM.currentDataObject.className.toLowerCase()} collection
-     * in the data control palette. It removes the ${WSM.currentDataObject.className.toLowerCase()} instance passed in from the ${WSM.currentDataObject.className.toLowerCase()} list, deletes the
+     * This method is automatically called when using the Delete operation on the ${WSM.currentDataObject.classVariableName} collection
+     * in the data control palette. It removes the ${WSM.currentDataObject.classVariableName} instance passed in from the ${WSM.currentDataObject.classVariableName} list, deletes the
      * corresponding row from the database (if persisted) and calls the configured remove method on the remote
      * persistence manager.  
      * Do NOT drag and drop this method from the data control palette, use the Delete operation instead to ensure 
-     * that iterator binding and ${WSM.currentDataObject.className.toLowerCase()} list stay in sync.
-     * @param ${WSM.currentDataObject.className.toLowerCase()}
+     * that iterator binding and ${WSM.currentDataObject.classVariableName} list stay in sync.
+     * @param ${WSM.currentDataObject.classVariableName}
      */
-    public void remove${WSM.currentDataObject.className}(${WSM.currentDataObject.className} ${WSM.currentDataObject.className.toLowerCase()})
+    public void remove${WSM.currentDataObject.className}(${WSM.currentDataObject.className} ${WSM.currentDataObject.classVariableName})
     {
-      removeEntity(${WSM.currentDataObject.className.toLowerCase()});
+      removeEntity(${WSM.currentDataObject.classVariableName});
     }
     
     /**
-     * Inserts or updates a ${WSM.currentDataObject.className.toLowerCase()} using the configured persistence managers.
-     * The insert or update is determined by calling isNewEntity on the ${WSM.currentDataObject.className.toLowerCase()} instance.
-     * @param ${WSM.currentDataObject.className.toLowerCase()}
+     * Inserts or updates a ${WSM.currentDataObject.classVariableName} using the configured persistence managers.
+     * The insert or update is determined by calling isNewEntity on the ${WSM.currentDataObject.classVariableName} instance.
+     * @param ${WSM.currentDataObject.classVariableName}
      */
-    public void save${WSM.currentDataObject.className}(${WSM.currentDataObject.className} ${WSM.currentDataObject.className.toLowerCase()})
+    public void save${WSM.currentDataObject.className}(${WSM.currentDataObject.className} ${WSM.currentDataObject.classVariableName})
     {
-      super.mergeEntity(${WSM.currentDataObject.className.toLowerCase()});
+      super.mergeEntity(${WSM.currentDataObject.classVariableName});
     }
 
     /**
-     * Retrieves all ${WSM.currentDataObject.className.toLowerCase()} instances using the configured persistence managers and populates the ${WSM.currentDataObject.className.toLowerCase()} list 
+     * Retrieves all ${WSM.currentDataObject.classVariableName} instances using the configured persistence managers and populates the ${WSM.currentDataObject.classVariableName} list 
      * with the result.
      * When this method is called for the first time, and a remote persistence manager is configured,
      * the data is fetched remotely and the local DB is populated with the results.
@@ -84,8 +84,8 @@ public class ${WSM.currentDataObject.serviceClassName}
     }
 
     /**
-     * Retrieves all ${WSM.currentDataObject.className.toLowerCase()} instances using the findAll method on the remote persistence manager
-     * and populates the ${WSM.currentDataObject.className.toLowerCase()} list 
+     * Retrieves all ${WSM.currentDataObject.classVariableName} instances using the findAll method on the remote persistence manager
+     * and populates the ${WSM.currentDataObject.classVariableName} list 
      */
     public void findAll${WSM.currentDataObject.className}Remote()
     {
@@ -93,8 +93,8 @@ public class ${WSM.currentDataObject.serviceClassName}
     }
 
     /**
-     * Retrieves the ${WSM.currentDataObject.className.toLowerCase()} instances that match the searchValue filter using the configured persistence 
-     * managers and populates the ${WSM.currentDataObject.className.toLowerCase()} list with the result.
+     * Retrieves the ${WSM.currentDataObject.classVariableName} instances that match the searchValue filter using the configured persistence 
+     * managers and populates the ${WSM.currentDataObject.classVariableName} list with the result.
      * By default, the search value is applied to all string attributes using a "startsWith" operator. 
      * To customize the attributes on which the searchValue is applied, you can override method getQuickSearchAttributeNames. 
      * If a find method is configured against the remote persistence manager, then this method will also
@@ -115,9 +115,9 @@ public class ${WSM.currentDataObject.serviceClassName}
    * wants to see the additional entity data immediately
    * @param entity
    */
-  public void getCanonical${WSM.currentDataObject.className}(${WSM.currentDataObject.className} ${WSM.currentDataObject.className.toLowerCase()})
+  public void getCanonical${WSM.currentDataObject.className}(${WSM.currentDataObject.className} ${WSM.currentDataObject.classVariableName})
   {
-    super.getCanonical(${WSM.currentDataObject.className.toLowerCase()});
+    super.getCanonical(${WSM.currentDataObject.classVariableName});
   }
   #end
 
@@ -132,22 +132,34 @@ public class ${WSM.currentDataObject.serviceClassName}
     }
 
     /**
-     * Resets the values of the ${WSM.currentDataObject.className.toLowerCase()} instance to the values as stored in the SQLite database. This method
-     * will do nothing when the ${WSM.currentDataObject.className.toLowerCase()} is not persisted to the database.
-     * @param ${WSM.currentDataObject.className.toLowerCase()}
+     * Resets the values of the ${WSM.currentDataObject.classVariableName} instance to the values as stored in the SQLite database. This method
+     * will do nothing when the ${WSM.currentDataObject.classVariableName} is not persisted to the database.
+     * @param ${WSM.currentDataObject.classVariableName}
      */
-    public void reset${WSM.currentDataObject.className}(${WSM.currentDataObject.className} ${WSM.currentDataObject.className.toLowerCase()})
+    public void reset${WSM.currentDataObject.className}(${WSM.currentDataObject.className} ${WSM.currentDataObject.classVariableName})
     {
-      super.resetEntity(${WSM.currentDataObject.className.toLowerCase()});
+      super.resetEntity(${WSM.currentDataObject.classVariableName});
     }
     
     /**
-     * Returns true when there are pending ${WSM.currentDataObject.className.toLowerCase()} data sync actions. Returns false if there are no such actions.
+     * Returns true when there are pending ${WSM.currentDataObject.classVariableName} data sync actions. Returns false if there are no such actions.
      */
     public boolean getHas${WSM.currentDataObject.className}DataSynchActions()
     {
       return getDataSynchManager().getHasDataSynchActions();
     }
+
+  #foreach($method in ${WSM.currentDataObject.customMethods})
+    /**
+     * Invoke custom method "${method.accessorAttribute}
+     */
+    public void ${method.accessorAttribute}(${WSM.currentDataObject.className} ${WSM.currentDataObject.classVariableName})
+    {
+      invokeCustomMethod(${WSM.currentDataObject.classVariableName}, "${method.accessorAttribute}");
+    }
+  #end
+
+
 }
 
 
