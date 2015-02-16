@@ -2,16 +2,22 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
-24-jan-2015   Steven Davelaar
- 1.0           initial creation
+ 14-feb-2015   Steven Davelaar
+  1.1           changed implemenataion to have one instance per feature. This is needed because flushing of data change 
+                events doesn't work in any feature except for the initial feature that created an instnce of this class
+ 24-jan-2015   Steven Davelaar
+  1.0           initial creation
 ******************************************************************************/
 package oracle.ateam.sample.mobile.util;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import oracle.adfmf.framework.api.AdfmfContainerUtilities;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 
 /**
@@ -19,7 +25,7 @@ import oracle.adfmf.framework.api.AdfmfJavaUtilities;
  * The added value comes when running tasks in the background, this class ensures that all background tasks
  * are executed in sequence of submission on a single thread. When making multiple remote REST calls, the sequence might
  * be important as result of the first call might ne needed by the next call. Furthermore, the local SQLite database is a
- * single user database. If you have multiple simulatneous REST calls running in the background, and they all want to store 
+ * single user database. If you have multiple simulatneous REST calls running in the background, and they all want to store
  * the data returned in the local database, you will most likely get errors about nested transactions not being allowed.
  * Finally, this class sets an application scope boolean flag to indicate whether there are background tasks running.
  * This flag can be used to show some sort of spinning wheel icon in the UI, or simply some text message like "Loading data".
@@ -29,24 +35,34 @@ public class TaskExecutor
 {
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(TaskExecutor.class);
 
-  private static TaskExecutor instance;
+  //  private static TaskExecutor instance;
   private ThreadPoolExecutor executor = null;
 
   private boolean running = false;
 
   private Future<?> lasttFuture = null;
 
+  private static Map<String, TaskExecutor> instanceMap = new HashMap<String, TaskExecutor>();
+
   public TaskExecutor()
   {
     super();
   }
 
+  /**
+   * Returns an instance based on the current feature. We cannot share the instance across features because
+   * flushing of data change events would not work in any feature except for the feature that creates the instance.
+   * @return
+   */
   public static synchronized TaskExecutor getInstance()
   {
-    if (instance==null)
+    String featureId = AdfmfJavaUtilities.getFeatureId();
+    TaskExecutor instance = instanceMap.get(featureId);
+    if (instance == null)
     {
-      sLog.fine("Creating new instance of TaskExecutor");
+      sLog.fine("Creating new instance of TaskExecutor for feature " + featureId);
       instance = new TaskExecutor();
+      instanceMap.put(featureId, instance);
     }
     return instance;
   }
@@ -64,11 +80,11 @@ public class TaskExecutor
       //        (new ThreadPoolExecutor(1, 1,
       //         0L, TimeUnit.MILLISECONDS,
       //         new LinkedBlockingQueue<Runnable>()));
-      //       }      
+      //       }
       executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
     }
   }
-  
+
   protected void setRunning(boolean running)
   {
     AdfmfJavaUtilities.setELValue("#{applicationScope.ampa_bgtask_running}", running);
@@ -84,11 +100,11 @@ public class TaskExecutor
           int size = executor.getQueue().size();
           if (size > 0 || !lasttFuture.isDone())
           {
-            setRunning(true);            
+            setRunning(true);
           }
           while (size > 0 || !lasttFuture.isDone())
           {
-            sLog.fine("Number of background tasks in Queue in TaskExecutor: "+size);
+            sLog.fine("Number of background tasks in Queue in TaskExecutor: " + size);
             try
             {
               Thread.sleep(100);
@@ -100,7 +116,7 @@ public class TaskExecutor
           }
           setRunning(false);
           AdfmfJavaUtilities.flushDataChangeEvent();
-          sLog.fine("No more background tasks running in TaskExecutor: "+size);
+          sLog.fine("No more background tasks running in TaskExecutor: " + size);
         };
       Thread t = new Thread(r2);
       t.start();
@@ -110,7 +126,7 @@ public class TaskExecutor
   /**
    * Execute a task. If the task is to be executed in the background, a single thread
    * will be used for all submitted tasks, ensuring they are executed in the sequence of submission.
-   * To check whether there are any background tasks running, you can use the boolean expression 
+   * To check whether there are any background tasks running, you can use the boolean expression
    * #{applicationScope.ampa_bgtask_running}.
    * @param inBackground
    * @param task
@@ -135,14 +151,17 @@ public class TaskExecutor
   }
 
   /**
-   *  Shuts down the thread pool gracefully, first executing any pending tasks
+   *  Shuts down the thread pool gracefully for all features, first executing any pending tasks
    */
-  public void shutDown()
-  { 
-    if (executor!=null)
+  public static void shutDown()
+  {
+    for (TaskExecutor instance: instanceMap.values())
     {
-      executor.shutdown();
-      executor = null;
+      if (instance.executor != null)
+      {
+        instance.executor.shutdown();
+        instance.executor = null;
+      }
     }
   }
 }
