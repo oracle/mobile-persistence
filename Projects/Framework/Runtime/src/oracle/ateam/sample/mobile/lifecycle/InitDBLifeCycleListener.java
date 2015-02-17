@@ -79,7 +79,7 @@ public class InitDBLifeCycleListener
   public void deactivate()
   {
     DBConnectionFactory.closeConnectionIfNeeded();
-    TaskExecutor.getInstance().shutDown();
+    TaskExecutor.shutDown();
   }
 
 }

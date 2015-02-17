@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
 
 import oracle.ateam.sample.mobile.v2.persistence.service.IndirectList;
@@ -182,15 +183,33 @@ public abstract class Entity<E> extends ChangeEventSupportable
    * through a remote server call executed in the background
    * @param oldList
    * @param newList
-   * @param childClass
+   * @param childClass NOT USED ANYMORE
    * @param childAttribute
    */
   public void refreshChildEntityList(List oldList, List newList, Class childClass, String childAttribute)
   {
-//    Entity[] oldEntityArray = EntityUtils.getEntityListAsCorrectlyTypedArray(oldList, childClass);
-//    Entity[] newEntityArray = EntityUtils.getEntityListAsCorrectlyTypedArray(newList, childClass);
+    refreshChildEntityList(oldList,newList,childAttribute);
+  }
+
+  /**
+   * This method is called from IndirectList.buildDelegate when child rows for an entity are retrieved
+   * through a remote server call executed in the background
+   * @param oldList
+   * @param newList
+   * @param childAttribute
+   */
+  public void refreshChildEntityList(List oldList, List newList, String childAttribute)
+  {
     getPropertyChangeSupport().firePropertyChange(childAttribute, oldList, newList);
     getProviderChangeSupport().fireProviderRefresh(childAttribute);
+    // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
+    // a list view. So, we rfresh the iterator binding assuming the name it would get with normal
+    // drag and drop action
+    EntityUtils.refreshIteratorBinding(childAttribute+"Iterator");
+    if (AdfmfJavaUtilities.isBackgroundThread())
+    {
+      AdfmfJavaUtilities.flushDataChangeEvent();
+    }
   }
 
 }

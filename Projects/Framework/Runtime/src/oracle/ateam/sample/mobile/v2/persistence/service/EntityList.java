@@ -2,17 +2,21 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  17-feb-2015   Steven Davelaar
+  1.1           Moved to service pckage so we can call protected method on crudService to refresh entity lisy
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
-package oracle.ateam.sample.mobile.v2.persistence.model;
+package oracle.ateam.sample.mobile.v2.persistence.service;
 
 
 import java.util.ArrayList;
 
+import java.util.List;
+
 import oracle.adfmf.util.Utility;
 
-import oracle.ateam.sample.mobile.v2.persistence.service.EntityCRUDService;
+import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 
 /**
@@ -40,7 +44,12 @@ public class EntityList<E extends Entity>
     if (EntityUtils.primaryKeyIsNull(element))
     {
       // call the add[EntityName] method on the service class
+      List<E> oldList = new ArrayList<E>();
+      oldList.addAll(this);
       EntityUtils.invokeAddMethod(crudService, index, element);
+      // MAF 2.1 no longer automatically refreshes iterator binding when using Create operation 
+      // on typed collection from data control palette, need to log bug.
+      crudService.refreshEntityList(oldList);
     }
   }
 
@@ -52,6 +61,9 @@ public class EntityList<E extends Entity>
     {
       // call the remove[EntityName] method on the service class
       EntityUtils.invokeRemoveMethod(crudService, element);
+      // MAF 2.1 does not correctly refresh the UI when using Delete operation 
+      // in form layout, but refreshing the iterator does NOT fix this, as is the
+      // the case with Create operation. need to log bug
     }
     return element;
   }

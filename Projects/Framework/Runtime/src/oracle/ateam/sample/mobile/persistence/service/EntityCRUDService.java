@@ -40,6 +40,7 @@ import oracle.adf.model.datacontrols.device.DeviceManagerFactory;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
 
+import oracle.adfmf.framework.internal.AdfmfJavaUtilitiesInternal;
 import oracle.adfmf.util.Utility;
 
 import oracle.ateam.sample.mobile.persistence.cache.EntityCache;
@@ -496,6 +497,10 @@ public abstract class EntityCRUDService
     Entity[] newEntityArray = getEntityListAsCorrectlyTypedArray();
     getPropertyChangeSupport().firePropertyChange(getEntityListName(), oldEntityArray, newEntityArray);
     getProviderChangeSupport().fireProviderRefresh(getEntityListName());
+    if (AdfmfJavaUtilities.isBackgroundThread())
+    {
+      AdfmfJavaUtilities.flushDataChangeEvent();
+    }
   }
 
   /**

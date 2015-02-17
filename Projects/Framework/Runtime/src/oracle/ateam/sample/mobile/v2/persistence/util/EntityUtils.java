@@ -24,10 +24,12 @@ import java.util.Map;
 
 import oracle.adfmf.bindings.DataControl;
 import oracle.adfmf.bindings.dbf.AmxBindingContext;
+import oracle.adfmf.bindings.dbf.AmxIteratorBinding;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
 import oracle.adfmf.util.Utility;
 
+import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.DateUtils;
 import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.manager.PersistenceManager;
@@ -44,6 +46,8 @@ import oracle.ateam.sample.mobile.v2.persistence.service.ValueHolderInterface;
  */
 public class EntityUtils
 {
+
+  private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(EntityUtils.class);
 
   public static Method getSetMethod(Class entityClass, String attrName, boolean valueHolder)
   {
@@ -540,4 +544,36 @@ public class EntityUtils
     Object[] params = new Object[] { entity};
     Utility.invokeIfPossible(crudService, removeMethodName, paramTypes, params);        
   }
+
+  /**
+   * The standard technique to refresh UI using property change and provider refresh events does NOT refresh 
+   * the UI when the UI displays a form layout instead of a list view. 
+   * Only way to refresh in case of form layout is to call refresh on iterator binding.
+   * Not elegant to access ViewController objects but it works, as long as the iterator binding exists.
+   * That's why we have to catch any exception because the actual iterator name might be different than what we assume, 
+   * in which case the developer has to override this method and use the correct iterator name.
+   */
+  public static void refreshIteratorBinding(String iteratorBindingName)
+  {
+    try
+    {
+      AmxIteratorBinding ib =
+          (AmxIteratorBinding) AdfmfJavaUtilities.evaluateELExpression("#{bindings."+iteratorBindingName+"}");
+      if (ib!=null)
+      {
+        Object rowKey = ib.getIterator().getCurrentRowKey();
+        ib.refresh();      
+        if (rowKey!=null)
+        {
+          ib.getIterator().setCurrentIndexWithKey(rowKey);          
+        }
+      }
+    }
+    catch (Exception e)
+    {
+      // assumed iterator binding expression is wrong, just do nothing
+      sLog.info("Cannot refresh "+iteratorBindingName+" binding, UI might not refresh correctly when form layout is used.");      
+    }
+  }
+
 }

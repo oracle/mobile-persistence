@@ -18,6 +18,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
 
 import oracle.ateam.sample.mobile.persistence.service.IndirectList;
@@ -208,6 +209,10 @@ public abstract class Entity extends ChangeEventSupportable
     Entity[] newEntityArray = EntityUtils.getEntityListAsCorrectlyTypedArray(newList, childClass);
     getPropertyChangeSupport().firePropertyChange(childAttribute, oldEntityArray, newEntityArray);
     getProviderChangeSupport().fireProviderRefresh(childAttribute);
+    if (AdfmfJavaUtilities.isBackgroundThread())
+    {
+      AdfmfJavaUtilities.flushDataChangeEvent();
+    }
   }
 
 }

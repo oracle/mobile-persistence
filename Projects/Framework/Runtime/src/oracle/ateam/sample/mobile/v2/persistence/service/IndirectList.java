@@ -98,7 +98,12 @@ public class IndirectList<E extends Entity>
       Object[] params = new Object[] { new Integer(index), childEntity};
       Utility.invokeIfPossible(this.entity, addMethodName, paramTypes, params);        
     }
-    getDelegate().add(index, childEntity);
+    List<E> oldList = new ArrayList<E>();
+    oldList.addAll(getDelegate());
+    getDelegate().add(index, childEntity);    
+    // MAF 2.1 no longer automatically refreshes iterator binding when using Create operation 
+    // on typed collection from data control palette, need to log bug.
+    entity.refreshChildEntityList(oldList, getDelegate(), mapping.getAttributeName());
   }
 
   public boolean remove(Object o)
@@ -118,6 +123,9 @@ public class IndirectList<E extends Entity>
       Class[] paramTypes = new Class[] { beanClass };
       Object[] params = new Object[] { element};
       Utility.invokeIfPossible(entity, removeMethodName, paramTypes, params);        
+      // MAF 2.1 does not correctly refresh the UI when using Delete operation 
+      // in form layout, but refreshing the iterator binding does NOT fix this,
+      // like ot does with Create operation
     }
     return element;
   }
@@ -236,16 +244,12 @@ public class IndirectList<E extends Entity>
                       service.setDoRemoteReadInBackground(true);        
                       List newList = service.getEntityList(); 
                       delegate = newList;
-                      entity.refreshChildEntityList(oldList, newList, referenceDescriptor.getClazz(), mapping.getAttributeName());
+                      entity.refreshChildEntityList(oldList, newList, mapping.getAttributeName());
                     });    
       }
       else
       {
-//        service.setDoRemoteReadInBackground(false);        
         service.doRemoteFindAllInParent(entity,mapping.getAttributeName());        
-//        service.setDoRemoteReadInBackground(inBackground);
-//        List result = service.getEntityList(); 
-//        return result;        
       }
     }
     sLog.fine("Getter method for attribute " + this.mapping.getAttributeName() +

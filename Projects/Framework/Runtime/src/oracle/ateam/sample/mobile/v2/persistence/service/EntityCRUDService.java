@@ -14,6 +14,7 @@ import java.util.List;
 
 import oracle.adf.model.datacontrols.device.DeviceManagerFactory;
 
+import oracle.adfmf.bindings.dbf.AmxIteratorBinding;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
 
@@ -31,7 +32,6 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.MessageUtils;
 import oracle.ateam.sample.mobile.util.StringUtils;
 import oracle.ateam.sample.mobile.util.TaskExecutor;
-import oracle.ateam.sample.mobile.v2.persistence.model.EntityList;
 
 
 /**
@@ -433,6 +433,13 @@ public abstract class EntityCRUDService<E extends Entity>
   {
     getPropertyChangeSupport().firePropertyChange(getEntityListName(), oldEntityList, getEntityList());
     getProviderChangeSupport().fireProviderRefresh(getEntityListName());
+    // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
+    // a list view. 
+    EntityUtils.refreshIteratorBinding(getEntityListName()+"Iterator");
+    if (AdfmfJavaUtilities.isBackgroundThread())
+    {
+      AdfmfJavaUtilities.flushDataChangeEvent();
+    }
   }
 
   /**
