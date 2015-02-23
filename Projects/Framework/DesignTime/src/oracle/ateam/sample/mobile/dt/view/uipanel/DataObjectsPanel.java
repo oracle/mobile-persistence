@@ -33,6 +33,7 @@ import javax.swing.table.TableColumn;
 import oracle.ateam.sample.mobile.dt.controller.PersistenceMappingLoader;
 import oracle.ateam.sample.mobile.dt.model.BusinessObjectGeneratorModel;
 import oracle.ateam.sample.mobile.dt.controller.parser.DataControlDataObjectParser;
+import oracle.ateam.sample.mobile.dt.model.DCMethod;
 import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
 import oracle.ateam.sample.mobile.dt.model.jaxb.MobileObjectPersistence;
 import oracle.ateam.sample.mobile.dt.view.uimodel.DataObjectTableModel;
@@ -43,6 +44,8 @@ import oracle.ide.panels.TraversableContext;
 import oracle.ide.panels.TraversalException;
 
 import oracle.javatools.ui.table.GenericTable;
+
+import oracle.jbo.common.JboNameUtil;
 
 import org.w3c.dom.Node;
 
@@ -141,6 +144,11 @@ public class DataObjectsPanel
       // data objects (AuraPlayer has the messages element) where we really need only one
       for(DataObjectInfo doi : model.getSelectedDataObjects())
       {
+        // check class name is valid Java name
+        if (!JboNameUtil.isNameValid(doi.getClassName()))
+        {
+          throw new TraversalException(doi.getClassName()+ " is not a valid Java class name.");
+        }
         if (doi.getParent()==null && doi.getFindAllMethod()!=null)
         {
           // We ONLY do this for new methods, we should preserve the values manually set in persistence-mapping
@@ -150,10 +158,10 @@ public class DataObjectsPanel
             doi.getFindAllMethod().setPayloadRowElementName(doi.getPayloadRowElementName());            
           } 
         }
-        else
+        else if (doi.getFindAllMethod()!=null && !doi.getFindAllMethod().isExisting())
         {
-          // clear find-all method that might be set for child data objects
-          doi.setFindAllMethod(null);
+          // clear find-all method that might be set for child data objects UNLESS it is an "existing" method
+          doi.setFindAllMethod(null);            
         }
       }
     }

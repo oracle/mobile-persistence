@@ -40,6 +40,7 @@ import oracle.ateam.sample.mobile.dt.model.BusinessObjectGeneratorModel;
 import oracle.ateam.sample.mobile.dt.model.AccessorInfo;
 import oracle.ateam.sample.mobile.dt.model.DCMethod;
 import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
+import oracle.ateam.sample.mobile.dt.util.ProjectUtils;
 import oracle.ateam.sample.mobile.dt.view.editor.ClassPickerTextButtonCellEditor;
 import oracle.ateam.sample.mobile.dt.view.wizard.BusinessObjectsFromWSDataControlWizard;
 
@@ -52,6 +53,8 @@ import oracle.ide.panels.TraversableContext;
 import oracle.ide.panels.TraversalException;
 
 import oracle.javatools.ui.table.GenericTable;
+
+import oracle.jbo.common.JboNameUtil;
 
 
 public class AttributesPanel
@@ -128,10 +131,6 @@ public class AttributesPanel
     super.onEntry(tc);
     model = (BusinessObjectGeneratorModel) tc.get(BusinessObjectsFromWSDataControlWizard.MODEL_KEY);
     populateDataObjectList(model);
-    //    if (model.getDataControlName() != null)
-    //    {
-    //      doilist.setSelectedItem(model.getDataControlName());
-    //    }
     if (doilist.getItemCount() > 0)
     {
       doilist.setSelectedItem(doilist.getItemAt(0));
@@ -154,6 +153,21 @@ public class AttributesPanel
         if (doi.getKeyAttributes().size()==0)
         {
           throw new TraversalException("All data objects must have a primary key.");
+        }
+        for (AttributeInfo attr : doi.getAttributeDefs())
+        {
+          // check attr name is valid Java name
+          if (!JboNameUtil.isAttributeNameValid(attr.getAttrName()))
+          {
+            throw new TraversalException(doi.getClassName()+": "+attr.getAttrName()+" is not a valid Java attribute name.");
+          }
+        }
+        // we also re-apply the parameterValueProviderObject for each method, so defaulting logic is re-executed
+        // now that we have key attributes. This is useful when we used RAML: the methods are there, but the path
+        // params could not be populated yet because no key attrs were present at the time of parsing the RAML
+        for (DCMethod method : doi.getAllMethods())
+        {
+          method.setParameterValueProviderDataObject(method.getParameterValueProviderDataObject());
         }
       }      
     }
@@ -181,7 +195,7 @@ public class AttributesPanel
     tc2.setMaxWidth(70);
     scrollPane.getViewport().setView(table);
     TableColumn tc4 = table.getColumnModel().getColumn(4);
-    ClassPickerTextButtonCellEditor editor = new ClassPickerTextButtonCellEditor(new Context(null, Ide.getActiveProject()),this );
+    ClassPickerTextButtonCellEditor editor = new ClassPickerTextButtonCellEditor(new Context(null, ProjectUtils.getViewControllerProject()),this );
     tc4.setCellEditor(editor);
   }
 

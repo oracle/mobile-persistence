@@ -125,10 +125,10 @@ public class PersistenceMappingGenerator
     {
       service = objectFactory.createCrudServiceClass();
       classMappingDescriptor.setCrudServiceClass(service);
-      service.setClassName(dataObject.getRootDataObject().getFullyQualifiedServiceClassName());
       service.setAutoIncrementPrimaryKey(true);
       if (dataObject.isGenerateServiceClass())
       {
+        service.setClassName(dataObject.getFullyQualifiedServiceClassName());
         String remotePersistenceManager = null;
         if (model.isWebServiceDataControl())
         {
@@ -149,6 +149,11 @@ public class PersistenceMappingGenerator
         service.setRemoteWriteInBackground(true);
         service.setShowWebServiceInvocationErrors(true);
         service.setAutoQuery(true);
+      }
+      else
+      {
+        // set service class to parent service class
+        service.setClassName(dataObject.getRootDataObject().getFullyQualifiedServiceClassName());        
       }
     }
 
@@ -190,8 +195,6 @@ public class PersistenceMappingGenerator
       {
         jaxbMethod = objectFactory.createMethod();
         methods.setFindAllMethod(jaxbMethod);
-        // new method, set default header params
-        setHeaderParams(jaxbMethod);
       }
       setMethodPropertiesAndParams(jaxbMethod, dataObject.getFindAllMethod());
       jaxbMethod.setDeleteLocalRows(dataObject.isDeleteLocalRows());
@@ -203,8 +206,6 @@ public class PersistenceMappingGenerator
       {
         jaxbMethod = objectFactory.createMethod();
         methods.setFindMethod(jaxbMethod);
-        // new method, set default header params
-        setHeaderParams(jaxbMethod);
       }
       setMethodPropertiesAndParams(jaxbMethod, dataObject.getFindMethod());
     }
@@ -215,8 +216,6 @@ public class PersistenceMappingGenerator
       {
         jaxbMethod = objectFactory.createMethod();
         methods.getFindAllInParentMethod().add(jaxbMethod);
-        // new method, set default header params
-        setHeaderParams(jaxbMethod);
       }
       setMethodPropertiesAndParams(jaxbMethod, findAllInParentMethod);
     }
@@ -227,8 +226,6 @@ public class PersistenceMappingGenerator
       {
         jaxbMethod = objectFactory.createMethod();
         methods.getGetAsParentMethod().add(jaxbMethod);
-        // new method, set default header params
-        setHeaderParams(jaxbMethod);
       }
       setMethodPropertiesAndParams(jaxbMethod, getAsParentMethod);
     }
@@ -239,8 +236,6 @@ public class PersistenceMappingGenerator
       {
         jaxbMethod = objectFactory.createMethod();
         methods.setGetCanonicalMethod(jaxbMethod);
-        // new method, set default header params
-        setHeaderParams(jaxbMethod);
       }
       setMethodPropertiesAndParams(jaxbMethod, dataObject.getGetCanonicalMethod());
     }
@@ -251,8 +246,6 @@ public class PersistenceMappingGenerator
       {
         jaxbMethod = objectFactory.createMethod();
         methods.setCreateMethod(jaxbMethod);
-        // new method, set default header params
-        setHeaderParams(jaxbMethod);
       }
       setMethodPropertiesAndParams(jaxbMethod, dataObject.getCreateMethod());
     }
@@ -263,8 +256,6 @@ public class PersistenceMappingGenerator
       {
         jaxbMethod = objectFactory.createMethod();
         methods.setUpdateMethod(jaxbMethod);
-        // new method, set default header params
-        setHeaderParams(jaxbMethod);
       }
       setMethodPropertiesAndParams(jaxbMethod, dataObject.getUpdateMethod());
     }
@@ -275,8 +266,6 @@ public class PersistenceMappingGenerator
       {
         jaxbMethod = objectFactory.createMethod();
         methods.setMergeMethod(jaxbMethod);
-        // new method, set default header params
-        setHeaderParams(jaxbMethod);
       }
       setMethodPropertiesAndParams(jaxbMethod, dataObject.getMergeMethod());
     }
@@ -287,8 +276,6 @@ public class PersistenceMappingGenerator
       {
         jaxbMethod = objectFactory.createMethod();
         methods.setRemoveMethod(jaxbMethod);
-        // new method, set default header params
-        setHeaderParams(jaxbMethod);
       }
       setMethodPropertiesAndParams(jaxbMethod, dataObject.getDeleteMethod());
     }
@@ -299,8 +286,6 @@ public class PersistenceMappingGenerator
       {
         jaxbMethod = objectFactory.createMethod();
         methods.getCustomMethod().add(jaxbMethod);
-        // new method, set default header params
-        setHeaderParams(jaxbMethod);
       }
       setMethodPropertiesAndParams(jaxbMethod, customMethod);
     }
@@ -347,6 +332,7 @@ public class PersistenceMappingGenerator
         param.setPathParam(methodParam.isPathParam());
       }
     }
+    setHeaderParams(jaxbMethod, wizardMethod);
   }
 
   private void createDirectAttributeMapping(AttributeMappings attributeMappings, AttributeInfo attr)
@@ -409,15 +395,18 @@ public class PersistenceMappingGenerator
     }
   }
 
-  private void setHeaderParams(Method method)
+  private void setHeaderParams(Method jaxbMethod, DCMethod wizardMethod)
   {
-    for (HeaderParam param: model.getHeaderParams())
+    // remove existing ones, they will be re-added through wizardMethod (if
+    // they haven't been removed in wizard)
+    jaxbMethod.getHeaderParameter().clear();
+    for (HeaderParam param: wizardMethod.getHeaderParams())
     {
       if (param.getName() != null && !"".equals(param.getName()) && param.getValue() != null &&
           !"".equals(param.getValue()))
       {
         HeaderParameter headerParam = objectFactory.createHeaderParameter();
-        method.getHeaderParameter().add(headerParam);
+        jaxbMethod.getHeaderParameter().add(headerParam);
         headerParam.setName(param.getName());
         headerParam.setValue(param.getValue());
       }

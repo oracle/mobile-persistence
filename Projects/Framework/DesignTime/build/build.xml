@@ -91,6 +91,7 @@
     <copy todir="${design.output.dir}" >
       <fileset dir="${design.source.dir}" >
         <include name="*.gif"/>
+        <include name="*.png"/>
       </fileset>
     </copy>
   </target>

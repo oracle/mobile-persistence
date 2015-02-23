@@ -63,14 +63,21 @@ public class FileUtils
 
   public static URL getSourceURL(Project project, String packageName, String fileName)
   {
-    final URLPath srcPath = PathsConfiguration.getInstance(project).getSourcePath();
-
-    // Get the first sourcepath entry.
-    if (srcPath.size() > 0)
+    try
     {
-      URL srcDir = srcPath.asList().get(0);
-      URL dirURL = URLFactory.newDirURL(srcDir, packageName.replace('.', '/'));
-      return URLFactory.newURL(dirURL, fileName);
+     final URLPath srcPath = PathsConfiguration.getInstance(project).getSourcePath();
+      // Get the first sourcepath entry.
+      if (srcPath.size() > 0)
+      {
+        URL srcDir = srcPath.asList().get(0);
+        URL dirURL = URLFactory.newDirURL(srcDir, packageName.replace('.', '/'));
+        return URLFactory.newURL(dirURL, fileName);
+      }
+    }
+    catch (Exception e)
+    {
+      // can happen with some projects, like AMPA runtime project
+      // just return null
     }
     return null;
   }

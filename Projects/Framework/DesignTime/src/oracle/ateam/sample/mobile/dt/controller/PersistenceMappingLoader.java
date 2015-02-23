@@ -272,12 +272,12 @@ public class PersistenceMappingLoader
       if (mapping.getAccessorMethod()!=null)
       {
          DCMethod childAccessorMethod = findChildAccessorMethod(child, mapping.getAttributeName());
-         ai.setChildAccessorMethod(childAccessorMethod);         
+         ai.setChildAccessorMethod(childAccessorMethod); 
+         childAccessorMethod.setParameterValueProviderDataObject(dataObjectInfo);
       }
       else
       {
-        // set parent data object in child so this child does not show up on CRUD methods panel, because
-        // it has no service class
+        // set parent data object in child 
         child.setParent(dataObjectInfo);
         ai.setChildAccessorPayloadName(mapping.getPayloadAttributeName());
       }
@@ -311,6 +311,7 @@ public class PersistenceMappingLoader
       {
          DCMethod parentAccessorMethod = findParentAccessorMethod(parent, mapping.getAttributeName());
          ai.setParentAccessorMethod(parentAccessorMethod);         
+         parentAccessorMethod.setParameterValueProviderDataObject(dataObjectInfo);
       }
       if (!existingAi)
       {

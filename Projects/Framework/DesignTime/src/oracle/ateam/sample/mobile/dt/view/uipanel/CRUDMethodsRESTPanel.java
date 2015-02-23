@@ -325,6 +325,8 @@ public class CRUDMethodsRESTPanel
     {
       // no method with this URI created yet
       method = new DCMethod(model.getConnectionName(), fullUri, (String) requestType.getSelectedItem());
+      // set default header params
+      method.getHeaderParams().addAll(model.getHeaderParams());
       methodMap.put(methodKey, method);
     }
     method.setRequestType((String) requestType.getSelectedItem());

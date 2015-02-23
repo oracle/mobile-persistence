@@ -400,6 +400,8 @@ public class ParentChildAccessorsPanel
         {
           String suffix = model.isMaf20Style() ? "List" : "";
           childAccessorMethod = new DCMethod(childAccessorNameField.getText()+suffix,model.getConnectionName(), childAccessorMethodFieldRest.getText(), (String) childAccessorMethodRequestType.getSelectedItem());                      
+          // set default header params
+          childAccessorMethod.getHeaderParams().addAll(model.getHeaderParams());
         }
         else
         {
@@ -421,6 +423,8 @@ public class ParentChildAccessorsPanel
         if (parentAccessorMethod==null)
         {
           parentAccessorMethod = new DCMethod(parentAccessorNameField.getText(),model.getConnectionName(), parentAccessorMethodFieldRest.getText(), (String) parentAccessorMethodRequestType.getSelectedItem());                      
+          // set default header params
+          parentAccessorMethod.getHeaderParams().addAll(model.getHeaderParams());
         }
         else
         {

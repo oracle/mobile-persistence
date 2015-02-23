@@ -78,12 +78,15 @@ public class RAMLParser
     //        is = new ByteArrayInputStream(newFileContent.getBytes());
     Raml raml = getRamlDocument();
     String contentType = raml.getMediaType();
-    HeaderParam contentTypeParam = new HeaderParam();
-    contentTypeParam.setName("Content-Type");
-    contentTypeParam.setValue(contentType);
-    if (!headerParams.contains(contentTypeParam))
+    if (contentType!=null)
     {
-      headerParams.add(contentTypeParam);
+      HeaderParam contentTypeParam = new HeaderParam();
+      contentTypeParam.setName("Content-Type");
+      contentTypeParam.setValue(contentType);
+      if (!headerParams.contains(contentTypeParam))
+      {
+        headerParams.add(contentTypeParam);
+      }      
     }
     schemas = raml.getSchemas();
     Map<String, Resource> resources = raml.getResources();
@@ -172,7 +175,7 @@ public class RAMLParser
     // name can be null when it is  top-level resource consisting of only a slask, or only uri params
     // which should be very unlikely
     name = name==null ? "Root" : name;
-    DataObjectInfo doi = new DataObjectInfo(name, name);
+    DataObjectInfo doi = new DataObjectInfo(name, resource.getUri());
     doi.setXmlPayload(false);
     dataObjectInfos.add(doi);
 
@@ -338,12 +341,16 @@ public class RAMLParser
 
   private void addHeaders(Action action, DCMethod method)
   {
+    // first add common headers, based on mediaType 
+    method.getHeaderParams().addAll(headerParams);
     Map<String, Header> headers = action.getHeaders();
     for (String headerName : headers.keySet())
     {
       Header header = headers.get(headerName);
       HeaderParam param = new HeaderParam();
-      param.setName(headerName);
+      // for some strange reason, the header param names are suffixed with "-header". so we remove it
+      String name = headerName.endsWith("-header") ? headerName.substring(0,headerName.length()-7) : headerName;
+      param.setName(name);
       if (header.getDefaultValue()!=null)
       {
         param.setValue(header.getDefaultValue());        

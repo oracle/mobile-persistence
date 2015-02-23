@@ -105,7 +105,6 @@ public class BusinessObjectGeneratorModel {
 
    public BusinessObjectGeneratorModel(String defaultPackage)
    {
-  //   String defaultPackage = Ide.getActiveProject() project.getProperty(DEFAULT_PACKAGE_PROPERTY);
      setPackageName(defaultPackage+".model");  
      setServicePackageName(defaultPackage+".model.service");  
      setMaf20Style(oldPersistenceMappingFileExists());
@@ -436,6 +435,14 @@ public class BusinessObjectGeneratorModel {
           {
             keep.addFindAllInParentMethod(accessor.getChildAccessorMethod());
           }          
+        }
+      }
+      // also check the parameterValueProvider objects for methods
+      for(DCMethod method : doi.getAllMethods())
+      {
+        if (merge==method.getParameterValueProviderDataObject())
+        {
+          method.setParameterValueProviderDataObject(keep);
         }
       }
     }

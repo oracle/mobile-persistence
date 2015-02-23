@@ -114,10 +114,10 @@ public class RESTResourcesPanel
     removeHeaderParamButton.addActionListener(this);
     removeHeaderParamButton.setEnabled(false);
     setHeadersButton.addActionListener(this);
+    setHeadersButton.setToolTipText("Specify HTTP request headers");
     flattenNestedObjects.setSelected(false);
     addResourceButton.setToolTipText("Add REST resource");
     removeResourceButton.setToolTipText("Remove selected REST resource");
-    setHeadersButton.setToolTipText("Specify HTTP request headers");
     flattenNestedObjects.setToolTipText("Include attributes of nested JSON objects in parent data object?");
 
     setLayout(new GridBagLayout());
@@ -258,7 +258,7 @@ public class RESTResourcesPanel
       (BusinessObjectGeneratorModel) tc.get(BusinessObjectsFromWSDataControlWizard.MODEL_KEY);
     if (tc.getDirection() == tc.FORWARD_TRAVERSAL)
     {
-      fillPathParameterMap(model);
+      fillPathParameterMapAndSetHeaderParams(model);
       if (pathParams.size()>0)
       {
         buildAndRunParamValuesDialog(model);
@@ -268,7 +268,7 @@ public class RESTResourcesPanel
     super.onExit(tc);
   }
 
-  private void fillPathParameterMap(BusinessObjectGeneratorModel model)
+  private void fillPathParameterMapAndSetHeaderParams(BusinessObjectGeneratorModel model)
   {
     List<DCMethod> resources = model.getRestResources();
     // first clear old params that might not be needed anymore
@@ -282,6 +282,7 @@ public class RESTResourcesPanel
           pathParams.put(param.getName(), "");
         }
       }
+      resource.getHeaderParams().addAll(model.getHeaderParams());
     }    
   }
 

@@ -9,6 +9,8 @@ package oracle.ateam.sample.mobile.dt.view.editor;
 
 import java.awt.Component;
 
+import oracle.ateam.sample.mobile.dt.util.ProjectUtils;
+
 import oracle.bali.xml.gui.jdev.JDevXmlContext;
 
 import oracle.ide.Context;
@@ -31,8 +33,8 @@ public class ClassPickerTextButtonCellEditor
   @Override
   protected String getValueforTextField()
   {
-    String[] names = ClassPackageBrowserV2.browseClassOrPackage(component, // Ide.getMainWindow(),
-                                               Ide.getActiveProject()
+    String[] names = ClassPackageBrowserV2.browseClassOrPackage(component // Ide.getMainWindow(),
+                                               ,ProjectUtils.getViewControllerProject()
                                                ,ClassPackageBrowserV2.CLASS_ONLY,false
                                                ,null,null);
     if(names!=null && names.length >0) 

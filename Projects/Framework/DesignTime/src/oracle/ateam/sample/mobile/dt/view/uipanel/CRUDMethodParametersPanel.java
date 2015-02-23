@@ -60,11 +60,13 @@ import oracle.ateam.sample.mobile.dt.model.DCMethodParameter;
 import oracle.ateam.sample.mobile.dt.controller.parser.DataControlDataObjectParser;
 import oracle.ateam.sample.mobile.dt.model.AccessorInfo;
 import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
+import oracle.ateam.sample.mobile.dt.model.HeaderParam;
 import oracle.ateam.sample.mobile.dt.view.uimodel.DataObjectTableModel;
 
 import oracle.ateam.sample.mobile.dt.view.uimodel.MethodParamsTableModel;
 import oracle.ateam.sample.mobile.dt.model.UIAttributeInfo;
 import oracle.ateam.sample.mobile.dt.util.StringUtils;
+import oracle.ateam.sample.mobile.dt.view.uimodel.HeaderParamTableModel;
 import oracle.ateam.sample.mobile.dt.view.wizard.BusinessObjectsFromWSDataControlWizard;
 
 import oracle.bali.ewt.dialog.JEWTDialog;
@@ -91,9 +93,10 @@ public class CRUDMethodParametersPanel
   JComboBox methodList = new JComboBox();
   JCheckBox sendSerializedDO = new JCheckBox("Send Serialized Data Object as Payload");
 
-  private JLabel payloadListElementLabel = new JLabel("Payload List Element");
+  private JCheckBox sendAsArray = new JCheckBox("Send as Array");
+  private JLabel payloadListElementLabel = new JLabel("Payload List Element Name");
   private JTextField payloadListElementField = new JTextField();
-  private JLabel payloadRowElementLabel = new JLabel("Payload Row Element");
+  private JLabel payloadRowElementLabel = new JLabel("Payload Row Element Name");
   private JTextField payloadRowElementField = new JTextField();
 
 
@@ -113,6 +116,15 @@ public class CRUDMethodParametersPanel
   private JLabel resourceUriLabel = new JLabel("Resource");
   private JTextField resourceUriField = new JTextField();
   private JComboBox resourceRequestType = new JComboBox();
+  private DCMethod currentMethod;
+
+  JButton setHeadersButton = new JButton("Set Headers");
+  JButton addHeaderParamButton = new JButton("Add");
+  JButton removeHeaderParamButton = new JButton("Remove");
+  JScrollPane headerScrollPane =
+    new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+  GenericTable headerTable = null;
+  JEWTDialog requestHeadersDialog = null;
   
   public CRUDMethodParametersPanel()
   {
@@ -140,6 +152,15 @@ public class CRUDMethodParametersPanel
                                GridBagConstraints.BOTH, 
                                new Insets(0, 0, 0, 0), 0, 0);
     add(scrollPane, gbcScrollPane);
+
+    addHeaderParamButton.addActionListener(this);
+    removeHeaderParamButton.addActionListener(this);
+    removeHeaderParamButton.setEnabled(false);
+    setHeadersButton.addActionListener(this);
+    setHeadersButton.setToolTipText("Specify HTTP request headers");
+
+    buildRequestHeadersDialog();
+
   }
   
   private JPanel buildHeaderPanel()
@@ -172,27 +193,56 @@ public class CRUDMethodParametersPanel
 
     restSpecificPanel.setLayout(new GridBagLayout());
     contentPanel.add(restSpecificPanel,
-        new GridBagConstraints(0, 1, 3, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+        new GridBagConstraints(0, 1, 6, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
                            new Insets(0, 0, 0, 0), 0, 0));
 
-    GridBagConstraints gbcRest = new GridBagConstraints();
-    gbcRest.insets = new Insets(0, 0, 5, 5);
-    gbcRest.gridx = 0;
-    gbcRest.gridy = 0;
-    gbcRest.gridwidth = 1;
-    gbcRest.gridheight = 1;
-    gbcRest.anchor = GridBagConstraints.WEST;
-    gbcRest.fill = GridBagConstraints.NONE;
+//    GridBagConstraints gbcRest = new GridBagConstraints();
+//    gbcRest.insets = new Insets(0, 0, 5, 5);
+//    gbcRest.gridx = 0;
+//    gbcRest.gridy = 0;
+//    gbcRest.gridwidth = 2;
+//    gbcRest.gridheight = 1;
+//    gbcRest.anchor = GridBagConstraints.WEST;
+//    gbcRest.fill = GridBagConstraints.NONE;
+    restSpecificPanel.add(sendSerializedDO,
+                  new GridBagConstraints(0, 0, 2, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+                                         new Insets(0, 0, 5, 5), 0, 0));
 
-    restSpecificPanel.add(sendSerializedDO,gbcRest);
     sendSerializedDO.addActionListener(this);
-    gbcRest.gridx++;
     addButton.addActionListener(this);
-    restSpecificPanel.add(addButton,gbcRest);
-    gbcRest.gridx++;
     removeButton.addActionListener(this);
     removeButton.setEnabled(false);
-    restSpecificPanel.add(removeButton,gbcRest);
+
+    restSpecificPanel.add(sendAsArray,
+                  new GridBagConstraints(0, 1, 2, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+                                         new Insets(0, 0, 5, 5), 0, 0));
+    sendAsArray.addActionListener(this);
+
+    restSpecificPanel.add(payloadListElementLabel,
+                  new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+                                         new Insets(0, 0, 5, 5), 0, 0));
+    restSpecificPanel.add(payloadListElementField,
+                  new GridBagConstraints(1, 2, 4, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
+                                         new Insets(0, 0, 5, 5), 0, 0));
+    restSpecificPanel.add(payloadRowElementLabel,
+                  new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+                                         new Insets(0, 0, 5, 5), 0, 0));
+    restSpecificPanel.add(payloadRowElementField,
+                  new GridBagConstraints(1, 3, 4, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
+                                         new Insets(0, 0, 5, 5), 0, 0));
+    restSpecificPanel.add(new JLabel("Parameters"),
+                  new GridBagConstraints(0, 4, 5, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+                                         new Insets(0, 0, 5, 5), 0, 0));
+    restSpecificPanel.add(addButton,
+                  new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE,
+                                         new Insets(0, 0, 5, 5), 0, 0));
+    restSpecificPanel.add(removeButton,
+                  new GridBagConstraints(2, 4, 1, 1, 0.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE,
+                                         new Insets(0, 0, 5, 5), 0, 0));
+    restSpecificPanel.add(setHeadersButton,
+                  new GridBagConstraints(3, 4, 1, 1, 0.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE,
+                           new Insets(0, 0, 5, 5), 0, 0));
+
     return contentPanel;    
   }
 
@@ -218,6 +268,8 @@ public class CRUDMethodParametersPanel
         {
           DCMethod method = new DCMethod(resourceNameField.getText(),model.getConnectionName(),resourceUriField.getText()
                                          ,(String) resourceRequestType.getSelectedItem());
+          // set default header params
+          method.getHeaderParams().addAll(model.getHeaderParams());
           DataObjectInfo dataObject = dataObjectMap.get(dataObjectField.getSelectedItem());
           dataObject.addCustomMethod(method);
           populateMethodList(model);
@@ -365,15 +417,11 @@ public class CRUDMethodParametersPanel
     }
     populateDataObjectList();
     populateMethodList(model);
-    //    if (model.getDataControlName() != null)
-    //    {
-    //      doilist.setSelectedItem(model.getDataControlName());
-    //    }
     if (methodList.getItemCount() > 0)
     {
-      methodList.setSelectedItem(methodList.getItemAt(0));
       DCMethod method = methodsMap.get(methodList.getSelectedItem());
-      createParametersTable(method, model.isRestfulWebService());
+      setCurrentMethod(method);
+      methodList.setSelectedItem(methodList.getItemAt(0));
     }
     // enable back -  next - finish
     tc.getWizardCallbacks().wizardEnableButtons(true, true, true);
@@ -384,6 +432,7 @@ public class CRUDMethodParametersPanel
   {
     BusinessObjectGeneratorModel model =
         (BusinessObjectGeneratorModel) tc.get(BusinessObjectsFromWSDataControlWizard.MODEL_KEY);
+    saveCurrentMethod();
     super.onExit(tc);
   }
 
@@ -419,51 +468,152 @@ public class CRUDMethodParametersPanel
     scrollPane.getViewport().setView(table);
   }
 
+  private void saveCurrentMethod()
+  {
+    boolean getRequest = "GET".equals(currentMethod.getRequestType());
+    currentMethod.setSendSerializedDataObjectAsPayload(!getRequest && sendSerializedDO.isSelected());        
+    String elemName= StringUtils.isEmpty(payloadListElementField.getText()) ? "root" : payloadListElementField.getText();
+    if (getRequest)
+    {
+      currentMethod.setPayloadElementName(elemName);
+      currentMethod.setPayloadRowElementName(StringUtils.convertEmptyStringToNull(payloadRowElementField.getText()));
+    }
+    else
+    {
+      if (sendAsArray.isSelected())
+      {
+        currentMethod.setPayloadElementName(elemName);        
+      }
+      else
+      {
+        currentMethod.setPayloadElementName(null);
+      }
+    }  
+    currentMethod.setPayloadRowElementName(StringUtils.convertEmptyStringToNull(payloadRowElementField.getText()));
+  }
+
   @Override
   public void actionPerformed(ActionEvent e)
   {
     if (e.getSource()== methodList)
     {
+      saveCurrentMethod();
       String methodName = (String) methodList.getSelectedItem();
       DCMethod method = methodsMap.get(methodName);
-      boolean enableSerializeCheckbox = !"GET".equals(method.getRequestType());
-      sendSerializedDO.setEnabled(enableSerializeCheckbox);
-      sendSerializedDO.setSelected(method.isSendSerializedDataObjectAsPayload());
-      createParametersTable(method, model.isRestfulWebService());      
+      setCurrentMethod(method);      
     }
     else if (e.getSource()== addButton)
     {
-      String methodName = (String) methodList.getSelectedItem();
-      DCMethod method = methodsMap.get(methodName);
-      method.addParam(new DCMethodParameter());
-      createParametersTable(method, true);
+      currentMethod.addParam(new DCMethodParameter());
+      createParametersTable(currentMethod, true);
     }
     else if (e.getSource()== sendSerializedDO)
     {
-      String methodName = (String) methodList.getSelectedItem();
-      DCMethod method = methodsMap.get(methodName);
-      method.setSendSerializedDataObjectAsPayload(sendSerializedDO.isSelected());
+      if (sendSerializedDO.isSelected())
+      {
+        sendAsArray.setEnabled(true);
+        payloadListElementField.setEnabled(true);
+      }
+      else
+      {
+        sendAsArray.setSelected(false);
+        sendAsArray.setEnabled(false);  
+        payloadListElementField.setText(null);
+        payloadListElementField.setEnabled(false);
+      }
+    }
+    else if (e.getSource()== sendAsArray)
+    {
+      if (sendAsArray.isSelected())
+      {
+        payloadListElementField.setEnabled(true);
+      }
+      else
+      {
+        payloadListElementField.setText(null);
+        payloadListElementField.setEnabled(false);
+      }
     }
     else if (e.getSource()== removeButton)
     {
       int paramIndex = table.getSelectedRow();
       if (paramIndex>-1)
       {
-        String methodName = (String) methodList.getSelectedItem();
-        DCMethod method = methodsMap.get(methodName);
-        method.getParams().remove(paramIndex);
-        createParametersTable(method, true);        
+        currentMethod.getParams().remove(paramIndex);
+        createParametersTable(currentMethod, true);        
       }
+    }
+    else if (e.getSource()==addHeaderParamButton)
+    {
+      currentMethod.getHeaderParams().add(new HeaderParam());
+      createRequestHeaderParamsTable(currentMethod.getHeaderParams());      
+    }
+    else if (e.getSource()==removeHeaderParamButton)
+    {
+      int index = headerTable.getSelectedRow();
+      if (index>-1)
+      {
+        currentMethod.getHeaderParams().remove(index);
+        createRequestHeaderParamsTable(currentMethod.getHeaderParams());              
+      }
+    }
+    else if (e.getSource()==setHeadersButton)
+    {
+      boolean OK = requestHeadersDialog.runDialog();      
     }
     removeButton.setEnabled(table.getSelectedRow()>-1);
     enableOrDisableResourceDialogOKButton();
+    removeHeaderParamButton.setEnabled(headerTable.getSelectedRow()>-1);
+  }
+
+  private void setCurrentMethod(DCMethod method)
+  {
+    this.currentMethod = method;
+    boolean nonGetRequest = !"GET".equals(method.getRequestType());
+    sendSerializedDO.setEnabled(nonGetRequest);
+    sendSerializedDO.setSelected(method.isSendSerializedDataObjectAsPayload());
+    sendAsArray.setEnabled(nonGetRequest && sendSerializedDO.isSelected());
+    // if we have an array payload and there is no payload list element name, we store "root" as 
+    // value in payload list element name, however, we do not show this in UI
+    String listElemName = "root".equals(method.getPayloadElementName()) ? null : method.getPayloadElementName();
+    if (nonGetRequest)
+    {
+      sendAsArray.setSelected(!StringUtils.isEmpty(method.getPayloadElementName()));    
+      if (sendAsArray.isSelected())
+      {
+        payloadListElementField.setEnabled(true);
+        payloadListElementField.setText(listElemName);
+      }
+      else
+      {
+        payloadListElementField.setText(null);
+        payloadListElementField.setEnabled(false);
+      }
+    }
+    else
+    {
+      // GET request
+      payloadListElementField.setEnabled(true);
+      payloadListElementField.setText(listElemName);
+    }
+    payloadRowElementField.setText(method.getPayloadRowElementName());
+    createParametersTable(method, model.isRestfulWebService());
+    createRequestHeaderParamsTable(method.getHeaderParams());
   }
 
   @Override
   public void valueChanged(ListSelectionEvent e)
   {
-    boolean removeEnable = table.getSelectedRow() > -1;
-    removeButton.setEnabled(removeEnable);
+     if (e.getSource()==table.getSelectionModel())
+     {
+       boolean removeEnable = table.getSelectedRow() > -1;
+       removeButton.setEnabled(removeEnable);       
+     }
+    else if (e.getSource()==headerTable.getSelectionModel())
+    {
+      boolean removeEnable = headerTable.getSelectedRow() > -1;
+      removeHeaderParamButton.setEnabled(removeEnable);      
+    }
   }
 
   private void enableOrDisableResourceDialogOKButton()
@@ -495,4 +645,40 @@ public class CRUDMethodParametersPanel
   public void keyReleased(KeyEvent e)
   {
   }
+
+  private void buildRequestHeadersDialog()
+  {
+    requestHeadersDialog = JEWTDialog.createDialog(this, "Set Request Header Parameters", JEWTDialog.BUTTON_DEFAULT);
+    JPanel headersPanel = new JPanel();
+    requestHeadersDialog.setContent(headersPanel);
+    requestHeadersDialog.setPreferredSize(500, 300);
+    requestHeadersDialog.setResizable(true);
+    requestHeadersDialog.setModal(true);
+    requestHeadersDialog.setButtonMask((JEWTDialog.BUTTON_OK | JEWTDialog.BUTTON_CANCEL));
+    requestHeadersDialog.setDefaultButton(JEWTDialog.BUTTON_OK);
+    GridBagLayout containerLayout = new GridBagLayout();
+    headersPanel.setLayout(containerLayout);
+    headersPanel.add(addHeaderParamButton,
+        new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE,
+                               new Insets(5, 0, 0, 0), 0, 0));
+    headersPanel.add(removeHeaderParamButton,
+        new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE,
+                               new Insets(5, 5, 0, 0), 0, 0));
+    GridBagConstraints gbcScrollPane =
+      new GridBagConstraints(0, 1, 2, 1, 1.0, 1.0, GridBagConstraints.LINE_START, GridBagConstraints.BOTH,
+                             new Insets(0, 0, 5, 0), 0, 0);
+    headersPanel.add(headerScrollPane, gbcScrollPane);    
+  }
+
+  public void createRequestHeaderParamsTable(List<HeaderParam> params)
+  {
+    headerTable = new GenericTable(new HeaderParamTableModel(params));
+    headerTable.getSelectionModel().addListSelectionListener(this);
+    headerTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    headerTable.setColumnSelectorAvailable(false);
+    //To stop cell editing when user switches to another component without using tab/enter keys
+    headerTable.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
+    headerScrollPane.getViewport().setView(headerTable);
+  }
+
 }

@@ -1,4 +1,4 @@
-<extension id="oracle.ateam.mobile.persistence" version="12.1.3.1.22" 
+<extension id="oracle.ateam.mobile.persistence" version="12.1.3.1.25" 
            xmlns="http://jcp.org/jsr/198/extension-manifest" esdk-version="1.0">
   <name>A-Team Mobile Persistence Accelerator</name>
   <required-bundles>
@@ -87,12 +87,37 @@
           <param name="match" value="any"/>
         </parameters>
       </rule>
+    <rule id="is-persistence-mapping-node" type="context-has-node" >
+      <parameters>
+        <param name="node-class" value="oracle.ateam.sample.mobile.dt.editor.PersistenceMappingNode"/>
+      </parameters>        
+    </rule>
+    <rule id="ampa-is-initialized" type="on-extension-init" >
+      <parameters>
+        <param name="extension-id" value="oracle.ateam.mobile.persistence"/>
+      </parameters>        
+    </rule>
+    <rule id="is-project-node" type="context-has-node" >
+      <parameters>
+        <param name="node-class" value="oracle.ide.model.Project"/>
+      </parameters>        
+    </rule>
       <composite-rule id="java-node">
         <and>
           <rule-reference id="context-has-project"/>
           <rule-reference id="on-single-selection"/>
           <rule-reference id="context-has-java-source-node"/>
           <rule-reference id="context-has-concrete-java-class"/>
+        </and>
+      </composite-rule>
+      <composite-rule id="pm-node">
+        <and>
+          <rule-reference id="project-has-adfmf-techscope"/>
+          <rule-reference id="ampa-is-initialized"/>
+          <or>
+            <rule-reference id="is-project-node"/>
+            <rule-reference id="is-persistence-mapping-node"/>
+          </or>
         </and>
       </composite-rule>
     </rules>
@@ -159,6 +184,16 @@
             </properties>
             <!--<controller-class>oracle.ateam.sample.mobile.dt.MobileController</controller-class>-->
         </action>
+        <action id="oracle.ateam.sample.mobile.editPersistenceMapping">
+          <properties>
+            <property name="Name">Edit Persistence Mapping</property>
+            <property name="LongDescription">Edit Persistence Mapping</property>
+            <!--<property name="SmallIcon">res:/mapping.png</property>-->
+            <property name="SmallIcon">mapping.png</property>
+            <!--<property name="enabled">false</property>
+            <property name="disabled">true</property>-->
+          </properties>
+        </action>
       </actions> 
     
       <controllers>
@@ -166,6 +201,9 @@
           <update-rules>
             <update-rule rule="always-enabled">
               <action id="oracle.ateam.sample.mobile.OpenDoc"/>
+            </update-rule>
+            <update-rule rule="pm-node">
+              <action id="oracle.ateam.sample.mobile.editPersistenceMapping"/>
             </update-rule>
           </update-rules>
         </controller>
@@ -198,6 +236,15 @@
       </library>    
     </libraries>
       
+      <context-menu-hook rule="pm-node">      
+        <site idref="navigator"></site>
+          <menu>
+            <section xmlns="http://jcp.org/jsr/198/extension-manifest" id="MY_CUSTOM_MENU_SECTION_ONE" weight="8.0">
+             <item action-ref="oracle.ateam.sample.mobile.editPersistenceMapping"></item>
+            </section>
+         </menu>
+      </context-menu-hook>
+
     </triggers>
   </trigger-hooks>
   

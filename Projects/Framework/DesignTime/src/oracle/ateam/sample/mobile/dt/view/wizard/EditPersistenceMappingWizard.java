@@ -13,8 +13,17 @@ import java.awt.Frame;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
+import java.util.List;
+
 import oracle.ateam.sample.mobile.dt.controller.BusinessObjectGenerator;
+import oracle.ateam.sample.mobile.dt.controller.PersistenceMappingLoader;
 import oracle.ateam.sample.mobile.dt.model.BusinessObjectGeneratorModel;
+import oracle.ateam.sample.mobile.dt.model.DCMethod;
+import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
+import oracle.ateam.sample.mobile.dt.model.jaxb.MobileObjectPersistence;
 import oracle.ateam.sample.mobile.dt.util.ProjectUtils;
 import oracle.ateam.sample.mobile.dt.view.uipanel.AttributesPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.CRUDMethodParametersPanel;
@@ -47,16 +56,12 @@ import oracle.ide.wizard.Wizard;
 import oracle.javatools.dialogs.DialogUtil;
 
 
-public class BusinessObjectsFromRestWSWizard extends Wizard
+public class EditPersistenceMappingWizard extends Wizard
 {
 
   private static final String DEFAULT_PACKAGE_PROPERTY = "defaultPackage";
 
   public static final String MODEL_KEY = "model";
-  static final String STATE_WELCOME = "welcome";
-    static final String STATE_SECURITY_WARNING = "secWarning";
-  static final String STATE_CONNECTION = "restConnection";
-  static final String STATE_RESOURCES = "restResources";
   static final String STATE_DATA_OBJECTS = "dataObjects";
   static final String STATE_ATTRIBUTES = "attributes";
   static final String STATE_PERSISTENCE_MAPPING= "pmapping";
@@ -65,7 +70,7 @@ public class BusinessObjectsFromRestWSWizard extends Wizard
   static final String STATE_OPTIONS = "options";
 
 //  private String wizardTitle = "Create Mobile Web Service Proxy and Persistence Provider";
-  private String wizardTitle = "MAF Business Objects From REST Web Service";
+  private String wizardTitle = "Edit Persistence Mapping";
   private String logTitle = wizardTitle+ " Generator";
   
   public boolean runWizard(Component parent, final Project project)
@@ -76,28 +81,9 @@ public class BusinessObjectsFromRestWSWizard extends Wizard
     // Add all the pages to the finite state machine builder.
     ADD_PAGES_TO_BUILDER:
     {
-      Step welcomeStep =
-        WelcomePanel.newStep(wizardTitle, "Welcome to the "+wizardTitle+" Wizard",
-         "This wizard helps you to generate Java data objects and service objects that can be used to read and write data from a REST web service, as well as from the on-device SQLite database, allowing you to use your mobile application in off-line mode. A SQL DDL script to auto-create the on-device SQLite database is also generated. To build the MAF user interface, you can create a data control from the generated service objects. To enable this option, you must select a MAF project or a file within such a project in the Application Navigator."                    
-//                             "This wizard helps you to create 'data object' Java classes that can act as a proxy to a remote web service and " +
-//        " 'service object' Java classes that use the proxy to make a request to and retrieve a response from the web service. The service object " +
-//        " class also takes care of storing the data in  the on-device SQLite database allowing the mobile application to work in off-line mode as well." 
-          +"\n\nClick Next to continue.", "Bla bla", null); // No help topic.
-          welcomeStep.setStepLabel(wizardTitle);
-          welcomeStep.setPageTitle(wizardTitle);
-        builder.newStartState(welcomeStep, STATE_SECURITY_WARNING);
 
-        Step step = new Step("Security Warning", SecurityWarningPanel.class, null);
-        builder.newState(STATE_SECURITY_WARNING, step, STATE_CONNECTION,false);
-
-       step = new Step("URL Connection", SelectURLConnectionPanel.class, null);
-      builder.newState(STATE_CONNECTION, step, STATE_RESOURCES,false);
-
-       step = new Step("Data Object Resources", RESTResourcesPanel.class, null);
-      builder.newState(STATE_RESOURCES, step, STATE_DATA_OBJECTS,false);
-
-      step = new Step("Select Data Objects", DataObjectsPanel.class, null);
-      builder.newState(STATE_DATA_OBJECTS, step, STATE_ATTRIBUTES,false);
+      Step step = new Step("Data Objects", DataObjectsPanel.class, null);
+      builder.newStartState(step, STATE_ATTRIBUTES);
 
       step = new Step("Data Object Attributes", AttributesPanel.class, null);
       builder.newState(STATE_ATTRIBUTES, step, STATE_PERSISTENCE_MAPPING,false);
@@ -123,6 +109,34 @@ public class BusinessObjectsFromRestWSWizard extends Wizard
       String defaultPackage = ProjectUtils.getViewControllerProject().getProperty(DEFAULT_PACKAGE_PROPERTY);
       BusinessObjectGeneratorModel model = new BusinessObjectGeneratorModel(defaultPackage);
       model.setLogTitle(wizardTitle);
+
+      PersistenceMappingLoader loader = new PersistenceMappingLoader();
+      MobileObjectPersistence jaxbModel = loader.loadJaxbModel();
+      model.setExistingPersistenceMappingModel(jaxbModel);
+      if (jaxbModel!=null)
+      {
+        Collection<DataObjectInfo> existingDataObjects =loader.run(jaxbModel);
+        model.setDataObjectInfos(new ArrayList<DataObjectInfo>(existingDataObjects));      
+      }
+      model.setRestfulWebService(true);
+      // set connectionName based on first one found
+      String connectionName = null;
+      for (DataObjectInfo doi : model.getDataObjectInfos())
+       {
+        for (DCMethod method : doi.getAllMethods())
+        {
+          if (method.getConnectionName()!=null)
+          {
+            connectionName = method.getConnectionName();
+            break;
+          }
+        }
+        if (connectionName!=null)
+        {
+          break;
+        }
+       }
+       model.setConnectionName(connectionName);
       ns.put(MODEL_KEY, model);
 
       FSMWizard wizard = new FSMWizard(stateMachine, ns);
@@ -131,7 +145,7 @@ public class BusinessObjectsFromRestWSWizard extends Wizard
       INITIALIZE_WIZARD:
       {
         wizard.setWizardTitle(wizardTitle);
-        wizard.setWelcomePageAdded(true);
+        wizard.setWelcomePageAdded(false);
         wizard.setFinishPageAdded(true);
         wizard.setShowStepNumber(true);
         //                ImageIcon imageicon =
@@ -165,7 +179,7 @@ public class BusinessObjectsFromRestWSWizard extends Wizard
         public void commit(ApplyEvent applyEvent)
           throws TraversalException
         {
-          BusinessObjectsFromRestWSWizard.this.commit(applyEvent.getTraversableContext(), project);
+          EditPersistenceMappingWizard.this.commit(applyEvent.getTraversableContext(), project);
         }
 
         public void rollback(ApplyEvent applyEvent)

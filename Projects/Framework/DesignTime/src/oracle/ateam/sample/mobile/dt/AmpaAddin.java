@@ -20,7 +20,6 @@ public class AmpaAddin
   @Override
   public void initialize()
   {
-//    System.err.println("**** INIT AMPA ****");
     // schema reg is also done in PersistenceMappingNode class, but then ot doesn't woprk the first time the
     // mapping xml is opened. Need to close and re-open before code insight is available
     final URL url = Thread.currentThread().getContextClassLoader().getResource("xsd/persistenceMapping.xsd");

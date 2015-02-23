@@ -67,7 +67,7 @@ public class GeneratorSettingsPanel extends DefaultTraversablePanel {
       gbc.gridy++;
       contentPanel.add(overwriteServiceObjectsLabel, gbc);
         gbc.gridy++;
-        contentPanel.add(usageTrackingLabel, gbc);
+//        contentPanel.add(usageTrackingLabel, gbc);
 //        gbc.gridy++;
 //        add(_lbAuthor, gbc);
 
@@ -84,7 +84,7 @@ public class GeneratorSettingsPanel extends DefaultTraversablePanel {
       gbc.gridy++;
       contentPanel.add(overwriteServiceObjectsField, gbc);
         gbc.gridy++;
-        contentPanel.add(usageTrackingField, gbc);
+//        contentPanel.add(usageTrackingField, gbc);
 //        gbc.gridy++;
 //        add(_tfAuthor, gbc);
     }

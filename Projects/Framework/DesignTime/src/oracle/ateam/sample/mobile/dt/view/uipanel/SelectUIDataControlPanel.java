@@ -37,6 +37,7 @@ import oracle.ateam.sample.mobile.dt.model.BusinessObjectGeneratorModel;
 
 import oracle.ateam.sample.mobile.dt.controller.parser.DataControlUIDataObjectParser;
 import oracle.ateam.sample.mobile.dt.model.UIGeneratorModel;
+import oracle.ateam.sample.mobile.dt.util.ProjectUtils;
 import oracle.ateam.sample.mobile.dt.view.wizard.BusinessObjectsFromWSDataControlWizard;
 
 import oracle.ateam.sample.mobile.dt.view.wizard.UIGeneratorWizard;
@@ -114,7 +115,7 @@ public class SelectUIDataControlPanel
           // check whether beanClass extends from EntityCrudService
           StructureDefinition beanDef = adc.getDataControlDefinition().getStructure();
           String beanClass = beanDef.getFullName();
-          JavaClass serviceObject = getClass(Ide.getActiveProject(),beanClass);
+          JavaClass serviceObject = getClass(ProjectUtils.getViewControllerProject(),beanClass);
           if (serviceObject!=null && serviceObject.getSuperclass()!=null 
             && serviceObject.getSuperclass().getName().endsWith("EntityCRUDService"))
           {

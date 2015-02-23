@@ -34,6 +34,8 @@ import oracle.ateam.sample.mobile.dt.controller.velocity.VelocityTemplateProcess
 
 import oracle.ateam.sample.mobile.dt.util.FileUtils;
 
+import oracle.ateam.sample.mobile.dt.util.ProjectUtils;
+
 import oracle.bali.xml.addin.XMLSourceNode;
 import oracle.bali.xml.gui.base.xmlComponent.XmlComponentModel;
 import oracle.bali.xml.gui.jdev.JDevXmlContext;
@@ -75,8 +77,8 @@ public class BusinessObjectGenerator
   public void run()
     throws IOException
   {
-    Project appControllerProject = McAppUtils.getApplicationControllerProject(project.getWorkspace()
-                                                                                      , null);
+    Project appControllerProject = ProjectUtils.getApplicationControllerProject();
+
     GeneratorLogPage log = GeneratorLogPage.getPage(model.getLogTitle());
     log.initialize();
     log.info(model.getLogTitle()+" started");

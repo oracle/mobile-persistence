@@ -19,6 +19,7 @@ import oracle.ateam.sample.mobile.dt.model.BusinessObjectGeneratorModel;
 
 import oracle.ateam.sample.mobile.dt.controller.BusinessObjectGenerator;
 
+import oracle.ateam.sample.mobile.dt.util.ProjectUtils;
 import oracle.ateam.sample.mobile.dt.view.uipanel.AttributesPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.DBDataObjectsPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.GeneratorSettingsPanel;
@@ -99,7 +100,7 @@ public class BusinessObjectsFromTablesWizard extends Wizard
     {
       FSM stateMachine = builder.getFSM();
       Namespace ns = new Namespace();
-      String defaultPackage = Ide.getActiveProject().getProperty(DEFAULT_PACKAGE_PROPERTY);
+      String defaultPackage = ProjectUtils.getViewControllerProject().getProperty(DEFAULT_PACKAGE_PROPERTY);
       BusinessObjectGeneratorModel model = new BusinessObjectGeneratorModel(defaultPackage);
       ns.put(MODEL_KEY, model);
 
@@ -173,7 +174,7 @@ public class BusinessObjectsFromTablesWizard extends Wizard
     {
       BusinessObjectGeneratorModel model = (BusinessObjectGeneratorModel) context.get(MODEL_KEY);
       model.setLogTitle(logTitle);
-      BusinessObjectGenerator generator = new BusinessObjectGenerator(project,model);
+      BusinessObjectGenerator generator = new BusinessObjectGenerator(ProjectUtils.getViewControllerProject(),model);
       generator.run();
     }
     catch (IOException ioe)

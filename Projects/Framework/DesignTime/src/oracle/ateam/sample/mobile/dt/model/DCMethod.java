@@ -30,14 +30,14 @@ import oracle.binding.meta.StructureDefinition;
  */
 public class DCMethod
 {
-  
+
   // holds data control method name in case of WS Data Control, holds
   // request URI in case of RESTful WS
   private String name;
   private String accessorAttribute;
   private OperationDefinition method;
   private AccessorDefinition accessor;
-  private List<DCMethodParameter> params = new ArrayList<DCMethodParameter>(); 
+  private List<DCMethodParameter> params = new ArrayList<DCMethodParameter>();
   private DataObjectInfo dataObject;
   private DataObjectInfo parameterValueProviderDataObject;
   private String payloadElementName;
@@ -136,14 +136,14 @@ public class DCMethod
     {
       param = (ParameterDefinition) iterator.next();
       addParam(new DCMethodParameter(param));
-    }    
+    }
   }
-  
+
   public String getFirstParamName()
   {
-    if (getParams().size()>0)
+    if (getParams().size() > 0)
     {
-      return getParams().get(0).getName();      
+      return getParams().get(0).getName();
     }
     return null;
   }
@@ -161,13 +161,39 @@ public class DCMethod
   {
     if (!headerParams.contains(param))
     {
-      headerParams.add(param);      
+      headerParams.add(param);
     }
   }
 
   public List<DCMethodParameter> getParams()
   {
     return params;
+  }
+
+  public List<DCMethodParameter> getPathParams()
+  {
+    List<DCMethodParameter> pathParams = new ArrayList<DCMethodParameter>();
+    for (DCMethodParameter param: params)
+    {
+      if (param.isPathParam())
+      {
+        pathParams.add(param);
+      }
+    }
+    return pathParams;
+  }
+
+  public List<DCMethodParameter> getQueryParams()
+  {
+    List<DCMethodParameter> queryParams = new ArrayList<DCMethodParameter>();
+    for (DCMethodParameter param: params)
+    {
+      if (!param.isPathParam())
+      {
+        queryParams.add(param);
+      }
+    }
+    return queryParams;
   }
 
   public void setName(String name)
@@ -183,7 +209,7 @@ public class DCMethod
   public void setDataObject(DataObjectInfo dataObject)
   {
     this.dataObject = dataObject;
-    if (getParameterValueProviderDataObject()==null)
+    if (getParameterValueProviderDataObject() == null)
     {
       setParameterValueProviderDataObject(dataObject);
     }
@@ -196,18 +222,18 @@ public class DCMethod
 
   public String getDataControlName()
   {
-    if (dataControlName!=null)
+    if (dataControlName != null)
     {
       // this is the case when method is created from existing persistence-mapping
-      return dataControlName;         
+      return dataControlName;
     }
-    else if (method!=null)
+    else if (method != null)
     {
-      return ((NamedDefinition)method.getDefinitionParent()).getName();            
+      return ((NamedDefinition) method.getDefinitionParent()).getName();
     }
-    else if (accessor!=null)
+    else if (accessor != null)
     {
-      return ((NamedDefinition)accessor.getDefinitionParent()).getName();            
+      return ((NamedDefinition) accessor.getDefinitionParent()).getName();
     }
     return null;
   }
@@ -215,19 +241,20 @@ public class DCMethod
   private void derivePayloadReturnElementName()
   {
     OperationReturnDefinition returnType = (OperationReturnDefinition) method.getOperationReturnType();
-    if (returnType!=null ) // && returnType.isAccessor() ) //&& accessor.isCollectionType())
+    if (returnType != null) // && returnType.isAccessor() ) //&& accessor.isCollectionType())
     {
-    //          StructureDefinition accBean = (StructureDefinition) returnType.getDefinitionParent();
-      MethodDef methodDef = (MethodDef) returnType.getDefinitionParent();   
+      //          StructureDefinition accBean = (StructureDefinition) returnType.getDefinitionParent();
+      MethodDef methodDef = (MethodDef) returnType.getDefinitionParent();
       MethodReturnDef methodreturnDef = (MethodReturnDef) methodDef.getOperationReturnType();
-    //          if (methodreturnDef!=null && methodreturnDef.isCollection() && !methodreturnDef.isScalarCollection() ) //&& accessor.isCollectionType())
-      if (methodreturnDef!=null ) // && methodreturnDef.isCollection() && !methodreturnDef.isScalarCollection() ) //&& accessor.isCollectionType())
+      //          if (methodreturnDef!=null && methodreturnDef.isCollection() && !methodreturnDef.isScalarCollection() ) //&& accessor.isCollectionType())
+      if (methodreturnDef !=
+          null) // && methodreturnDef.isCollection() && !methodreturnDef.isScalarCollection() ) //&& accessor.isCollectionType())
       {
-        StructureDefinition accBean = methodreturnDef.getStructure();    
-        if (accBean!=null)
-        {          
+        StructureDefinition accBean = methodreturnDef.getStructure();
+        if (accBean != null)
+        {
           List beansProcessed = new ArrayList<StructureDefinition>();
-          getAccessorBean(accBean,beansProcessed);
+          getAccessorBean(accBean, beansProcessed);
         }
       }
     }
@@ -259,13 +286,13 @@ public class DCMethod
         // Return type is wrapped in "Result" accessor, then get the bean of the accessor
         // if we have two sibling accessors, we return the last one. This is kind of a hack for AuraPlayer: AuraPlyer always
         // retrns the messages element as the first one, and then the actual content data as the next. It has to be in that order because
-        // othewise ADF Mobile is somehow not able to 
+        // othewise ADF Mobile is somehow not able to
         AccessorDefinition accessor = null;
         while (iterator.hasNext())
         {
-          accessor = (AccessorDefinition) iterator.next();          
+          accessor = (AccessorDefinition) iterator.next();
         }
-        accBean = accessor.getStructure();                
+        accBean = accessor.getStructure();
         getAccessorBean(accBean, beansProcessed);
       }
     }
@@ -282,59 +309,64 @@ public class DCMethod
   }
 
   public void setParameterValueProviderDataObject(DataObjectInfo parameterValueProviderDataObject)
-  {    
-    this.parameterValueProviderDataObject = parameterValueProviderDataObject;    
-    if (parameterValueProviderDataObject!=null)
+  {
+    this.parameterValueProviderDataObject = parameterValueProviderDataObject;
+    if (parameterValueProviderDataObject != null)
     {
-      for(DCMethodParameter param : getParams())
+      for (DCMethodParameter param: getParams())
       {
+        if (param.getValueProvider()!=null)
+        {
+          // already set, skip it.
+          continue;
+        }
         String payloadName = param.getName();
         AttributeInfo attr = parameterValueProviderDataObject.getAttributeDefByPayloadName(payloadName);
-        if (attr!=null && (isIsWriteMethod() || isIsFindAllInParentMethod() || isIsGetCanonicalMethod()))
+        if (attr != null && (isIsWriteMethod() || isIsFindAllInParentMethod() || isIsGetCanonicalMethod()))
         {
           // we have a match, set this attribute as value provider
           param.setValueProvider(DCMethodParameter.DATA_OBJECT_ATTRIBUTE);
           param.setDataObjectAttribute(attr.getAttrName());
         }
-        else if (payloadName.toUpperCase().contains("USERNAME") || payloadName.toUpperCase().contains("USER_NAME"))
-        {
-          param.setValueProvider(DCMethodParameter.EL_EXPRESSION);
-          param.setValue("#{applicationScope.UserContext.userName}");
-        }
-        else if (payloadName.toUpperCase().contains("PASSWORD") || payloadName.toUpperCase().contains("PASS_WORD"))
-        {
-          param.setValueProvider(DCMethodParameter.EL_EXPRESSION);
-          param.setValue("#{applicationScope.UserContext.password}");
-        }
+//        else if (payloadName.toUpperCase().contains("USERNAME") || payloadName.toUpperCase().contains("USER_NAME"))
+//        {
+//          param.setValueProvider(DCMethodParameter.EL_EXPRESSION);
+//          param.setValue("#{applicationScope.UserContext.userName}");
+//        }
+//        else if (payloadName.toUpperCase().contains("PASSWORD") || payloadName.toUpperCase().contains("PASS_WORD"))
+//        {
+//          param.setValueProvider(DCMethodParameter.EL_EXPRESSION);
+//          param.setValue("#{applicationScope.UserContext.password}");
+//        }
         else if (isIsFindMethod())
         {
           param.setValueProvider(DCMethodParameter.SEARCH_VALUE);
         }
-      }  
-      // if write method and only one param, then we assume this is the serialized entity that must be passed in
-      // This is reasonable default when using ADF BC SDO services
-      // if it is a rest uri param, we default it to the primary key attribute of the value provider 
-      if (getParams().size()==1)
+      }
+      // if there is only 1 rest path param, we default it to the primary key attribute of the value provider
+      if (getPathParams().size() == 1)
       {
         DCMethodParameter param = getParams().get(0);
-        if (param.isPathParam())
+        List<AttributeInfo> keyAttrs = parameterValueProviderDataObject.getKeyAttributes();
+        if (keyAttrs.size() > 0)
         {
           param.setValueProvider(DCMethodParameter.DATA_OBJECT_ATTRIBUTE);
-          List<AttributeInfo> keyAttrs = parameterValueProviderDataObject.getKeyAttributes();
-          if (keyAttrs.size()>0)
-          {
-            param.setDataObjectAttribute(keyAttrs.get(0).getAttrName());            
-          }
-        }
-        else if (isIsWriteMethod())
-        {
-          param.setValueProvider(DCMethodParameter.SERIALIZED_DATA_OBJECT);          
+          param.setDataObjectAttribute(keyAttrs.get(0).getAttrName());
         }
       }
-      else if (isIsWriteMethod() && getParams().size()==0)
+      if (isIsWriteMethod())
       {
-        // no params, so we can assume the serialized dataobject will be s
-        setSendSerializedDataObjectAsPayload(true);
+        if (getQueryParams().size()==0)
+        {
+          // no params, so we can assume the serialized dataobject will be sent
+          setSendSerializedDataObjectAsPayload(true);          
+        }
+        else if (getQueryParams().size()==1)
+        {
+          // 1 query param, we assume this will contain serialized dataobject
+          setSendSerializedDataObjectAsPayload(true);          
+          getQueryParams().get(0).setValueProvider(DCMethodParameter.SERIALIZED_DATA_OBJECT);
+        }
       }
     }
   }
@@ -420,14 +452,14 @@ public class DCMethod
     if (questionPos > -1)
     {
       uri = fullUri.substring(0, questionPos);
-      params = fullUri.substring(questionPos+1);
+      params = fullUri.substring(questionPos + 1);
     }
     uri = derivePathParams(uri);
     setName(uri);
-    if (params!=null)
+    if (params != null)
     {
       deriveQueryParams(params);
-    }      
+    }
   }
 
   /**
@@ -442,20 +474,20 @@ public class DCMethod
     String uri = name;
     int paramPos = uri.indexOf("{");
     int startPosInReturnUri = paramPos;
-    while (paramPos>-1)
+    while (paramPos > -1)
     {
-      int endPos = uri.indexOf("}",paramPos);
-      int endPosInReturnUri = returnUri.indexOf("}",startPosInReturnUri);
-      if (endPos>-1)
+      int endPos = uri.indexOf("}", paramPos);
+      int endPosInReturnUri = returnUri.indexOf("}", startPosInReturnUri);
+      if (endPos > -1)
       {
-        String paramName = uri.substring(paramPos+1,endPos);
+        String paramName = uri.substring(paramPos + 1, endPos);
         int suffix = 1;
         boolean nameModified = false;
         String newName = paramName;
         while (paramExists(newName))
         {
           // duplicate params in uri, rename
-          newName = paramName+suffix;
+          newName = paramName + suffix;
           nameModified = true;
           suffix++;
         }
@@ -463,23 +495,24 @@ public class DCMethod
         {
           paramName = newName;
           // update return uri with new param name
-          returnUri = returnUri.substring(0,startPosInReturnUri+1)+paramName+returnUri.substring(endPosInReturnUri);          
+          returnUri =
+            returnUri.substring(0, startPosInReturnUri + 1) + paramName + returnUri.substring(endPosInReturnUri);
         }
 
         DCMethodParameter methodParam = new DCMethodParameter();
         methodParam.setName(paramName);
         methodParam.setPathParam(true);
-        addParam(methodParam);            
-        if (uri.length()>endPos+1)
+        addParam(methodParam);
+        if (uri.length() > endPos + 1)
         {
-          uri = uri.substring(endPos+1);        
+          uri = uri.substring(endPos + 1);
           paramPos = uri.indexOf("{");
           startPosInReturnUri = returnUri.indexOf("{", endPosInReturnUri);
         }
         else
         {
           paramPos = -1;
-        }        
+        }
       }
       else
       {
@@ -492,17 +525,17 @@ public class DCMethod
   private void deriveQueryParams(String params)
   {
     String[] paramKeyValuePairs = StringUtils.stringToStringArray(params, "&");
-    for( String paramKeyValuePair : paramKeyValuePairs)
+    for (String paramKeyValuePair: paramKeyValuePairs)
     {
       int ispos = paramKeyValuePair.indexOf("=");
-      if (ispos>0)
+      if (ispos > 0)
       {
         String paramName = paramKeyValuePair.substring(0, ispos);
         if (!paramExists(paramName))
         {
           DCMethodParameter methodParam = new DCMethodParameter();
           methodParam.setName(paramName);
-          addParam(methodParam);            
+          addParam(methodParam);
         }
       }
     }
@@ -511,7 +544,7 @@ public class DCMethod
   public boolean paramExists(String name)
   {
     boolean exists = false;
-    for(DCMethodParameter param : getParams())
+    for (DCMethodParameter param: getParams())
     {
       if (name.equals(param.getName()))
       {

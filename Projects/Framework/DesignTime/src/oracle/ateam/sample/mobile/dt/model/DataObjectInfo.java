@@ -1014,6 +1014,30 @@ public class DataObjectInfo
     || getCustomMethods().size()>0;  
   }
 
+  public List<DCMethod> getAllMethods()
+  {
+    List<DCMethod> methods = new ArrayList<DCMethod>();
+    addMethodIfNotNull(methods,getFindAllMethod());
+    addMethodIfNotNull(methods,getFindMethod());
+    addMethodIfNotNull(methods,getGetCanonicalMethod());
+    addMethodIfNotNull(methods,getCreateMethod());
+    addMethodIfNotNull(methods,getUpdateMethod());
+    addMethodIfNotNull(methods,getMergeMethod());
+    addMethodIfNotNull(methods,getDeleteMethod());
+    methods.addAll(getFindAllInParentMethods());
+    methods.addAll(getGetAsParentMethods());
+    methods.addAll(getCustomMethods());
+    return methods;
+  }
+  
+  private void addMethodIfNotNull(List<DCMethod> methods, DCMethod method)
+  {
+    if (method!=null)
+    {
+      methods.add(method);
+    }
+  }
+
   public List<DCMethod> getCustomMethods()
   {
     return customMethods;
