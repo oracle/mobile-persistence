@@ -52,7 +52,7 @@ public class JSONExampleDataObjectParser
         List list = gson.fromJson(response, ArrayList.class);        
         if (list!=null)
         {
-          processJSONList(root, "root", list,"");
+          processJSONList(root, "root", list,"",true);
         }
       }
       catch (Exception e)
@@ -112,7 +112,7 @@ public class JSONExampleDataObjectParser
         //        {
         //          resource.setPayloadReturnElementName(key);
         //        }
-        processJSONList(currentDataObject, key, value,payloadAttrPrefix);
+        processJSONList(currentDataObject, key, value,payloadAttrPrefix,false);
       }
       else
       {
@@ -135,7 +135,7 @@ public class JSONExampleDataObjectParser
     }
   }
 
-  private void processJSONList(DataObjectInfo currentDataObject, String key, Object value, String payloadAttrPrefix)
+  private void processJSONList(DataObjectInfo currentDataObject, String key, Object value, String payloadAttrPrefix, boolean rootList)
   {
     List children = (List) value;
     if (children.size() > 0)
@@ -143,11 +143,12 @@ public class JSONExampleDataObjectParser
       Object child = children.get(0);
       if (child instanceof Map)
       {
-        if ("root".equals(key) || currentDataObject.getPayloadListElementName()==null)
-        {
+//        if ("root".equals(key) || currentDataObject.getPayloadListElementName()==null)
           // we can add attributes straight to existing root data object
           // if currentDataObject has null value for getPayloadListElementName it is coming from RAML example
           // and we can add the attributes straight to this data objwect
+        if (rootList)
+        {
           if (currentDataObject.getPayloadListElementName()==null)
           {
             currentDataObject.setPayloadListElementName(key);
