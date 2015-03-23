@@ -1,7 +1,9 @@
 /*******************************************************************************
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
- $revision_history$
+ $revision_history$ 
+ 20-mar-2015   Steven Davelaar
+ 1.4           Added method isShowWebServiceTimings
  03-nov-2014   Steven Davelaar / Jeevan Joseph
  1.3           Added OAuth config
  25-may-2014   Steven Davelaar
@@ -22,6 +24,7 @@ import java.util.List;
 
 import java.util.Map;
 
+import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.util.KXmlUtil;
 import oracle.adfmf.util.XmlAnyDefinition;
 
@@ -134,4 +137,25 @@ public class ObjectPersistenceMapping
   {
     return (OAuthConfig) getOAuthConfigMap().get(configName);
   }
+
+  /**
+   * Returns the value of show-web-service-timings in persistenceMapping.xml. If the value is false
+   * it also checks for EL expression #{applicationScope.showWebServiceTimings} allowing you to
+   * temporarily switch on timings at runtime.
+   * @return
+   */
+  public boolean isShowWebServiceTimings()
+  {
+    boolean value = getAttributeBooleanValue("show-web-service-timings",false);
+    if (!value)
+    {
+      Object elValue = AdfmfJavaUtilities.evaluateELExpression("#{applicationScope.showWebServiceTimings}");
+      if (elValue!=null)
+      {
+        value = (Boolean)elValue; 
+      }      
+    }
+    return value;
+  }
+  
 }

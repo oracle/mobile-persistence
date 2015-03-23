@@ -150,9 +150,9 @@ public class DataSynchManager
    * Register remote data sync action. If we are online and the sync action does not contain
    * a "last sync error" then we do not save the sync action in the local SQLITE db yet, because it will
    * be processed right away. If we are offline, or the data sync action contains a last sync error, then we also
-   * store it in SQLite DB. With this approach we prevent creating a data sync row and subsequent removal of that same row
-   * in the normal scenario where we are online and the sync action is processed succesfully right away.
-   * If processing fails, 
+   * store it in SQLite DB when offline transactions are supported. With this approach we prevent creating a data 
+   * sync row and subsequent removal of that same row in the normal scenario where we are online and the sync action 
+   * is processed succesfully right away.
    * @param synchAction
    */
   protected void registerDataSynchAction(DataSynchAction synchAction)
@@ -172,9 +172,8 @@ public class DataSynchManager
    // call to refresh list causes unpredictable behavior, not really needed here anyway
 //    refreshDataSynchActionsList(oldArray);
     refreshHasDataSynchActions(oldList.size()>0);
-    // we save to DB when last synch erro is not null. We don't have to check online/offline, because
-    // when we are offline the 
-    if (synchAction.getLastSynchError()!=null )
+    // we save to DB when last synch error is not null. 
+    if (synchAction.getLastSynchError()!=null && crudService.isOfflineTransactionsEnabled() )
     {
       saveDataSynchAction(synchAction);
     }

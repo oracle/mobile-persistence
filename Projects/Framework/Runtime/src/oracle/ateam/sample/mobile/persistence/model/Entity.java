@@ -2,6 +2,9 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 19-mar-2015   Steven Davelaar
+ 1.3           Added call to EntityUtils.refreshCurrentEntity in refreshChildEntityList method
+               to ensure UI is also refreshed correctly when child entities are shown in form layout 
  27-dec-2014   Steven Davelaar
  1.2           Overloaded method createIndirectList with additional array attr name argument
                Added method refreshChildEntityList
@@ -209,6 +212,9 @@ public abstract class Entity extends ChangeEventSupportable
     Entity[] newEntityArray = EntityUtils.getEntityListAsCorrectlyTypedArray(newList, childClass);
     getPropertyChangeSupport().firePropertyChange(childAttribute, oldEntityArray, newEntityArray);
     getProviderChangeSupport().fireProviderRefresh(childAttribute);
+    // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
+    // a list view. So, we als refresh the current entity. 
+    EntityUtils.refreshCurrentEntity(childAttribute,newList,getProviderChangeSupport());
     if (AdfmfJavaUtilities.isBackgroundThread())
     {
       AdfmfJavaUtilities.flushDataChangeEvent();

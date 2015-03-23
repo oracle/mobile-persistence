@@ -11,12 +11,50 @@ import oracle.ateam.sample.mobile.v2.persistence.service.EntityCRUDService;
 import ${WSM.currentDataObject.fullyQualifiedClassName};
 
 
+/**
+ *  Service class that provides CRUD and custom operations against the ${WSM.currentDataObject.classVariableName} data object.
+ *  The behavior of this class is driven by the ${WSM.currentDataObject.classVariableName} classMappingDescriptor in persistence-mapping.xml.
+ *  
+ *  You can customize and extend this behavior by overriding methods of the EntityCRUDService superclass, and/or
+ *  creating a subclass of the local and remote persistence managers as configured in persistence-mapping.xml.
+ */
 public class ${WSM.currentDataObject.serviceClassName}
   extends EntityCRUDService<${WSM.currentDataObject.className}>
 {
 
+  /**
+   * Default constructor. If autoQuery is set to true in the classMappingDescriptor in persistence-mapping.xml, then 
+   * the findAll method will be executed and the ${WSM.currentDataObject.classVariableName} list will be populated when this constructor is invoked. 
+   * If you created a data control for this service class, the data control will use this constructor, allowing you to 
+   * immediately show data in your user interface when accessing the data control for the first time.
+   * By default, the findAll method will first query the local SQLite database for any rows and show these immediately in
+   * the UI. Then the remote findAll method as configured in persistence-mapping.xml will be executed in the background, 
+   * and the UI will be automatically refreshed when the remote data have been processed and stored in the local SQLite 
+   * database.
+   * If you want the user to wait until the remote data have been processed and not show local data first, you can set 
+   * the remoteReadInBackground attribute in the classMappingDescriptor to false.
+   * 
+   * If you need programmatic access to the same instance of this class as used by the bean data control typically
+   * created for this class, then you can use the following convenience method:
+   *  
+   * ${WSM.currentDataObject.serviceClassName} crudService = (${WSM.currentDataObject.serviceClassName}) EntityUtils.getEntityCRUDService(${WSM.currentDataObject.className}.class);
+   *  
+   * Note that calling this method might fire a remote method call when autoQuery is set to true in the 
+   * classMappingDescriptor and the data control has not been instantiated yet for the feature context in which you 
+   * execute the above call. Remember: each feature has its own class loader, bean data controls are NOT shared 
+   * accross features!
+   */
   public ${WSM.currentDataObject.serviceClassName}()
   {
+  }
+
+  /**
+   * Use this constructor with autoQuery=false in Java code when you want to execute a method in this service class
+   * without autoQuery as configured in persistence-mapping.xml taking place. 
+   */
+  public ${WSM.currentDataObject.serviceClassName}(boolean autoQuery)
+  {
+    super(autoQuery);
   }
 
   protected Class getEntityClass()
@@ -110,14 +148,26 @@ public class ${WSM.currentDataObject.serviceClassName}
   /**
    * Invokes the getCanonical method on the remote persistence manager if this has not happened yet
    * for this instance during this application session. The corresponding row in the local database is also updated if
-   * the entity is persistable. Note that this method ignores the setting of remote-read-in-background property
-   * in persistenceMapping.xml, this method is always executed in the foreground because the user typically
-   * wants to see the additional entity data immediately
-   * @param entity
+   * the entity is persistable. This method uses the setting of remote-read-in-background property
+   * in persistenceMapping.xml to determine whether the method is executed in the background.
+   * While you can call this method from the user interface layer using the data control palette, it is easier and 
+   * cleaner to call this method from a getter method for one of the attributes that will be populated by the
+   * getCanonical method call. Here is an example of the code you should add to such a getter method:
+   * 
+   * if (!canonicalGetExecuted())
+   * {
+   *   ${WSM.currentDataObject.serviceClassName} crudService = (${WSM.currentDataObject.serviceClassName}) EntityUtils.getEntityCRUDService(Department.class);
+   *   crudService.getCanonical${WSM.currentDataObject.className}(this);
+   * }
+   * 
+   * If you specifed the getCanonical triggering attribute in the AMPA REST wizard, then the above code is already generated
+   * for you.
+   * 
+   * @param ${WSM.currentDataObject.classVariableName}
    */
   public void getCanonical${WSM.currentDataObject.className}(${WSM.currentDataObject.className} ${WSM.currentDataObject.classVariableName})
   {
-    super.getCanonical(${WSM.currentDataObject.classVariableName});
+    super.getCanonical(${WSM.currentDataObject.classVariableName},isDoRemoteReadInBackground());
   }
   #end
 

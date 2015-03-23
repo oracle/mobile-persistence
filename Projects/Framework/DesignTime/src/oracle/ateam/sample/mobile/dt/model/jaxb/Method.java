@@ -25,14 +25,14 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;/sequence>
  *       &lt;attribute name="name" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="uri" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="connectionName" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="connectionName" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="dataControlName" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="requestType" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="secured" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
  *       &lt;attribute name="payloadRowElementName" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="sendDataObjectAsPayload" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
  *       &lt;attribute name="deleteLocalRows" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
- *       &lt;attribute name="payloadElementName" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="payloadElementName" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="attributesToExclude" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="oauthConfig" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/restriction>
@@ -56,7 +56,7 @@ public class Method
   protected String name;
   @XmlAttribute(name = "uri")
   protected String uri;
-  @XmlAttribute(name = "connectionName", required = true)
+  @XmlAttribute(name = "connectionName")
   protected String connectionName;
   @XmlAttribute(name = "dataControlName")
   protected String dataControlName;
@@ -70,7 +70,7 @@ public class Method
   protected Boolean sendDataObjectAsPayload;
   @XmlAttribute(name = "deleteLocalRows")
   protected Boolean deleteLocalRows;
-  @XmlAttribute(name = "payloadElementName", required = true)
+  @XmlAttribute(name = "payloadElementName")
   protected String payloadElementName;
   @XmlAttribute(name = "attributesToExclude")
   protected String attributesToExclude;

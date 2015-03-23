@@ -10,6 +10,9 @@ import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.service.ValueHolderInterface;
 #end
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
+#if (${WSM.currentDataObject.canonicalTriggerAttribute})
+import ${WSM.currentDataObject.fullyQualifiedServiceClassName};
+#end
 
   #foreach($type in ${WSM.currentDataObject.attributeImportTypes})
      import ${type};
@@ -48,6 +51,14 @@ public class ${WSM.currentDataObject.className} extends Entity
   #foreach($attr in ${WSM.currentDataObject.attributeDefs})
     public $attr.javaType ${attr.getterMethodName}()
     {
+      #if (${WSM.currentDataObject.canonicalTriggerAttribute} && ${attr}==${WSM.currentDataObject.canonicalTriggerAttribute})
+
+    if (!canonicalGetExecuted())
+    {
+      ${WSM.currentDataObject.serviceClassName} crudService = (${WSM.currentDataObject.serviceClassName}) EntityUtils.getEntityCRUDService(${WSM.currentDataObject.className}.class);
+      crudService.getCanonical${WSM.currentDataObject.className}(this);
+    }
+      #end
       return this.${attr.attrName};
     }
 

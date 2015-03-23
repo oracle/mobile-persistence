@@ -7,6 +7,7 @@
       <xs:sequence>
         <xs:element ref="classMappingDescriptor" minOccurs="0" maxOccurs="unbounded"/>
       </xs:sequence>
+      <xs:attribute type="xs:boolean" name="showWebServiceTimings" default="false"/>
     </xs:complexType>
   </xs:element>
   <xs:element name="classMappingDescriptor">
@@ -26,6 +27,7 @@
       <xs:attribute type="xs:string" name="dateFormat"/>
       <xs:attribute type="xs:string" name="dateTimeFormat"/>
       <xs:attribute type="xs:string" name="orderBy"/>
+      <xs:attribute type="xs:string" name="canonicalTriggerAttribute"/>
     </xs:complexType>
   </xs:element>
   <xs:element name="crudServiceClass">
@@ -41,6 +43,7 @@
       <xs:attribute type="xs:boolean" name="remoteWriteInBackground" default="true"/>
       <xs:attribute type="xs:boolean" name="showWebServiceInvocationErrors" default="true"/>
       <xs:attribute type="xs:boolean" name="autoQuery" default="true"/>
+      <xs:attribute type="xs:boolean" name="enableOfflineTransactions" default="true"/>
     </xs:complexType>
   </xs:element>
   <xs:element name="table">
@@ -97,6 +100,7 @@
           <xs:attribute type="xs:string" name="parentAttributeName"/>
           <xs:attribute type="xs:string" name="javaType"/>
           <xs:attribute type="xs:boolean" name="keyAttribute" default="false"/>
+          <xs:attribute type="xs:string" name="dateFormat"/>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>

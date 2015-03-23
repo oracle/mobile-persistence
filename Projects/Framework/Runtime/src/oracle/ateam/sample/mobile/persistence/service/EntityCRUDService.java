@@ -2,6 +2,14 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 19-mar-2015   Steven Davelaar
+ 1.8           - Changed implementation of getCanonical: now executed in background when
+               remote-read-in-background is set to true in persistence-mapping.xml. Added overloaded
+               getCanonical method with additional argument to override the remote-read-in-background
+               setting in persistence-mapping.xml. Added executeGetCanonical method to easily add behavior
+               when executed in background.
+               - Added call to EntityUtils.refreshCurrentEntity in refreshEntityList method
+               to ensure UI is also refreshed correctly when child entities are shown in form layout 
  27-dec-2014   Steven Davelaar
  1.7           Moved implementation of getEntityListAsCorrectlyTypedArray to EntityUtils class to enable reuse.
  27-nov-2014   Steven Davelaar
@@ -25,27 +33,18 @@
 ******************************************************************************/
 package oracle.ateam.sample.mobile.persistence.service;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import javax.el.ValueExpression;
 
 import oracle.adf.model.datacontrols.device.DeviceManagerFactory;
 
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
-
-import oracle.adfmf.framework.internal.AdfmfJavaUtilitiesInternal;
 import oracle.adfmf.util.Utility;
 
 import oracle.ateam.sample.mobile.persistence.cache.EntityCache;
 import oracle.ateam.sample.mobile.persistence.manager.DBPersistenceManager;
-import oracle.ateam.sample.mobile.persistence.manager.PersistenceManager;
 import oracle.ateam.sample.mobile.persistence.manager.RemotePersistenceManager;
 import oracle.ateam.sample.mobile.persistence.metadata.AttributeMappingDirect;
 import oracle.ateam.sample.mobile.persistence.metadata.ClassMappingDescriptor;
@@ -497,6 +496,13 @@ public abstract class EntityCRUDService
     Entity[] newEntityArray = getEntityListAsCorrectlyTypedArray();
     getPropertyChangeSupport().firePropertyChange(getEntityListName(), oldEntityArray, newEntityArray);
     getProviderChangeSupport().fireProviderRefresh(getEntityListName());
+    // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
+    // a list view. 
+    EntityUtils.refreshCurrentEntity(getEntityListName(),getEntityList(),getProviderChangeSupport());
+    if (AdfmfJavaUtilities.isBackgroundThread())
+    {
+      AdfmfJavaUtilities.flushDataChangeEvent();
+    }
     if (AdfmfJavaUtilities.isBackgroundThread())
     {
       AdfmfJavaUtilities.flushDataChangeEvent();
@@ -885,35 +891,72 @@ public abstract class EntityCRUDService
   /**
    * Invokes the getCanonical method on the remote persistence manager if this has not happened yet
    * for this instance during this application session. The corresponding row in the local database is also updated if
-   * the entity is persistable. Note that this method ignores the setting of remote-read-in-background property
-   * in persistenceMapping.xml, this method is always executed in the foreground because the user typically
-   * wants to see the additional entity data immediately
+   * the entity is persistable. The method is executed in foreground.
    * @param entity
    */
   protected void getCanonical(Entity entity)
+  {
+    getCanonical(entity,false);
+  }
+  
+  /**
+   * Invokes the getCanonical method on the remote persistence manager if this has not happened yet
+   * for this instance during this application session. The corresponding row in the local database is also updated if
+   * the entity is persistable. The method is executed in background when param executeInBackground is set to true.
+   * The UI will be refreshed correctly when background call is finished.
+   * @param entity
+   * @param executeInBackground
+   */
+  protected void getCanonical(Entity entity, boolean executeInBackground)
   {
     if (isOnline() && getRemotePersistenceManager() != null && !entity.canonicalGetExecuted())
     {      
       // immediately set flag to false, so we can call this method from some get Attribute method without
       // causing endless loop
       entity.setCanonicalGetExecuted(true);
-      boolean oldValue = isDoRemoteReadInBackground();
-      try
-      {
-       setDoRemoteReadInBackground(false);
-       getRemotePersistenceManager().getCanonical(entity);
-     }
-      finally
-      {
-        setDoRemoteReadInBackground(oldValue);
-      }
-      if (getLocalPersistenceManager() != null && ClassMappingDescriptor.getInstance(getEntityClass()).isPersisted())
-      {
-        getLocalPersistenceManager().mergeEntity(entity, true);
-      }
+
+      TaskExecutor.getInstance().execute(executeInBackground
+          , () -> {
+                    executeGetCanonical(entity);                     
+                    if (executeInBackground)
+                    {
+                      AdfmfJavaUtilities.flushDataChangeEvent();
+                    }
+                  });    
+
+
+  //      boolean oldValue = isDoRemoteReadInBackground();
+  //      try
+  //      {
+  //       setDoRemoteReadInBackground(false);
+  //       getRemotePersistenceManager().getCanonical(entity);
+  //     }
+  //      finally
+  //      {
+  //        setDoRemoteReadInBackground(oldValue);
+  //      }
+  //      if (getLocalPersistenceManager() != null && ClassMappingDescriptor.getInstance(getEntityClass()).isPersisted())
+  //      {
+  //        getLocalPersistenceManager().mergeEntity(entity, true);
+  //      }
     }
   }
 
+  /**
+   * Executes getCanonical method against remote persistence manager.
+   * Convenience method that you can override to perform additional actions before or after. 
+   * Note that this method is executed in the background if getCanonical is called with executeInBackground set to true.
+   * @return
+   */
+  protected void executeGetCanonical(Entity entity)
+  {
+    getRemotePersistenceManager().getCanonical(entity);
+    if (getLocalPersistenceManager() != null && oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor.getInstance(getEntityClass()).isPersisted())
+    {
+      getLocalPersistenceManager().mergeEntity(entity, true);
+    }
+    EntityUtils.refreshCurrentEntity(getEntityListName(),getEntityList(),getProviderChangeSupport());                          
+  }
 
   /**
    * Initialize this service instance based on properties specified in crud-service-class element

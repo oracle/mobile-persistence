@@ -174,7 +174,7 @@ public class DataSynchManager
    * be processed right away. If we are offline, or the data sync action contains a last sync error, then we also
    * store it in SQLite DB. With this approach we prevent creating a data sync row and subsequent removal of that same row
    * in the normal scenario where we are online and the sync action is processed succesfully right away.
-   * If processing fails, 
+   * 
    * @param synchAction
    */
   protected void registerDataSynchAction(DataSynchAction synchAction)
@@ -195,8 +195,7 @@ public class DataSynchManager
    // call to refresh list causes unpredictable behavior, not really needed here anyway
 //    refreshDataSynchActionsList(oldArray);
     refreshHasDataSynchActions(oldArray.length>0);
-    // we save to DB when last synch erro is not null. We don't have to check online/offline, because
-    // when we are offline the 
+    // we save to DB when last synch error is not null. 
     if (synchAction.getLastSynchError()!=null )
     {
       saveDataSynchAction(synchAction);

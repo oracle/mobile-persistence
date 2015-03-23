@@ -2,6 +2,8 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 19-mar-2015   Steven Davelaar / Puja Subramanyam
+ 1.1           Fix in convertToDate to keep time component 
  01-jul-2013   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -54,12 +56,12 @@ public class DateUtils
 
   public static Date convertToDate(Class dateType, String value, String dateFormat, String dateTimeFormat)
   {
-    // first try datetime pattern
-    Date convertedValue = convertToDate(value, dateFormat);
+    // first try datetime pattern so we don't loose time component if present
+    Date convertedValue = convertToDate(value, dateTimeFormat);
     if (convertedValue==null)
     {
       // try date format
-      convertedValue = convertToDate(value, dateTimeFormat);
+      convertedValue = convertToDate(value, dateFormat);
     }
     if (convertedValue==null)
     {

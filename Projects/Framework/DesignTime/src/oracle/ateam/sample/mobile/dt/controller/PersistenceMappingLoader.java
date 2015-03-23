@@ -158,6 +158,12 @@ public class PersistenceMappingLoader
     // on column name
     doi.setOrderBy(descriptor.getOrderBy());
     doi.setSortOrder(convertToAttributeSortOrder(doi, descriptor.getOrderBy()));
+    
+    if (descriptor.getCanonicalTriggerAttribute()!=null)
+    {
+      AttributeInfo attr = doi.getAttributeDef(descriptor.getCanonicalTriggerAttribute());
+      doi.setCanonicalTriggerAttribute(attr);
+    }
 
     // first create methods so we can lookup find-all-in-parent-method when
     // create one-to-many mappings
@@ -228,6 +234,7 @@ public class PersistenceMappingLoader
     attr.setPayloadName(dm.getPayloadAttributeName());
     attr.setPersisted(dm.isPersisted());
     attr.setRequired(dm.isRequired());
+    attr.setDateFormat(dm.getDateFormat());
     if (dm.getParentAttributeName()!=null)
     {
       // add to list of parentPopulated attrs so we can add parenet references after all dataObjects have been created

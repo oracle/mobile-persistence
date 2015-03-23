@@ -1,7 +1,11 @@
  /*******************************************************************************
-  Copyright ? 2015, Oracle and/or its affiliates. All rights reserved.
+  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  19-mar-2015   Steven Davelaar
+  1.1           - Default dateTimeFormat to dateFormat
+                - Allow runtime config of showWebServiceInvocationErrors
+                - Added isEnableOfflineTransactions
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
@@ -10,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
 
 import oracle.adfmf.util.Utility;
@@ -149,6 +154,12 @@ public class ClassMappingDescriptor
     return value;
   }
 
+  /**
+   * returns the value of showWebServiceInvocationErrors in persistence-mapping.xml. If the value is false
+   * it also checks for EL expression #{applicationScope.showWebServiceInvocationErrors} allowing you to
+   * temporarily show web service invocation errors at runtime.
+   * @return
+   */
     public boolean isShowWebServiceInvocationErrors()
     {
       boolean value = true;
@@ -157,6 +168,14 @@ public class ClassMappingDescriptor
       {
         value = serviceNode.getAttributeBooleanValue("showWebServiceInvocationErrors",true);
       } 
+      if (!value)
+      {
+        Object elValue = AdfmfJavaUtilities.evaluateELExpression("#{applicationScope.showWebServiceInvocationErrors}");
+        if (elValue!=null)
+        {
+          value = (Boolean)elValue; 
+        }      
+      }
       return value;
     }
     
@@ -171,6 +190,18 @@ public class ClassMappingDescriptor
       }  
       return value;
     }
+
+  public boolean isEnableOfflineTransactions()
+  {
+    // old XML structure: text node
+    boolean value = true;
+    XmlAnyDefinition serviceNode = getCrudServiceClassNode();
+    if (serviceNode!=null)
+    {
+      value = serviceNode.getAttributeBooleanValue("enableOfflineTransactions",true);
+    }  
+    return value;
+  }
 
   /**
    * Returns orderBy as defined in persistenceMapping.xml, or when setOrderByhas been
@@ -410,7 +441,8 @@ public class ClassMappingDescriptor
 
   public String getDateTimeFormat()
   {
-    return getAttributeStringValue("dateTimeFormat");
+    String format = getAttributeStringValue("dateTimeFormat");
+    return format!=null ? format : getDateFormat();
   }
 
   public XmlAnyDefinition getMethodNode(String methodName)

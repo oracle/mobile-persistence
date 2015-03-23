@@ -119,6 +119,10 @@ public class PersistenceMappingGenerator
     classMappingDescriptor.setDateTimeFormat(dataObject.getPayloadDateTimeFormat());
     classMappingDescriptor.setOrderBy(dataObject.getOrderBy());
     classMappingDescriptor.setPersisted(dataObject.isPersisted());
+    if (dataObject.getCanonicalTriggerAttribute()!=null)
+    {
+      classMappingDescriptor.setCanonicalTriggerAttribute(dataObject.getCanonicalTriggerAttribute().getAttrName());
+    }
 
     CrudServiceClass service = classMappingDescriptor.getCrudServiceClass();
     if (service == null)
@@ -149,6 +153,7 @@ public class PersistenceMappingGenerator
         service.setRemoteWriteInBackground(true);
         service.setShowWebServiceInvocationErrors(true);
         service.setAutoQuery(true);
+        service.setEnableOfflineTransactions(true);
       }
       else
       {
@@ -344,6 +349,7 @@ public class PersistenceMappingGenerator
     mapping.setJavaType(attr.getJavaTypeFullName());
     mapping.setColumnName(attr.getColumnName());
     mapping.setColumnDataType(attr.getColumnType());
+    mapping.setDateFormat(attr.getDateFormat());
     if (attr.getParentReferenceAttribute()!=null)
     {
       mapping.setParentClass(attr.getParentDataObject().getFullyQualifiedClassName());      

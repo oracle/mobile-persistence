@@ -63,8 +63,10 @@ public class CRUDMethodsRESTPanel
   private JLabel findAllLabel = new JLabel("Find All Resource");
   private JTextField findAllField = new JTextField();
   private JComboBox findAllRequestType = new JComboBox();
-  private JLabel getCanonicalLabel = new JLabel("Get Canonical Resource");
+  private JLabel getCanonicalLabel = new JLabel("Canonical Resource");
   private JTextField getCanonicalField = new JTextField();
+  private JLabel canonicalTriggerAttributeLabel = new JLabel("Canonical Trigger Attribute");
+  private JComboBox canonicaltriggerAttribute = new JComboBox();
   private JComboBox getCanonicalRequestType = new JComboBox();
   private JLabel findLabel = new JLabel("Quick Search Resource");
   private JTextField findField = new JTextField();
@@ -124,6 +126,7 @@ public class CRUDMethodsRESTPanel
     gbc.fill = GridBagConstraints.HORIZONTAL;
 
     gbc.insets = new Insets(0, 0, 20, 5);
+    gbc.weightx = 0.2;
     contentPanel.add(doiLabel, gbc);
     gbc.gridx++;
     gbc.weightx = 1.0f;
@@ -138,6 +141,7 @@ public class CRUDMethodsRESTPanel
 //    contentPanel.add(layoutStyleField, gbc);
     gbc.gridy++;
     gbc.gridx = 0;
+    gbc.weightx = 0.2;
     contentPanel.add(findAllLabel, gbc);
     gbc.gridx++;
     gbc.weightx = 1.0f;
@@ -149,6 +153,7 @@ public class CRUDMethodsRESTPanel
 
     gbc.gridy++;
     gbc.gridx = 0;
+    gbc.weightx = 0.2;
     contentPanel.add(deleteLocalRowsLabel, gbc);
     gbc.gridx++;
     gbc.weightx = 1.0f;
@@ -157,6 +162,7 @@ public class CRUDMethodsRESTPanel
 
     gbc.gridy++;
     gbc.gridx = 0;
+    gbc.weightx = 0.2;
     contentPanel.add(findLabel, gbc);
     gbc.gridx++;
     gbc.weightx = 1.0f;
@@ -167,6 +173,7 @@ public class CRUDMethodsRESTPanel
 
     gbc.gridy++;
     gbc.gridx = 0;
+    gbc.weightx = 0.2;
     contentPanel.add(getCanonicalLabel, gbc);
     gbc.gridx++;
     gbc.weightx = 1.0f;
@@ -177,6 +184,15 @@ public class CRUDMethodsRESTPanel
 
     gbc.gridy++;
     gbc.gridx = 0;
+    gbc.weightx = 0.2;
+    contentPanel.add(canonicalTriggerAttributeLabel, gbc);
+    gbc.gridx++;
+    gbc.weightx = 1.0f;
+    contentPanel.add(canonicaltriggerAttribute, gbc);
+
+    gbc.gridy++;
+    gbc.gridx = 0;
+    gbc.weightx = 0.2;
     contentPanel.add(createLabel, gbc);
     gbc.gridx++;
     gbc.weightx = 1.0f;
@@ -187,6 +203,7 @@ public class CRUDMethodsRESTPanel
 
     gbc.gridy++;
     gbc.gridx = 0;
+    gbc.weightx = 0.2;
     contentPanel.add(updateLabel, gbc);
     gbc.gridx++;
     gbc.weightx = 1.0f;
@@ -197,6 +214,7 @@ public class CRUDMethodsRESTPanel
 
     gbc.gridy++;
     gbc.gridx = 0;
+    gbc.weightx = 0.2;
     contentPanel.add(mergeLabel, gbc);
     gbc.gridx++;
     gbc.weightx = 1.0f;
@@ -207,6 +225,7 @@ public class CRUDMethodsRESTPanel
 
     gbc.gridy++;
     gbc.gridx = 0;
+    gbc.weightx = 0.2;
     contentPanel.add(deleteLabel, gbc);
     gbc.gridx++;
     gbc.weightx = 1.0f;
@@ -217,6 +236,7 @@ public class CRUDMethodsRESTPanel
 
     gbc.gridy++;
     gbc.gridx = 0;
+    gbc.weightx = 0.2;
     contentPanel.add(sortLabel, gbc);
     gbc.gridx++;
     gbc.weightx = 1.0f;
@@ -230,6 +250,7 @@ public class CRUDMethodsRESTPanel
 
     gbc.gridy++;
     gbc.gridx = 0;
+    gbc.weightx = 0.2;
     contentPanel.add(dateFormatLabel, gbc);
     gbc.gridx++;
     gbc.weightx = 1.0f;
@@ -238,6 +259,7 @@ public class CRUDMethodsRESTPanel
 
     gbc.gridy++;
     gbc.gridx = 0;
+    gbc.weightx = 0.2;
     contentPanel.add(dateTimeFormatLabel, gbc);
     gbc.gridx++;
     gbc.weightx = 1.0f;
@@ -279,6 +301,14 @@ public class CRUDMethodsRESTPanel
     }
     doilist.setModel(new DefaultComboBoxModel(dataObjectNames.toArray()));
   }
+
+    private void populateTriggerAttributeList()
+    {
+      List<String> attrNames = new ArrayList<String>();
+      attrNames.add("");
+      attrNames.addAll(getCurrentDataObject().getAttributeNames());
+      canonicaltriggerAttribute.setModel(new DefaultComboBoxModel(attrNames.toArray()));
+    }
 
   public void onEntry(TraversableContext tc)
   {
@@ -348,6 +378,15 @@ public class CRUDMethodsRESTPanel
     getCurrentDataObject().setFindAllMethod(findOrCreateMethod(findAllField, findAllRequestType));
     getCurrentDataObject().setFindMethod(findOrCreateMethod(findField,findRequestType));
     getCurrentDataObject().setGetCanonicalMethod(findOrCreateMethod(getCanonicalField, getCanonicalRequestType));
+    if (StringUtils.isEmpty((String) canonicaltriggerAttribute.getSelectedItem()))
+    {
+      getCurrentDataObject().setCanonicalTriggerAttribute(null);
+    }
+    else
+    {
+      AttributeInfo attr = getCurrentDataObject().getAttributeDef((String) canonicaltriggerAttribute.getSelectedItem());
+      getCurrentDataObject().setCanonicalTriggerAttribute(attr);
+    }
     getCurrentDataObject().setCreateMethod(findOrCreateMethod(createField, createRequestType));
     getCurrentDataObject().setUpdateMethod(findOrCreateMethod(updateField, updateRequestType));
     getCurrentDataObject().setMergeMethod(findOrCreateMethod(mergeField, mergeRequestType));
@@ -372,6 +411,11 @@ public class CRUDMethodsRESTPanel
 
     method = currentDataObject.getGetCanonicalMethod();
     initMethodAndRequestTypeFields(method,getCanonicalField, getCanonicalRequestType,"GET");
+    populateTriggerAttributeList();
+    if (currentDataObject.getCanonicalTriggerAttribute()!=null)
+    {
+      canonicaltriggerAttribute.setSelectedItem(currentDataObject.getCanonicalTriggerAttribute().getAttrName());
+    }
 
     method = currentDataObject.getCreateMethod();
     initMethodAndRequestTypeFields(method,createField, createRequestType,"POST");

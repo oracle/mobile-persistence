@@ -19,7 +19,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;attribute name="name" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="value" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="valueProvider" use="required" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="valueProvider" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="dataObjectAttribute" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="pathParam" use="required" type="{http://www.w3.org/2001/XMLSchema}boolean" />
  *       &lt;attribute name="javaType" type="{http://www.w3.org/2001/XMLSchema}string" />
@@ -40,7 +40,7 @@ public class Parameter
   protected String name;
   @XmlAttribute(name = "value")
   protected String value;
-  @XmlAttribute(name = "valueProvider", required = true)
+  @XmlAttribute(name = "valueProvider")
   protected String valueProvider;
   @XmlAttribute(name = "dataObjectAttribute")
   protected String dataObjectAttribute;

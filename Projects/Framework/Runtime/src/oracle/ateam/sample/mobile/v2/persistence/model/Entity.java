@@ -2,6 +2,9 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  19-mar-2015   Steven Davelaar
+  1.1           Added call to EntityUtils.refreshCurrentEntity in refreshChildEntityList method
+                to ensure UI is also refreshed correctly when child entities are shown in form layout 
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
@@ -203,9 +206,8 @@ public abstract class Entity<E> extends ChangeEventSupportable
     getPropertyChangeSupport().firePropertyChange(childAttribute, oldList, newList);
     getProviderChangeSupport().fireProviderRefresh(childAttribute);
     // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
-    // a list view. So, we rfresh the iterator binding assuming the name it would get with normal
-    // drag and drop action
-    EntityUtils.refreshIteratorBinding(childAttribute+"Iterator");
+    // a list view. So, we als refresh the current entity. 
+    EntityUtils.refreshCurrentEntity(childAttribute,newList,getProviderChangeSupport());
     if (AdfmfJavaUtilities.isBackgroundThread())
     {
       AdfmfJavaUtilities.flushDataChangeEvent();

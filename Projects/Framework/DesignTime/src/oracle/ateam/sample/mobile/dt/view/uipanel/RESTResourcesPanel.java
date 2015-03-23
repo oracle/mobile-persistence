@@ -82,6 +82,7 @@ public class RESTResourcesPanel
   JButton addResourceButton = new JButton("Add");
   JButton removeResourceButton = new JButton("Remove");
   JButton setHeadersButton = new JButton("Set Headers");
+  JButton setHeadersRamlButton = new JButton("Set Headers");
   JButton addHeaderParamButton = new JButton("Add");
   JButton removeHeaderParamButton = new JButton("Remove");
   JCheckBox flattenNestedObjects = new JCheckBox("Flatten Nested Objects");
@@ -115,6 +116,8 @@ public class RESTResourcesPanel
     removeHeaderParamButton.setEnabled(false);
     setHeadersButton.addActionListener(this);
     setHeadersButton.setToolTipText("Specify HTTP request headers");
+    setHeadersRamlButton.addActionListener(this);
+    setHeadersRamlButton.setToolTipText("Specify common HTTP request headers for all RAML resources");
     flattenNestedObjects.setSelected(false);
     addResourceButton.setToolTipText("Add REST resource");
     removeResourceButton.setToolTipText("Remove selected REST resource");
@@ -151,9 +154,12 @@ public class RESTResourcesPanel
     ramlPanel.add(instructionRaml,
              new GridBagConstraints(0, 0, 6, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
                                     new Insets(0, 0, 0, 0), 0, 0));
-    ramlPanel.add(flattenNestedObjectsRaml,
+    ramlPanel.add(setHeadersRamlButton,
         new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE,
                                new Insets(10, 0, 0, 0), 0, 0));
+    ramlPanel.add(flattenNestedObjectsRaml,
+        new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE,
+                               new Insets(10, 10, 0, 0), 0, 0));
 
     ramlPanel.add(ramlFileLabel,
                  new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.NORTH,
@@ -493,7 +499,7 @@ public class RESTResourcesPanel
         createHeaderParamsTable(model.getHeaderParams());              
       }
     }
-    else if (e.getSource()==setHeadersButton)
+    else if (e.getSource()==setHeadersButton || e.getSource()==setHeadersRamlButton)
     {
       boolean OK = headersDialog.runDialog();      
     }

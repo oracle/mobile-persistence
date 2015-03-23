@@ -2,6 +2,8 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 19-mar-2015   Steven Davelaar / Puja Subramanyam
+ 1.1           Fix in convertDateValueIfNeeded to keep time component 
  06-feb-2013   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -139,7 +141,9 @@ public class BindParamInfo
     if (value!=null && value instanceof java.util.Date)
     {
       java.util.Date utilDateValue = (java.util.Date) value;
-      Date sqlDate = new Date(utilDateValue.getTime());
+// time component lost when using Date
+//      Date sqlDate = new Date(utilDateValue.getTime());
+      Timestamp sqlDate = new Timestamp(utilDateValue.getTime());
       value = sqlDate;
     }
     return value;

@@ -2,6 +2,8 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 20-mar-2015   Steven Davelaar
+ 1.4           Allow runtime config of showWebServiceInvocationErrors
  15-sep-2014   Steven Davelaar
  1.3           Use Utility.loadClass rather than loading through context class loader, 
                the latter can cause app to hang when used in feature lifecycle listener activate method
@@ -18,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
 import oracle.adfmf.java.beans.PropertyChangeListener;
 import oracle.adfmf.java.beans.PropertyChangeSupport;
@@ -178,6 +181,12 @@ public class ClassMappingDescriptor
     return value;
   }
 
+  /**
+   * returns the value of show-web-service-invocation-errors in persistenceMapping.xml. If the value is false
+   * it also checks for EL expression #{applicationScope.showWebServiceInvocationErrors} allowing you to
+   * temporarily show web service invocation errors at runtime.
+   * @return
+   */
     public boolean isShowWebServiceInvocationErrors()
     {
       boolean value = true;
@@ -190,6 +199,14 @@ public class ClassMappingDescriptor
           value = "true".equals(node.getText());
         }
       } 
+      if (!value)
+      {
+        Object elValue = AdfmfJavaUtilities.evaluateELExpression("#{applicationScope.showWebServiceInvocationErrors}");
+        if (elValue!=null)
+        {
+          value = (Boolean)elValue; 
+        }      
+      }
       return value;
     }
     

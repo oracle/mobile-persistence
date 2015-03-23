@@ -33,6 +33,7 @@ public class AttributeInfo
   private String payloadName;
   private AttributeInfo parentReferenceAttribute;
   private DataObjectInfo parentDataObject;
+  private String dateFormat;
 
 
   static
@@ -282,5 +283,15 @@ public class AttributeInfo
   public boolean isPersisted()
   {
     return persisted;
+  }
+
+  public void setDateFormat(String dateFormat)
+  {
+    this.dateFormat = dateFormat;
+  }
+
+  public String getDateFormat()
+  {
+    return dateFormat;
   }
 }

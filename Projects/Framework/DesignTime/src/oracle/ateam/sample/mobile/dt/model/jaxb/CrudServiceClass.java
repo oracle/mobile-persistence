@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;attribute name="remoteWriteInBackground" type="{http://www.w3.org/2001/XMLSchema}boolean" default="true" />
  *       &lt;attribute name="showWebServiceInvocationErrors" type="{http://www.w3.org/2001/XMLSchema}boolean" default="true" />
  *       &lt;attribute name="autoQuery" type="{http://www.w3.org/2001/XMLSchema}boolean" default="true" />
+ *       &lt;attribute name="enableOfflineTransactions" type="{http://www.w3.org/2001/XMLSchema}boolean" default="true" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -54,6 +55,8 @@ public class CrudServiceClass
   protected Boolean showWebServiceInvocationErrors;
   @XmlAttribute(name = "autoQuery")
   protected Boolean autoQuery;
+  @XmlAttribute(name = "enableOfflineTransactions")
+  protected Boolean enableOfflineTransactions;
 
   /**
    * Gets the value of the className property.
@@ -296,6 +299,39 @@ public class CrudServiceClass
   public void setAutoQuery(Boolean value)
   {
     this.autoQuery = value;
+  }
+
+  /**
+   * Gets the value of the enableOfflineTransactions property.
+   *
+   * @return
+   *     possible object is
+   *     {@link Boolean }
+   *
+   */
+  public boolean isEnableOfflineTransactions()
+  {
+    if (enableOfflineTransactions == null)
+    {
+      return true;
+    }
+    else
+    {
+      return enableOfflineTransactions;
+    }
+  }
+
+  /**
+   * Sets the value of the enableOfflineTransactions property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link Boolean }
+   *
+   */
+  public void setEnableOfflineTransactions(Boolean value)
+  {
+    this.enableOfflineTransactions = value;
   }
 
 }

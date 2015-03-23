@@ -2,6 +2,8 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 18-mar-2015   Steven Davelaar
+ 1.2           Added method doSoapCallTimings
  18-jun-2014   Steven Davelaar
  1.1           Fix for change in how invokeDataControlMethod returns the data!
  07-jan-2014   Steven Davelaar
@@ -14,36 +16,29 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-
 import java.util.Map;
 
 import oracle.adfmf.dc.ws.soap.SoapGenericType;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
-import oracle.adfmf.framework.exception.AdfInvocationException;
-import oracle.adfmf.framework.exception.AdfInvocationRuntimeException;
 import oracle.adfmf.util.AttributeInfo;
 import oracle.adfmf.util.GenericType;
 
-import oracle.ateam.sample.mobile.persistence.cache.EntityCache;
 import oracle.ateam.sample.mobile.persistence.db.BindParamInfo;
 import oracle.ateam.sample.mobile.persistence.metadata.AttributeMapping;
-import oracle.ateam.sample.mobile.persistence.metadata.AttributeMappingDirect;
 import oracle.ateam.sample.mobile.persistence.metadata.AttributeMappingOneToMany;
 import oracle.ateam.sample.mobile.persistence.metadata.ClassMappingDescriptor;
 import oracle.ateam.sample.mobile.persistence.metadata.Method;
 import oracle.ateam.sample.mobile.persistence.metadata.MethodParameter;
 import oracle.ateam.sample.mobile.persistence.metadata.ObjectPersistenceMapping;
 import oracle.ateam.sample.mobile.persistence.model.Entity;
-import oracle.ateam.sample.mobile.persistence.service.DataSynchAction;
-import oracle.ateam.sample.mobile.persistence.util.EntityUtils;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.MessageUtils;
 
 
 /**
  * Implementation of persistence manager interface that provides basic CRUD operations using
- * a web service data control. This class uses the AdfmfJavaUtilities.invokeDataControlMethod method to 
+ * a web service data control. This class uses the AdfmfJavaUtilities.invokeDataControlMethod method to
  * invoke the web service. To be able to use this class, you first need to run the Web Service Data Control wizard
  * in JDeveloper, even if you do not intend to do drag-and-drop actions using the web service data control.
  * You also need to make sure that an instance of the data control is defined in the dataControlUsages
@@ -93,6 +88,7 @@ public class DataControlPersistenceManager
     {
       return entities;
     }
+    long startTime = System.currentTimeMillis();
     try
     {
       List paramNames = new ArrayList();
@@ -104,6 +100,7 @@ public class DataControlPersistenceManager
         GenericType result =
           (GenericType) AdfmfJavaUtilities.invokeDataControlMethod(method.getDataControlName(), null, method.getName(),
                                                                    paramNames, paramValues, paramTypes);
+      doSoapCallTimings(method.getDataControlName(),method.getName(),startTime,null);
         // result returns first row, NOT the collection since M15!
         // Need to get to the parent to get the collection!!!
         result = result!=null && result.getParent()!=null ? result.getParent() : result;
@@ -119,11 +116,30 @@ public class DataControlPersistenceManager
     }
     catch (Exception e)
     {
+      doSoapCallTimings(method.getDataControlName(),method.getName(),startTime,e);
       handleWebServiceInvocationError(descriptor, e, false);      
       return null;
     }
   }
 
+  /**
+   * Show info dialog with duration of SOAP service call when showWebServiceTimings is set to true in
+   * persistence-mapping.xml, or has been turned on at runtime by setting #{applicationScope.showWebServiceTimings}
+   * to true.
+   * @param dataControlName
+   * @param methodName
+   * @param startTime
+   * @param exception
+   */
+  protected void doSoapCallTimings(String dataControlName, String methodName, long startTime, Exception exception)
+  {
+    long endTime = System.currentTimeMillis();
+    if (ObjectPersistenceMapping.getInstance().isShowWebServiceTimings())
+    {
+      long duration = endTime-startTime;
+      MessageUtils.handleMessage("info", dataControlName+"."+methodName+": "+duration+" ms");
+    }  
+  }
 
   /**
    * Performs actual web service call using the method information passed in.
@@ -697,4 +713,5 @@ public class DataControlPersistenceManager
       handleWebServiceInvocationError(descriptor, e, true);
     }
   }
+
 }

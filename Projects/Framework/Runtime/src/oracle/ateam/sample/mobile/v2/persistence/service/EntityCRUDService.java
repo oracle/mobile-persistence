@@ -2,6 +2,18 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  19-mar-2015   Steven Davelaar
+  1.1           - Changed implementation of getCanonical: now executed in background when
+                remote-read-in-background is set to true in persistence-mapping.xml. Added overloaded
+                getCanonical method with additional argument to override the remote-read-in-background
+                setting in persistence-mapping.xml. Added executeGetCanonical method to easily add behavior
+                when executed in background.
+                - Added call to EntityUtils.refreshCurrentEntity in refreshEntityList method
+                to ensure UI is also refreshed correctly when child entities are shown in form layout 
+                - Added support for enableOfflineTransactions flag: report remote transaction errors
+                  immediately when offline transactions are disabled (using new method reportFailedTransaction).
+                - Call EntityCRUDService.synchronize convenience method in various methods instead of directly calling
+                getDataSynchManager.synchronize so it will be easier to customize sync behavior. 
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
@@ -11,15 +23,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-
 import oracle.adf.model.datacontrols.device.DeviceManagerFactory;
 
-import oracle.adfmf.bindings.dbf.AmxIteratorBinding;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
-
 import oracle.adfmf.util.Utility;
 
+import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.util.MessageUtils;
+import oracle.ateam.sample.mobile.util.StringUtils;
+import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.v2.persistence.cache.EntityCache;
 import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.manager.RemotePersistenceManager;
@@ -28,16 +41,12 @@ import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor
 import oracle.ateam.sample.mobile.v2.persistence.model.ChangeEventSupportable;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
-import oracle.ateam.sample.mobile.util.ADFMobileLogger;
-import oracle.ateam.sample.mobile.util.MessageUtils;
-import oracle.ateam.sample.mobile.util.StringUtils;
-import oracle.ateam.sample.mobile.util.TaskExecutor;
 
 
 /**
  * Abstract class that provides CRUD operations against two configurable persistence managers:
  * a local persistence manager and a remote persistence manager. Both persistence managers can be configured
- * per entity in the persistenceMapping.xml file.
+ * per entity in the persistence-mapping.xml file.
  * When both a local and remote persistence manager are configured,
  * then when the findAll method is called for the first time, it wll synchronize the local database with the
  * remote data source. In persistenceMapping.xml, you can also specify whether the remote CRUD actions are performed
@@ -60,6 +69,7 @@ public abstract class EntityCRUDService<E extends Entity>
   private int lastNewEntityIndex = -1;
   private boolean autoGeneratePrimaryKey = true;
   private boolean showWebServiceInvocationErrors = false;
+  private boolean offlineTransactionsEnabled = true;
 
 
   private transient DataSynchManager dataSynchManager;
@@ -274,7 +284,13 @@ public abstract class EntityCRUDService<E extends Entity>
   }
 
   /**
-   * Insert, update or remove an entity, or perform a custom action using the remote persistence manager
+   * Insert, update or remove an entity, or perform a custom action using the remote persistence manager.
+   * If CRUD or custom action fails because the device is offline or the service call fails for some reason,  
+   * and offline transactions are enabled, the data sync action will be saved for later execution and the end 
+   * user will not see an error message: the next time the end user tries to perform a remote data action, 
+   * these pending data sync actions will be replayed first.
+   * If offline transactions are disabled, the error message will be displayed immediately to the end user 
+   * (by calling method reportFailedTransaction), and the transaction is "lost", it will not be saved nor retried later.
    * @param dataSynchAction the sync action
    */
   protected void writeEntityRemote(DataSynchAction dataSynchAction)
@@ -288,16 +304,40 @@ public abstract class EntityCRUDService<E extends Entity>
     dataSynchAction.setLastSynchAttempt(new Date());
     dataSynchAction.setLastSynchError(isOnline()?
                                       (getDataSynchManager().isDataSynchRunning()?
-                                       "Previous data synchronization still in progress": null): "Device offline");
-    getDataSynchManager().registerDataSynchAction(dataSynchAction);
-    if (isOnline())
+                                       "Previous data synchronization still in progress": null): "Device is offline");
+    if (dataSynchAction.getLastSynchError()!=null && !isOfflineTransactionsEnabled())
     {
-      getDataSynchManager().synchronize(isDoRemoteWriteInBackground());
+      reportFailedTransaction(dataSynchAction);
+    }
+    else
+    {
+      getDataSynchManager().registerDataSynchAction(dataSynchAction);
+      if (isOnline())
+      {
+        synchronize(isDoRemoteWriteInBackground());
+      }      
     }
   }
 
   /**
-   * Callback method called by DataSynchronizer when dataSychronization action is done
+   * This method is called by the framework under following conditions
+   * - user performs an action that triggers a transaction against a remote persistence manager
+   * - offline transactions are disabled (enableOfflineTransactions=false in persistence-mapping.xml)
+   * - the device is offline or the remote service call fails.
+   * This method will take the error message recorded against the data sync action and present it to the
+   * end user.
+   * @param dataSynchAction
+   */
+  protected void reportFailedTransaction(DataSynchAction dataSynchAction)
+  {
+    MessageUtils.handleError(dataSynchAction.getLastSynchError());
+  }
+
+  /**
+   * Callback method called by DataSynchronizer when dataSychronization action is done. It contains a list of succeeded
+   * and failed data sync actions. You can override this method to add custom logic after data synchronization has taken place.
+   * For example, you could warn the end user that one or more transactions have failed and will be re-tried later, or you can
+   * inform them that all pending data sync actions have been processed successfully.
    * @param succeededDataSynchActions
    * @param failedDataSynchActions
    */
@@ -435,12 +475,13 @@ public abstract class EntityCRUDService<E extends Entity>
     getProviderChangeSupport().fireProviderRefresh(getEntityListName());
     // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
     // a list view. 
-    EntityUtils.refreshIteratorBinding(getEntityListName()+"Iterator");
+    EntityUtils.refreshCurrentEntity(getEntityListName(),getEntityList(),getProviderChangeSupport());
     if (AdfmfJavaUtilities.isBackgroundThread())
     {
       AdfmfJavaUtilities.flushDataChangeEvent();
     }
   }
+
 
   /**
    * Set autoCommit flag. When set to true, the local DBPersistenceManager will issue a commit after each
@@ -579,7 +620,7 @@ public abstract class EntityCRUDService<E extends Entity>
         , () -> {
                   // auto synch any pending actions first, pass false for inBackground because
                   // we want to proces pending actions before we do remote read
-                  getDataSynchManager().synchronize(false);
+                  synchronize(false);
                   List<E> entities = executeRemoteFindAll();
                   if (entities != null)
                   {
@@ -615,7 +656,7 @@ public abstract class EntityCRUDService<E extends Entity>
         , () -> {
                   // auto synch any pending actions first, pass false for inBackground because
                   // we want to proces pending actions before we do remote read
-                  getDataSynchManager().synchronize(false);
+                  synchronize(false);
                   List<E> entities = executeRemoteFindAllInParent(parent, accessorAttribute);
                   if (entities != null)
                   {
@@ -652,7 +693,7 @@ public abstract class EntityCRUDService<E extends Entity>
         , () -> {
                   // auto synch any pending actions first, pass false for inBackground because
                   // we are already running in background thread
-                  getDataSynchManager().synchronize(false);
+                  synchronize(false);
                   List<E> entities = executeRemoteFind(searchValue);
                   if (entities != null)
                   {
@@ -826,33 +867,55 @@ public abstract class EntityCRUDService<E extends Entity>
   /**
    * Invokes the getCanonical method on the remote persistence manager if this has not happened yet
    * for this instance during this application session. The corresponding row in the local database is also updated if
-   * the entity is persistable. Note that this method ignores the setting of remote-read-in-background property
-   * in persistenceMapping.xml, this method is always executed in the foreground because the user typically
-   * wants to see the additional entity data immediately
+   * the entity is persistable. The method is executed in foreground.
    * @param entity
    */
   protected void getCanonical(Entity entity)
+  {
+    getCanonical(entity,false);
+  }
+  
+  /**
+   * Invokes the getCanonical method on the remote persistence manager if this has not happened yet
+   * for this instance during this application session. The corresponding row in the local database is also updated if
+   * the entity is persistable. The method is executed in background when param executeInBackground is set to true.
+   * The UI will be refreshed correctly when background call is finished.
+   * @param entity
+   * @param executeInBackground
+   */
+  protected void getCanonical(Entity entity, boolean executeInBackground)
   {
     if (isOnline() && getRemotePersistenceManager() != null && !entity.canonicalGetExecuted())
     {      
       // immediately set flag to false, so we can call this method from some get Attribute method without
       // causing endless loop
       entity.setCanonicalGetExecuted(true);
-      boolean oldValue = isDoRemoteReadInBackground();
-      try
-      {
-       setDoRemoteReadInBackground(false);
-       getRemotePersistenceManager().getCanonical(entity);
-     }
-      finally
-      {
-        setDoRemoteReadInBackground(oldValue);
-      }
-      if (getLocalPersistenceManager() != null && ClassMappingDescriptor.getInstance(getEntityClass()).isPersisted())
-      {
-        getLocalPersistenceManager().mergeEntity(entity, true);
-      }
+
+      TaskExecutor.getInstance().execute(executeInBackground
+          , () -> {
+                    executeGetCanonical(entity);                
+                    if (executeInBackground)
+                    {
+                      AdfmfJavaUtilities.flushDataChangeEvent();
+                    }
+                  });    
     }
+  }
+
+  /**
+   * Executes getCanonical method against remote persistence manager.
+   * Convenience method that you can override to perform additional actions before or after. 
+   * Note that this method is executed in the background if getCanonical is called with executeInBackground set to true.
+   * @return
+   */
+  protected void executeGetCanonical(Entity entity)
+  {
+    getRemotePersistenceManager().getCanonical(entity);
+    if (getLocalPersistenceManager() != null && ClassMappingDescriptor.getInstance(getEntityClass()).isPersisted())
+    {
+      getLocalPersistenceManager().mergeEntity(entity, true);
+    }
+    EntityUtils.refreshCurrentEntity(getEntityListName(),getEntityList(),getProviderChangeSupport());                          
   }
 
 
@@ -903,6 +966,7 @@ public abstract class EntityCRUDService<E extends Entity>
     setAutoGeneratePrimaryKey(descriptor.isAutoIncrementPrimaryKey());
     setDoRemoteReadInBackground(descriptor.isRemoteReadInBackground());
     setShowWebServiceInvocationErrors(descriptor.isShowWebServiceInvocationErrors());
+    setOfflineTransactionsEnabled(descriptor.isEnableOfflineTransactions());
   }
 
   protected Object getClassInstance(String className)
@@ -944,6 +1008,16 @@ public abstract class EntityCRUDService<E extends Entity>
   public boolean isShowWebServiceInvocationErrors()
   {
     return showWebServiceInvocationErrors;
+  }
+
+  public void setOfflineTransactionsEnabled(boolean offlineTransactionsEnabled)
+  {
+    this.offlineTransactionsEnabled = offlineTransactionsEnabled;
+  }
+
+  public boolean isOfflineTransactionsEnabled()
+  {
+    return offlineTransactionsEnabled;
   }
 
 }

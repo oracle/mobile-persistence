@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  19-mar-2015   Steven Davelaar
+  1.2           Added method refreshCurrentEntity
   20-jan-2015   Steven Davelaar
   1.1           Fixed bug in getLocalPersistenceManager, local pm might not be set against (child) descriptor
   08-jan-2015   Steven Davelaar
@@ -27,6 +29,7 @@ import oracle.adfmf.bindings.dbf.AmxBindingContext;
 import oracle.adfmf.bindings.dbf.AmxIteratorBinding;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
+import oracle.adfmf.java.beans.ProviderChangeSupport;
 import oracle.adfmf.util.Utility;
 
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
@@ -143,8 +146,13 @@ public class EntityUtils
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
     if (columnValue instanceof String && attrType.isAssignableFrom(Date.class))
     {
+      // return attr date format instead of descriptor dateTime. If attr dateFormat is not set in
+      // persistence-mapping.xml, it will return the descritor dateTime format anyway
+//      return DateUtils.convertToDate(attrType, (String) columnValue, descriptor.getDateFormat(),
+//                                     descriptor.getDateTimeFormat());
+      AttributeMapping am = descriptor.findAttributeMappingByName(attrName);
       return DateUtils.convertToDate(attrType, (String) columnValue, descriptor.getDateFormat(),
-                                     descriptor.getDateTimeFormat());
+                                     am.getDateFormat());
     }
     boolean conversionNeeded = true;
     boolean valueHolder = columnValue instanceof ValueHolderInterface;
@@ -546,34 +554,52 @@ public class EntityUtils
   }
 
   /**
-   * The standard technique to refresh UI using property change and provider refresh events does NOT refresh 
-   * the UI when the UI displays a form layout instead of a list view. 
-   * Only way to refresh in case of form layout is to call refresh on iterator binding.
+   * The standard technique to refresh UI using providerChangeSupport.fireProviderRefresh only refreshes
+   * the UI correctly when a list view is used. With a form layout, we need to call
+   * providerChangeSupport.fireProviderChange("listName", rowKey, entity) to get form fields refreshed correctly.
+   * As we do not now the current row key (or index) nor current entity in the model layer, we need to access the iterator binding
+   * to find out this information.
    * Not elegant to access ViewController objects but it works, as long as the iterator binding exists.
    * That's why we have to catch any exception because the actual iterator name might be different than what we assume, 
    * in which case the developer has to override this method and use the correct iterator name.
+   *
+   * @param entityListName name of the collection attribute that needs to be refreshed. We assume the iterator binding is 
+   * named after the entityListName suffixed with "Iterator".
+   * @param entities list f entities that holds the current enity that needs to be refreshed
+   * @param providerChangeSupport instance used to invoke the fireProviderChange method
    */
-  public static void refreshIteratorBinding(String iteratorBindingName)
+  public static <E extends Entity> void refreshCurrentEntity(String entityListName, List<E> entities, ProviderChangeSupport providerChangeSupport)
   {
+    String iteratorBindingName = entityListName+"Iterator";
     try
     {
       AmxIteratorBinding ib =
           (AmxIteratorBinding) AdfmfJavaUtilities.evaluateELExpression("#{bindings."+iteratorBindingName+"}");
       if (ib!=null)
       {
-        Object rowKey = ib.getIterator().getCurrentRowKey();
-        ib.refresh();      
-        if (rowKey!=null)
-        {
-          ib.getIterator().setCurrentIndexWithKey(rowKey);          
-        }
+        // we do not want to use ib.refresh because this resets the current row to the first row, potentially
+        // firing some unwanted REST calls, instead we acll fireProviderChange passing in the current entity and row key
+        // We can only use ib.refresh when the current row is the first row, which we do, because
+        // only ib.refresh also refreshes DVT's correctly in the UI. (And when the iterator is used by a graph, the
+        // current row will typically be the first row anyway)
+         int index = ib.getIterator().getCurrentIndex();
+         if (index==0)
+         {
+           ib.refresh();
+         }
+         else if (index > -1 && index < entities.size())
+         {
+           Object rowKey = ib.getIterator().getCurrentRowKey();
+           providerChangeSupport.fireProviderChange(entityListName, rowKey, entities.get(index));             
+         }
       }
     }
     catch (Exception e)
     {
       // assumed iterator binding expression is wrong, just do nothing
-      sLog.info("Cannot refresh "+iteratorBindingName+" binding, UI might not refresh correctly when form layout is used.");      
+      sLog.info("Cannot find "+iteratorBindingName+" binding, UI might not refresh correctly when form layout is used.");      
     }
   }
+  
 
 }

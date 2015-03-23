@@ -2,6 +2,8 @@
   Copyright ? 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  19-mar-2015   Steven Davelaar
+  1.1           Modified substituteNullValuesInPayload to handle MCS null value notation
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
@@ -137,14 +139,19 @@ public class RestJSONPersistenceManager
   }
 
   /**
-   * Work around for MAF bug 18523199, replacing the {".null":true} with null.
-   * Override this method if you need another null notation
+   * This method can be used to substitute parts of the json payload before it is processed, like
+   * specific notations of null values.
+   * It includes a work around for MAF bug 18523199, replacing the {".null":true} with null.
+   * It also replaces {"@nil": "true"} with null, which is used by MCS to indicate null values.
+   * Override this method if you need another null notation or want to do some other preprocessing.
    * @param json
    * @return
    */
   protected String substituteNullValuesInPayload(String json)
   {
-    return StringUtils.substitute(json, "{\".null\":true}", "null");
+    String newJson = StringUtils.substitute(json, "{\".null\":true}", "null");
+    newJson = StringUtils.substitute(newJson, "{\"@nil\":\"true\"}", "null");
+    return newJson;
   }
 
   protected <E extends Entity> List<E> handleReadResponse(String jsonResponse, Class entityClass, String collectionElementName,
@@ -154,9 +161,10 @@ public class RestJSONPersistenceManager
                                     rowElementName,parentBindParamInfos, null, deleteAllRows);
   }
 
-  protected <E extends Entity> List<E> handleResponse(String jsonResponse, Class entityClass, String collectionElementName,
+  protected <E extends Entity> List<E> handleResponse(String json, Class entityClass, String collectionElementName,
                                     String rowElementName, List<BindParamInfo> parentBindParamInfos, E currentEntity, boolean deleteAllRows)
   {
+    String jsonResponse = substituteNullValuesInPayload(json); 
     if (deleteAllRows)
     {
       getLocalPersistenceManager().deleteAllRows(entityClass);

@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;attribute name="parentAttributeName" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="javaType" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="keyAttribute" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
+ *       &lt;attribute name="dateFormat" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/extension>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -55,6 +56,8 @@ public class DirectMapping
   protected String javaType;
   @XmlAttribute(name = "keyAttribute")
   protected Boolean keyAttribute;
+  @XmlAttribute(name = "dateFormat")
+  protected String dateFormat;
 
   /**
    * Gets the value of the columnName property.
@@ -283,6 +286,32 @@ public class DirectMapping
   public void setKeyAttribute(Boolean value)
   {
     this.keyAttribute = value;
+  }
+
+  /**
+   * Gets the value of the dateFormat property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getDateFormat()
+  {
+    return dateFormat;
+  }
+
+  /**
+   * Sets the value of the dateFormat property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setDateFormat(String value)
+  {
+    this.dateFormat = value;
   }
 
 }

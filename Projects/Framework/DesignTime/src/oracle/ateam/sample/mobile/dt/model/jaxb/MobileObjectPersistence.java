@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -22,6 +23,7 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;sequence>
  *         &lt;element ref="{http://www.oracle.com/ateam/mobile/persistenceMapping}classMappingDescriptor" maxOccurs="unbounded" minOccurs="0"/>
  *       &lt;/sequence>
+ *       &lt;attribute name="showWebServiceTimings" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -39,6 +41,8 @@ public class MobileObjectPersistence
 {
 
   protected List<ClassMappingDescriptor> classMappingDescriptor;
+  @XmlAttribute(name = "showWebServiceTimings")
+  protected Boolean showWebServiceTimings;
 
   /**
    * Gets the value of the classMappingDescriptor property.
@@ -69,6 +73,39 @@ public class MobileObjectPersistence
       classMappingDescriptor = new ArrayList<ClassMappingDescriptor>();
     }
     return this.classMappingDescriptor;
+  }
+
+  /**
+   * Gets the value of the showWebServiceTimings property.
+   *
+   * @return
+   *     possible object is
+   *     {@link Boolean }
+   *
+   */
+  public boolean isShowWebServiceTimings()
+  {
+    if (showWebServiceTimings == null)
+    {
+      return false;
+    }
+    else
+    {
+      return showWebServiceTimings;
+    }
+  }
+
+  /**
+   * Sets the value of the showWebServiceTimings property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link Boolean }
+   *
+   */
+  public void setShowWebServiceTimings(Boolean value)
+  {
+    this.showWebServiceTimings = value;
   }
 
 }

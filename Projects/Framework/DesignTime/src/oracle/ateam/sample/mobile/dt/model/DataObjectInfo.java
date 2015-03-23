@@ -79,8 +79,10 @@ public class DataObjectInfo
   private boolean persisted = false;
   private boolean existing = false;
   private String jsonSchema;
+  private AttributeInfo canonicalTriggerAttribute;
 
-//  Map<AttributeInfo,AttributeInfo> parentAttrMappings = new HashMap<AttributeInfo,AttributeInfo>();
+
+  //  Map<AttributeInfo,AttributeInfo> parentAttrMappings = new HashMap<AttributeInfo,AttributeInfo>();
     
   public DataObjectInfo(NamedDefinition accessorDef, StructureDefinition beanDef, boolean isCollection,DataObjectInfo parent)
   {
@@ -1051,4 +1053,15 @@ public class DataObjectInfo
       method.setDataObject(this);    
     }
   }
+
+  public void setCanonicalTriggerAttribute(AttributeInfo canonicalTriggerAttribute)
+  {
+    this.canonicalTriggerAttribute = canonicalTriggerAttribute;
+  }
+
+  public AttributeInfo getCanonicalTriggerAttribute()
+  {
+    return canonicalTriggerAttribute;
+  }
+
 }

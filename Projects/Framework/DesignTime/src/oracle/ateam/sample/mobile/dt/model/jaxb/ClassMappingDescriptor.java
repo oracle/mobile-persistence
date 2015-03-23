@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;attribute name="dateFormat" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="dateTimeFormat" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="orderBy" type="{http://www.w3.org/2001/XMLSchema}string" />
+ *       &lt;attribute name="canonicalTriggerAttribute" type="{http://www.w3.org/2001/XMLSchema}string" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -58,6 +59,8 @@ public class ClassMappingDescriptor
   protected String dateTimeFormat;
   @XmlAttribute(name = "orderBy")
   protected String orderBy;
+  @XmlAttribute(name = "canonicalTriggerAttribute")
+  protected String canonicalTriggerAttribute;
 
   /**
    * Gets the value of the crudServiceClass property.
@@ -298,6 +301,32 @@ public class ClassMappingDescriptor
   public void setOrderBy(String value)
   {
     this.orderBy = value;
+  }
+
+  /**
+   * Gets the value of the canonicalTriggerAttribute property.
+   *
+   * @return
+   *     possible object is
+   *     {@link String }
+   *
+   */
+  public String getCanonicalTriggerAttribute()
+  {
+    return canonicalTriggerAttribute;
+  }
+
+  /**
+   * Sets the value of the canonicalTriggerAttribute property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link String }
+   *
+   */
+  public void setCanonicalTriggerAttribute(String value)
+  {
+    this.canonicalTriggerAttribute = value;
   }
 
 }

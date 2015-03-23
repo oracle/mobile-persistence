@@ -2,6 +2,8 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
  $revision_history$
+ 20-mar-2015   Steven Davelaar
+ 1.1           Added method doRestCallTiming
  08-jan-2015   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -37,6 +39,7 @@ import oracle.ateam.sample.mobile.v2.persistence.metadata.ObjectPersistenceMappi
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 import oracle.ateam.sample.mobile.v2.security.OAuthTokenManager;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.util.MessageUtils;
 import oracle.ateam.sample.mobile.util.StringUtils;
 import oracle.ateam.sample.mobile.v2.persistence.db.BindParamInfo;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
@@ -87,7 +90,11 @@ public abstract class RestPersistenceManager
     if (Date.class.isAssignableFrom(javaType))
     {
       Date date = (Date) value;
-      String format = attrMapping.getClassMappingDescriptor().getDateFormat();
+// use dateTimeFormat so we don't loose any time component. the attribute data format first checks whether
+// the attribute has its own dateFormat property, if it doesn't it returns the dateTimeFormat of the classMappingDescriptor
+// and if that one is not set, the date format of the class mapping descriptor      
+//      String format = attrMapping.getClassMappingDescriptor().getDateFormat();
+      String format = attrMapping.getDateFormat();
       SimpleDateFormat sdf = new SimpleDateFormat(format);
       stringValue = sdf.format(date);
     }
@@ -281,17 +288,45 @@ public abstract class RestPersistenceManager
     uri = isGET? uri + (payloadSet? "?" + payload: ""): uri;
     restService.setRequestURI(uri);
     String response = "";
+    long startTime = System.currentTimeMillis();
     try
     {
       response = restService.send((isGET? null: payload));
+      doRestCallTiming(restService.getRequestType(),uri,payload,startTime,null);
       setLastResponseHeaders(restService.getResponseHeaders());
       return response;
     }
     catch (Exception e)
     {
+      doRestCallTiming(restService.getRequestType(),uri,payload,startTime,e);
       setLastResponseHeaders(restService.getResponseHeaders());
       return handleInvokeRestServiceError(requestType,uri,e);
     }
+  }
+
+  /**
+   * Show info dialog with duration of REST service call when showWebServiceTimings is set to true in
+   * persistence-mapping.xml, or has been turned on at runtime by setting #{applicationScope.showWebServiceTimings}
+   * to true.
+   * @param method
+   * @param uri
+   * @param payload
+   * @param startTime
+   * @param exception
+   */
+  protected void doRestCallTiming(String method, String uri,String payload, long startTime,Exception exception)
+  {
+    long endTime = System.currentTimeMillis();
+    if (ObjectPersistenceMapping.getInstance().isShowWebServiceTimings())
+    {
+      long duration = endTime-startTime;
+      String request = method+" "+uri;
+      MessageUtils.handleMessage("info", request+": "+duration+" ms");
+//      DBPersistenceManager pm = new DBPersistenceManager();
+//      Integer maxId = (Integer) pm.getMaxColumnValue("TIMINGS", "ID");
+//      String sql = "INSERT INTO WS_CALLS (ID, REQUEST, DURATION) VALUES("+maxId+1+",'"+request+"',"+duration+")";
+//      pm.executeSqlDml(sql, new ArrayList<BindParamInfo>(), true);      
+    }  
   }
   
   /**

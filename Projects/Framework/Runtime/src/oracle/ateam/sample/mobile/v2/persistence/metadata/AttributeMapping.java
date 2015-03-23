@@ -20,7 +20,7 @@ public abstract class AttributeMapping
   extends XmlAnyDefinition
 {
   private ClassMappingDescriptor classMappingDescriptor;
-  private boolean primaryKeyMapping = false;;
+  private boolean primaryKeyMapping = false;
 
   public AttributeMapping(XmlAnyDefinition xmlAnyDefinition, String[] strings, String[] strings1)
   {
@@ -41,9 +41,15 @@ public abstract class AttributeMapping
   {
     return getAttributeStringValue("attributeName");    
   }
+  
+  public String getDateFormat()
+  {
+    String format = getAttributeStringValue("dateFormat");    
+    return format!=null ? format : classMappingDescriptor.getDateTimeFormat();
+  }
 
   /**
-   *  Returns the value of element <payload-attribute-name>. 
+   *  Returns the value of element payloadAttributeName. 
    * @return
    */
   public String getAttributeNameInPayload()

@@ -2,6 +2,8 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 20-mar-2015   Steven Davelaar
+ 1.9           Added method doRestCallTiming
  29-dec-2014   Steven Davelaar
  1.8           - Added method handleInvokeRestServiceError to make it easier to overwrite default
                exception handling behavior when an exception is thrown by RestServiceAdapter.
@@ -62,6 +64,7 @@ import oracle.ateam.sample.mobile.persistence.metadata.ObjectPersistenceMapping;
 import oracle.ateam.sample.mobile.persistence.model.Entity;
 import oracle.ateam.sample.mobile.security.OAuthTokenManager;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.util.MessageUtils;
 import oracle.ateam.sample.mobile.util.StringUtils;
 
 /**
@@ -308,18 +311,42 @@ public abstract class RestPersistenceManager
     uri = isGET? uri + (payloadSet? "?" + payload: ""): uri;
     restService.setRequestURI(uri);
     String response = "";
+    long startTime = System.currentTimeMillis();
     try
     {
       response = restService.send((isGET? null: payload));
+      doRestCallTiming(restService.getRequestType(),uri,payload,startTime,null);
       setLastResponseHeaders(restService.getResponseHeaders());
       return response;
     }
     catch (Exception e)
     {
+      doRestCallTiming(restService.getRequestType(),uri,payload,startTime, e);
       setLastResponseHeaders(restService.getResponseHeaders());
       return handleInvokeRestServiceError(requestType,uri,e);
     }
   }
+  
+  /**
+   * Show info dialog with duration of REST service call when showWebServiceTimings is set to true in
+   * persistence-mapping.xml, or has been turned on at runtime by setting #{applicationScope.showWebServiceTimings}
+   * to true.
+   * @param method
+   * @param uri
+   * @param payload
+   * @param startTime
+   * @param exception
+   */
+  protected void doRestCallTiming(String method, String uri,String payload, long startTime,Exception exception)
+  {
+    long endTime = System.currentTimeMillis();
+    if (ObjectPersistenceMapping.getInstance().isShowWebServiceTimings())
+    {
+      long duration = endTime-startTime;
+      MessageUtils.handleMessage("info", method+" "+uri+": "+duration+" ms");
+    }  
+  }
+  
   
   /**
    * This method is called when the REST service call returns a status other than 200. The default 
@@ -825,6 +852,7 @@ public abstract class RestPersistenceManager
     return lastResponseHeaders;
   }
 
+
   protected abstract String getSerializedDataObject(Entity entity, String collectionElementName, String rowElementName,
                                                     boolean deleteRow);
 
@@ -838,4 +866,5 @@ public abstract class RestPersistenceManager
   protected abstract List handleResponse(String restResponse, Class entityClass, String collectionElementName,
                                              String rowElementName, List parentBindParamInfos, Entity currentEntity,
                                              boolean deleteLocalRowsOnFindAll);
+
 }
