@@ -78,6 +78,7 @@ public class DataObjectInfo
   private boolean xmlPayload = true;
   private boolean persisted = false;
   private boolean existing = false;
+  private boolean createdFromDBTable = false;
   private String jsonSchema;
   private AttributeInfo canonicalTriggerAttribute;
 
@@ -122,6 +123,7 @@ public class DataObjectInfo
 
   public DataObjectInfo(JDeveloperTable table)
   {
+    this.createdFromDBTable = true;
     this.collection = true;
     this.className = StringUtils.toCamelCase(table.getName());
     this.className = initClassName(className);
@@ -1004,7 +1006,8 @@ public class DataObjectInfo
   
   public boolean isGenerateServiceClass()
   {
-    return getFindAllMethod()!= null
+    return createdFromDBTable 
+    ||  getFindAllMethod()!= null
     || getFindMethod()!=null
     || getGetCanonicalMethod()!=null
     || getFindAllInParentMethods().size()>0
