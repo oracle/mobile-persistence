@@ -369,8 +369,8 @@ public abstract class RestPersistenceManager
     String rootError = e.getLocalizedMessage();
     String causeError = e.getCause() != null? e.getCause().getLocalizedMessage() : null;
     // the cause exception can have a null or "" message, in that case we throw the root exception message
-    String error = (causeError==null || "".equals(causeError)) ? rootError : causeError;
-    String message = "Error invoking REST " + requestType + " service " + uri + " error: " + error;
+    String error = (causeError==null || "".equals(causeError)) ? rootError : rootError + " Details: "+causeError;
+    String message = "Error invoking REST " + requestType + " service " + uri + " : " + error;
     sLog.severe(message);
     // throw exception so any failed data synch actions can be registsred and processed later
     throw new AdfException(message, AdfException.ERROR);    

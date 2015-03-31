@@ -376,4 +376,5 @@ public abstract class AbstractRemotePersistenceManager
       throw new AdfException(t);
     }
   }
+
 }
