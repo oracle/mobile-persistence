@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<pageDefinition xmlns="http://xmlns.oracle.com/adfm/uimodel" version="12.1.3.13.52" id="WebServiceCallPageDef"
+                Package="oracle.ateam.ampa.logging.pageDefs">
+  <parameters/>
+  <executables>
+    <variableIterator id="variables"/>
+    <iterator id="WebServiceCallServiceIterator" Binds="root" DataControl="WebServiceCallService" RangeSize="25"/>
+    <accessorIterator id="webServiceCallsIterator" MasterBinding="WebServiceCallServiceIterator" Binds="webServiceCalls"
+                      BeanClass="oracle.ateam.sample.mobile.logging.WebServiceCall" DataControl="WebServiceCallService"
+                      RangeSize="25"/>
+  </executables>
+  <bindings>
+    <attributeValues id="isNewEntity" IterBinding="webServiceCallsIterator">
+      <AttrNames>
+        <Item Value="isNewEntity"/>
+      </AttrNames>
+    </attributeValues>
+    <attributeValues id="id" IterBinding="webServiceCallsIterator">
+      <AttrNames>
+        <Item Value="id"/>
+      </AttrNames>
+    </attributeValues>
+    <attributeValues id="connection" IterBinding="webServiceCallsIterator">
+      <AttrNames>
+        <Item Value="connection"/>
+      </AttrNames>
+    </attributeValues>
+    <attributeValues id="request" IterBinding="webServiceCallsIterator">
+      <AttrNames>
+        <Item Value="request"/>
+      </AttrNames>
+    </attributeValues>
+    <attributeValues id="method" IterBinding="webServiceCallsIterator">
+      <AttrNames>
+        <Item Value="method"/>
+      </AttrNames>
+    </attributeValues>
+    <attributeValues id="requestHeaders" IterBinding="webServiceCallsIterator">
+      <AttrNames>
+        <Item Value="requestHeaders"/>
+      </AttrNames>
+    </attributeValues>
+    <attributeValues id="duration" IterBinding="webServiceCallsIterator">
+      <AttrNames>
+        <Item Value="duration"/>
+      </AttrNames>
+    </attributeValues>
+    <attributeValues id="requestPayload" IterBinding="webServiceCallsIterator">
+      <AttrNames>
+        <Item Value="requestPayload"/>
+      </AttrNames>
+    </attributeValues>
+    <attributeValues id="responsePayload" IterBinding="webServiceCallsIterator">
+      <AttrNames>
+        <Item Value="responsePayload"/>
+      </AttrNames>
+    </attributeValues>
+    <attributeValues id="errorMessage" IterBinding="webServiceCallsIterator">
+      <AttrNames>
+        <Item Value="errorMessage"/>
+      </AttrNames>
+    </attributeValues>
+    <attributeValues id="timestamp" IterBinding="webServiceCallsIterator">
+      <AttrNames>
+        <Item Value="timestamp"/>
+      </AttrNames>
+    </attributeValues>
+    <action IterBinding="webServiceCallsIterator" id="Previous" RequiresUpdateModel="true" Action="previous"/>
+    <action IterBinding="webServiceCallsIterator" id="Next" RequiresUpdateModel="true" Action="next"/>
+  </bindings>
+</pageDefinition>

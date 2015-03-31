@@ -138,5 +138,25 @@ public class ObjectPersistenceMapping
     }
     return value;
   }
+
+  /**
+   * Returns the value of logWebServiceCalls in persistence-mapping.xml. If the value is false
+   * it also checks for EL expression #{applicationScope.logWebServiceCalls} allowing you to
+   * temporarily switch on logging of ws calls at runtime.
+   * @return
+   */
+  public boolean isLogWebServiceCalls()
+  {
+    boolean value = getAttributeBooleanValue("logWebServiceCalls",false);
+    if (!value)
+    {
+      Object elValue = AdfmfJavaUtilities.evaluateELExpression("#{applicationScope.logWebServiceCalls}");
+      if (elValue!=null)
+      {
+        value = (Boolean)elValue; 
+      }      
+    }
+    return value;
+  }
   
 }

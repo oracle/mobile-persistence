@@ -951,7 +951,7 @@ public abstract class EntityCRUDService
   protected void executeGetCanonical(Entity entity)
   {
     getRemotePersistenceManager().getCanonical(entity);
-    if (getLocalPersistenceManager() != null && oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor.getInstance(getEntityClass()).isPersisted())
+    if (getLocalPersistenceManager() != null && ClassMappingDescriptor.getInstance(getEntityClass()).isPersisted())
     {
       getLocalPersistenceManager().mergeEntity(entity, true);
     }

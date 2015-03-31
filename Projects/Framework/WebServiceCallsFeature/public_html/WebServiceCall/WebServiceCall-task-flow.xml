@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="US-ASCII" ?>
+<adfc-mobile-config xmlns="http://xmlns.oracle.com/adf/controller" version="1.0">
+  <task-flow-definition id="WebServiceCall-task-flow">
+    <default-activity>WebServiceCallList</default-activity>
+    <view id="WebServiceCallList">
+      <page>/WebServiceCall/WebServiceCallList.amx</page>
+    </view>
+    <view id="WebServiceCall">
+      <page>/WebServiceCall/WebServiceCall.amx</page>
+    </view>
+    <control-flow-rule id="__1">
+      <from-activity-id>WebServiceCallList</from-activity-id>
+      <control-flow-case id="__2">
+        <from-outcome>WebServiceCall</from-outcome>
+        <to-activity-id>WebServiceCall</to-activity-id>
+      </control-flow-case>
+    </control-flow-rule>
+  </task-flow-definition>
+</adfc-mobile-config>

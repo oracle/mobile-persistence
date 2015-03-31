@@ -2,6 +2,9 @@
   Copyright ? 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  24-mar-2015   Steven Davelaar
+  1.2           removed deletion of local rows from handleResponse method. Now done in findAll, findAllInParent methods
+                in RestPersistenceManager
   19-mar-2015   Steven Davelaar
   1.1           Modified substituteNullValuesInPayload to handle MCS null value notation
   08-jan-2015   Steven Davelaar
@@ -154,6 +157,17 @@ public class RestJSONPersistenceManager
     return newJson;
   }
 
+  /**
+   * Handle JSON response payload from read methods. 
+   * @param <E>
+   * @param jsonResponse
+   * @param entityClass
+   * @param collectionElementName
+   * @param rowElementName
+   * @param parentBindParamInfos
+   * @param deleteAllRows no longer used (delete performed in calling method)
+   * @return
+   */
   protected <E extends Entity> List<E> handleReadResponse(String jsonResponse, Class entityClass, String collectionElementName,
                                     String rowElementName, List<BindParamInfo> parentBindParamInfos, boolean deleteAllRows)
   {
@@ -161,14 +175,23 @@ public class RestJSONPersistenceManager
                                     rowElementName,parentBindParamInfos, null, deleteAllRows);
   }
 
+  /**
+   * Process JSON response payload for all REST resources called through a CRUD or custom method as configured in
+   * persistence-mapping.xml
+   * @param <E>
+   * @param json
+   * @param entityClass
+   * @param collectionElementName
+   * @param rowElementName
+   * @param parentBindParamInfos
+   * @param currentEntity
+   * @param deleteAllRows no longer used (delete performed in calling method)
+   * @return
+   */
   protected <E extends Entity> List<E> handleResponse(String json, Class entityClass, String collectionElementName,
                                     String rowElementName, List<BindParamInfo> parentBindParamInfos, E currentEntity, boolean deleteAllRows)
   {
     String jsonResponse = substituteNullValuesInPayload(json); 
-    if (deleteAllRows)
-    {
-      getLocalPersistenceManager().deleteAllRows(entityClass);
-    }
     List<E> entities = new ArrayList<E>();
     if (!jsonResponse.startsWith("{") && !jsonResponse.startsWith("["))
     {

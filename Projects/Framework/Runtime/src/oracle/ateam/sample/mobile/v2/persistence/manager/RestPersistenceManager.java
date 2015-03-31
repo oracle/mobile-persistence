@@ -3,7 +3,8 @@
   
  $revision_history$
  20-mar-2015   Steven Davelaar
- 1.1           Added method doRestCallTiming
+ 1.1           - Added method logRestCall
+               - Now deleting local rows in findAll and findAllInParent methods (was done in handleResponse before)
  08-jan-2015   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -28,6 +29,8 @@ import oracle.adfmf.framework.exception.AdfException;
 import oracle.adfmf.util.Utility;
 import oracle.adfmf.util.XmlAnyDefinition;
 
+import oracle.ateam.sample.mobile.logging.WebServiceCall;
+import oracle.ateam.sample.mobile.logging.WebServiceCallService;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingOneToMany;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
@@ -43,6 +46,7 @@ import oracle.ateam.sample.mobile.util.MessageUtils;
 import oracle.ateam.sample.mobile.util.StringUtils;
 import oracle.ateam.sample.mobile.v2.persistence.db.BindParamInfo;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
+import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 
 /**
  * Abstract class that provides generic implementation of some of the methods of the
@@ -291,14 +295,14 @@ public abstract class RestPersistenceManager
     long startTime = System.currentTimeMillis();
     try
     {
-      response = restService.send((isGET? null: payload));
-      doRestCallTiming(restService.getRequestType(),uri,payload,startTime,null);
+      response = restService.send((isGET? null: payload));      
+      logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,response,startTime,null);
       setLastResponseHeaders(restService.getResponseHeaders());
       return response;
     }
     catch (Exception e)
     {
-      doRestCallTiming(restService.getRequestType(),uri,payload,startTime,e);
+      logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,null,startTime,e);
       setLastResponseHeaders(restService.getResponseHeaders());
       return handleInvokeRestServiceError(requestType,uri,e);
     }
@@ -308,24 +312,44 @@ public abstract class RestPersistenceManager
    * Show info dialog with duration of REST service call when showWebServiceTimings is set to true in
    * persistence-mapping.xml, or has been turned on at runtime by setting #{applicationScope.showWebServiceTimings}
    * to true.
+   * Log web service call details
    * @param method
    * @param uri
    * @param payload
    * @param startTime
    * @param exception
    */
-  protected void doRestCallTiming(String method, String uri,String payload, long startTime,Exception exception)
+  protected void logRestCall(String connection, String method, String uri, String requestHeaders, String requestPayload, String responsePayload, long startTime,Exception exception)
   {
     long endTime = System.currentTimeMillis();
+    long duration = endTime-startTime;
     if (ObjectPersistenceMapping.getInstance().isShowWebServiceTimings())
     {
-      long duration = endTime-startTime;
       String request = method+" "+uri;
       MessageUtils.handleMessage("info", request+": "+duration+" ms");
-//      DBPersistenceManager pm = new DBPersistenceManager();
-//      Integer maxId = (Integer) pm.getMaxColumnValue("TIMINGS", "ID");
-//      String sql = "INSERT INTO WS_CALLS (ID, REQUEST, DURATION) VALUES("+maxId+1+",'"+request+"',"+duration+")";
-//      pm.executeSqlDml(sql, new ArrayList<BindParamInfo>(), true);      
+    }  
+    if (ObjectPersistenceMapping.getInstance().isLogWebServiceCalls())
+    {
+      WebServiceCall wscall = new WebServiceCall();
+      wscall.setIsNewEntity(true);
+      EntityUtils.generatePrimaryKeyValue(wscall, 1);
+      wscall.setConnection(connection);
+      wscall.setDuration(duration);
+      wscall.setMethod(method);
+      wscall.setRequest(uri);
+      wscall.setRequestHeaders(requestHeaders);
+      wscall.setRequestPayload(requestPayload);
+      wscall.setResponsePayload(responsePayload);
+      wscall.setTimestamp(new Date());
+      if (exception!=null)
+      {
+        String rootError = exception.getLocalizedMessage();
+        String causeError = exception.getCause() != null? exception.getCause().getLocalizedMessage() : null;
+        // the cause exception can have a null or "" message, in that case we throw the root exception message
+        String error = (causeError==null || "".equals(causeError)) ? rootError : causeError;
+        wscall.setErrorMessage(error);        
+      }
+      new WebServiceCallService(false).saveWebServiceCall(wscall);
     }  
   }
   
@@ -668,14 +692,18 @@ public abstract class RestPersistenceManager
       String restResponse = invokeRestService(findAllMethod, paramValues);
       if (restResponse != null)
       {
+        DBPersistenceManager dbpm = getLocalPersistenceManager();
+        if (descriptor.isPersisted() && findAllMethod.isDeleteLocalRows())
+        {
+          dbpm.deleteAllRows(entityClass);
+        }
         entities =
           handleReadResponse(restResponse, entityClass, findAllMethod.getPayloadElementName(),
-                             findAllMethod.getPayloadRowElementName(), null, descriptor.isDeleteLocalRowsOnFindAll());
+                             findAllMethod.getPayloadRowElementName(), null, findAllMethod.isDeleteLocalRows());
         // only if an order-by statement is specified, we execute the find method against the local DB to reorder
         // the entity list. Note that the entity instances are not recreated because they will be retrieved from the cache
         if (descriptor.isPersisted() && descriptor.getOrderBy() != null)
         {
-          DBPersistenceManager dbpm = getLocalPersistenceManager();
           entities = dbpm.findAll(entityClass);
         }
       }
@@ -703,6 +731,11 @@ public abstract class RestPersistenceManager
       String restResponse = invokeRestService(findAllInParentMethod, paramValues);
       if (restResponse != null)
       {
+        DBPersistenceManager dbpm = getLocalPersistenceManager();
+        if (descriptor.isPersisted() && findAllInParentMethod.isDeleteLocalRows())
+        {
+          dbpm.deleteAllInParent(childEntityClass, parent, accessorAttribute);
+        }
         List<BindParamInfo> parentBindParamInfos = getBindParamInfos(parent);
         entities =
           handleReadResponse(restResponse, childEntityClass, findAllInParentMethod.getPayloadElementName(),
@@ -711,7 +744,6 @@ public abstract class RestPersistenceManager
         // the entity list. Note that the entity instances are not recreated because they will be retrieved from the cache
         if (descriptor.isPersisted() && descriptor.getOrderBy() != null)
         {
-          DBPersistenceManager dbpm = getLocalPersistenceManager();
           entities = dbpm.findAllInParent(childEntityClass, parent, accessorAttribute);
         }
       }

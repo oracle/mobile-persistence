@@ -8,6 +8,7 @@
         <xs:element ref="classMappingDescriptor" minOccurs="0" maxOccurs="unbounded"/>
       </xs:sequence>
       <xs:attribute type="xs:boolean" name="showWebServiceTimings" default="false"/>
+      <xs:attribute type="xs:boolean" name="logWebServiceCalls" default="false"/>
     </xs:complexType>
   </xs:element>
   <xs:element name="classMappingDescriptor">

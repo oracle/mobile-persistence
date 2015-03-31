@@ -277,6 +277,26 @@ public class DBPersistenceManager
   }
 
   /**
+   * Deletes rows in the table that maps to the entityClass.
+   * The WHERE clause is build based on the list BindParamInfo instances passed in. When multiple
+   * bindParamInfos are passed in the WHERE clause conditions are chained using the AND operator.
+   * Also clears all entity instances from the cache
+   * @param entityClass
+   */
+  public void deleteRows(Class entityClass, List<BindParamInfo>  bindParamInfos)
+  {
+    ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
+    if (descriptor.isPersisted())
+    {
+      StringBuffer sql = new StringBuffer();
+      sql.append(SQL_DELETE_KEYWORD);
+      sql.append(descriptor.getTableName());
+      sql = constructWhereClause(sql, bindParamInfos);
+      executeSqlDml(sql.toString(), bindParamInfos, true);
+    }
+  }
+
+  /**
    * Deletes all rows in the table that maps to the entityClass.
    * Also clears all entity instances from the cache
    * @param entityClass
@@ -1341,22 +1361,14 @@ public class DBPersistenceManager
   {
     // first find the corresponding oneToManyMapping
     ClassMappingDescriptor parentDescriptor = ClassMappingDescriptor.getInstance(parent.getClass());
-    List<AttributeMappingOneToMany> mappings = parentDescriptor.getAttributeMappingsOneToMany();
-    AttributeMappingOneToMany oneToManyMapping = null;
-    for (AttributeMappingOneToMany mapping : mappings)
-    {
-      if (mapping.getAttributeName().equals(accessorAttribute))
-      {
-        oneToManyMapping = mapping;
-        break;
-      }
-    }
+    AttributeMappingOneToMany oneToManyMapping = parentDescriptor.findOneToManyMappingByAccessorAttribute(accessorAttribute);
     if (oneToManyMapping==null)
     {
       MessageUtils.handleError("Cannot execute findAllInParent, no one-to-many mapping found between "+parent.getClass().getName()+" and "+entityClass.getName());
     }
     return findAllInParent(entityClass, parent, oneToManyMapping );
   }
+
 
   public <E extends Entity> List<E> findAllInParent(Class entityClass, Entity parent, AttributeMappingOneToMany oneToManyMapping)
   {
@@ -1380,6 +1392,42 @@ public class DBPersistenceManager
       bindParamInfos.add(bp);
     }
     return find(entityClass.getName(), bindParamInfos);
+  }
+
+  public void deleteAllInParent(Class entityClass, Entity parent, String accessorAttribute)
+  {
+    // first find the corresponding oneToManyMapping
+    ClassMappingDescriptor parentDescriptor = ClassMappingDescriptor.getInstance(parent.getClass());
+    AttributeMappingOneToMany oneToManyMapping = parentDescriptor.findOneToManyMappingByAccessorAttribute(accessorAttribute);
+    if (oneToManyMapping==null)
+    {
+      MessageUtils.handleError("Cannot execute deleteAllInParent, no one-to-many mapping found between "+parent.getClass().getName()+" and "+entityClass.getName());
+    }
+    deleteAllInParent(entityClass, parent, oneToManyMapping );
+  }
+
+  public void deleteAllInParent(Class entityClass, Entity parent, AttributeMappingOneToMany oneToManyMapping)
+  {
+    ClassMappingDescriptor parentDescriptor = ClassMappingDescriptor.getInstance(parent.getClass());
+    ClassMappingDescriptor referenceDescriptor = ClassMappingDescriptor.getInstance(entityClass);
+    Map<String,String> columnMappings = oneToManyMapping.getColumnMappings();
+    Iterator<String> sourceColumns = columnMappings.keySet().iterator();
+    List<BindParamInfo> bindParamInfos = new ArrayList<BindParamInfo>();
+    while (sourceColumns.hasNext())
+    {
+      String sourceColumn = sourceColumns.next();
+      String targetColumn = columnMappings.get(sourceColumn);
+      // lookup attribute mapping for the source column in referenceDescriptor
+      AttributeMapping refAttrMapping = referenceDescriptor.findAttributeMappingByColumnName(sourceColumn);
+      BindParamInfo bp = constructBindParamInfo(referenceDescriptor.getClazz(), refAttrMapping);
+      // the value must be set to the value of the attribute that matches the targetColumn
+      AttributeMapping baseAttrMapping =
+        parentDescriptor.findAttributeMappingByColumnName(targetColumn);
+      Object value = parent.getAttributeValue(baseAttrMapping.getAttributeName());
+      bp.setValue(value);
+      bindParamInfos.add(bp);
+    }
+    deleteRows(entityClass, bindParamInfos);
   }
 
   public Entity getAsParent(Class entityClass, Entity child, String accessorAttribute)

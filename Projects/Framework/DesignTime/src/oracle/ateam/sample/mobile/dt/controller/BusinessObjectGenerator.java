@@ -272,6 +272,14 @@ public class BusinessObjectGenerator
       int endPos = newContent.indexOf(");", startPos);
       newContent = newContent.substring(0, (startPos==0 ? 0 : startPos - 1)) + newContent.substring(endPos + 2);
     }
+    // also remove WEB_SERVICE_CALL table
+     startMatch = "CREATE TABLE WEB_SERVICE_CALL ";
+     startPos = newContent.indexOf(startMatch);
+    if (startPos > -1)
+    {
+      int endPos = newContent.indexOf(");", startPos);
+      newContent = newContent.substring(0, (startPos==0 ? 0 : startPos - 1)) + newContent.substring(endPos + 2);
+    }
     return newContent;
   }
 

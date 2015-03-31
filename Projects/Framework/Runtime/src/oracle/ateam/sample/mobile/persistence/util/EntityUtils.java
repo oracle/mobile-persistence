@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 
 import java.sql.Timestamp;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -469,17 +470,25 @@ public class EntityUtils
   
   public static Entity[] getEntityListAsCorrectlyTypedArray(List entities, Class entityClass)
   {
-      int size = entities!=null ? entities.size() : 0;
-      Entity[] value = (Entity[]) Array.newInstance(entityClass, size);
-      for (int i = 0; i < size; i++)
-      {
-        Object e = entities.get(i);
-        if (e instanceof Entity)
-        {
-          value[i] = (Entity)e;          
-        }
-      }
-      return value;
+    int size = entities!=null ? entities.size() : 0;
+    Entity[] value = (Entity[]) Array.newInstance(entityClass, size);
+    try
+    {
+     for (int i = 0; i < size; i++)
+     {
+       Object e = entities.get(i);
+       if (e instanceof Entity)
+       {
+         value[i] = (Entity)e;          
+       }
+     }
+   }
+    catch (Exception e)
+    {
+      // TODO: Add catch code
+      e.printStackTrace();
+    }
+    return value;
   }
 
   /**

@@ -47,6 +47,7 @@ import oracle.ateam.sample.mobile.dt.model.UIDataObjectInfo;
 import oracle.ateam.sample.mobile.dt.model.UIGeneratorModel;
 import oracle.ateam.sample.mobile.dt.controller.velocity.VelocityInitializer;
 import oracle.ateam.sample.mobile.dt.controller.velocity.VelocityTemplateProcessor;
+import oracle.ateam.sample.mobile.dt.model.jaxb.MobileObjectPersistence;
 import oracle.ateam.sample.mobile.dt.util.FileUtils;
 
 import oracle.bali.xml.dom.position.DomPosition;
@@ -81,7 +82,8 @@ import org.w3c.dom.NodeList;
 
 public class UIGenerator
 {
-  private static final String DATA_SYNCH_JAR_NAME = "DataSynchFeature.jar";
+    private static final String DATA_SYNCH_JAR_NAME = "DataSynchFeature.jar";
+    private static final String WS_CALLS_JAR_NAME = "WebServiceCallsFeature.jar";
   private UIGeneratorModel model;
   private Project project;
   private GeneratorLogPage log = GeneratorLogPage.getPage("Mobile User Interface Generator");
@@ -98,7 +100,7 @@ public class UIGenerator
     throws IOException
   {
     log.initialize();
-    log.info("ADF Mobile User Interface Generator started");
+    log.info("MAF User Interface Generator started");
 
     String iconsZipFile = Ide.getOracleHomeDirectory()+"/jdev/extensions/oracle.ateam.mobile.persistence/icons/icons.zip";
     URL publicHtmlDir = McAppUtils.getProjectPublicHtmlDir(project);
@@ -141,31 +143,69 @@ public class UIGenerator
 //               " to preserve current row across pages");
 //    }
     addDataSynchJarIfNeeded();
+    PersistenceMappingLoader pml = new PersistenceMappingLoader();
+    MobileObjectPersistence mob = pml.loadJaxbModel();
+    if (mob!=null && mob.isLogWebServiceCalls()) {
+        addWSCallsFeatureReference();
+        addWSCallsJarIfNeeded();        
+    }
 // doesnt work yet
 //    addNetworkStatusAccessPermission();
-    log.info("ADF Mobile User Interface Generator finished succesfully");
+    log.info("MAF User Interface Generator finished succesfully");
   }
 
-  private void addDataSynchJarIfNeeded()
-  {
-    ApplicationLibraries applicationLibraries = ApplicationLibraries.getInstance(project.getWorkspace());
-    ApplicationLibraryList applicationLibraryList = applicationLibraries.getLibraryDefinitions();
-    if (!applicationLibraryList.containsKey(DATA_SYNCH_JAR_NAME))
+    private void addDataSynchJarIfNeeded()
     {
-//      JLibraryAdapter lib = new JLibraryAdapter(HashStructure.newInstance());
-      JLibrary lib = applicationLibraryList.addLibrary(DATA_SYNCH_JAR_NAME);
-      URLPath up = new URLPath();
-      String directory = Ide.getOracleHomeDirectory();
-      String urlpath = directory+"/jdev/extensions/oracle.ateam.mobile.persistence/"+DATA_SYNCH_JAR_NAME;
-      up.add(URLFactory.newFileURL(urlpath));
-      lib.setClassPath(up);
-      lib.setName(DATA_SYNCH_JAR_NAME);    
-      List<JLibrary> liblist = new ArrayList<JLibrary>();
-      liblist.add(lib);
-      applicationLibraries.setLibraryReferences(liblist);
-      log.info("Added reusable feature jar "+DATA_SYNCH_JAR_NAME+" to application classpath");
+      ApplicationLibraries applicationLibraries = ApplicationLibraries.getInstance(project.getWorkspace());
+      ApplicationLibraryList applicationLibraryList = applicationLibraries.getLibraryDefinitions();
+      if (!applicationLibraryList.containsKey(DATA_SYNCH_JAR_NAME))
+      {
+    //      JLibraryAdapter lib = new JLibraryAdapter(HashStructure.newInstance());
+        JLibrary lib = applicationLibraryList.addLibrary(DATA_SYNCH_JAR_NAME);
+        URLPath up = new URLPath();
+        String directory = Ide.getOracleHomeDirectory();
+        String urlpath = directory+"/jdev/extensions/oracle.ateam.mobile.persistence/"+DATA_SYNCH_JAR_NAME;
+        up.add(URLFactory.newFileURL(urlpath));
+        lib.setClassPath(up);
+        lib.setName(DATA_SYNCH_JAR_NAME);    
+        List<JLibrary> liblist = new ArrayList<JLibrary>();
+        List<JLibrary> oldlist = applicationLibraries.getLibraryReferences();
+          liblist.addAll(oldlist);
+          liblist.add(lib);
+        applicationLibraries.setLibraryReferences(liblist);
+
+//        applicationLibraries.setLibraryDefinitions(applicationLibraryList);
+
+         // metyhod below throws UnsupportedOperationException
+       //   applicationLibraries.getLibraryReferences().add(lib);
+        // method below doesn't work
+//        applicationLibraries.addLibraryReference(lib);   
+        log.info("Added reusable feature jar "+DATA_SYNCH_JAR_NAME+" to application classpath");
+      }
     }
-  }
+
+    private void addWSCallsJarIfNeeded()
+    {
+      ApplicationLibraries applicationLibraries = ApplicationLibraries.getInstance(project.getWorkspace());
+      ApplicationLibraryList applicationLibraryList = applicationLibraries.getLibraryDefinitions();
+      if (!applicationLibraryList.containsKey(WS_CALLS_JAR_NAME))
+      {
+    //      JLibraryAdapter lib = new JLibraryAdapter(HashStructure.newInstance());
+        JLibrary lib = applicationLibraryList.addLibrary(WS_CALLS_JAR_NAME);
+        URLPath up = new URLPath();
+        String directory = Ide.getOracleHomeDirectory();
+        String urlpath = directory+"/jdev/extensions/oracle.ateam.mobile.persistence/"+WS_CALLS_JAR_NAME;
+        up.add(URLFactory.newFileURL(urlpath));
+        lib.setClassPath(up);
+        lib.setName(WS_CALLS_JAR_NAME);   
+        List<JLibrary> liblist = new ArrayList<JLibrary>();
+        List<JLibrary> oldlist = applicationLibraries.getLibraryReferences();
+          liblist.addAll(oldlist);
+          liblist.add(lib);
+        applicationLibraries.setLibraryReferences(liblist);
+        log.info("Added reusable feature jar "+WS_CALLS_JAR_NAME+" to application classpath");
+      }
+    }
 
   private void generatePages(UIDataObjectInfo doi, TaskFlowModel taskFlowModel)
   {
@@ -550,15 +590,25 @@ public class UIGenerator
               featureRef.setAttributeNS(null, FrameworkXmlEditorConstants.SHOW_ON_NB_ATTR, "false");
               featureRef.setAttributeNS(null, FrameworkXmlEditorConstants.SHOW_ON_SB_ATTR, "false");
               model.insertNode(featureRef, DomPositionFactory.inside(root), false);
-              log.info("Added reusable DataSync feature reference to adfmf-application.xml");
+              log.info("Added reusable DataSync feature reference to maf-application.xml");
             }
           }.run(model);
         }
       }
       catch (Exception e)
       {
-        log.error("Error adding DataSync feature reference to adfmf-application.xml: " + e.getMessage());
+        log.error("Error adding DataSync feature reference to maf-application.xml: " + e.getMessage());
       }
     }
   }
+
+    private void addWSCallsFeatureReference()
+    {
+      // here we can use MCAppUtils.addFeatureReference because we do not need to set "show on nav bar" nor
+      // "show on spring board" to false
+      final String featureId = "oracle.ateam.sample.mobile.wscalls";
+      McAppUtils.addFeatureReference(project.getWorkspace(), featureId);
+      log.info("Added reusable WebServiceCalls feature reference to maf-application.xml");
+    }
+
 }

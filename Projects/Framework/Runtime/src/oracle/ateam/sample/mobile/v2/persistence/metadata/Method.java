@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  23-mar-2015   Steven Davelaar
+  1.1           Added method isDeleteLocalRows
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
@@ -65,6 +67,11 @@ public class Method extends XmlAnyDefinition
   public boolean isSecured()
   {
     return getAttributeBooleanValue("secured",false);
+  }
+
+  public boolean isDeleteLocalRows()
+  {
+    return getAttributeBooleanValue("deleteLocalRows",false);
   }
 
   public boolean isSendDataObjectAsPayload()

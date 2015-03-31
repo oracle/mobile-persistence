@@ -2,6 +2,9 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  24-mar-2015   Steven Davelaar
+  1.1           removed deletion of local rows from handleResponse method. Now done in findAll, findAllInParent methods
+                in RestPersistenceManager
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
@@ -99,10 +102,6 @@ public class RestXMLPersistenceManager extends RestPersistenceManager
                                     String rowElementName, List parentBindParamInfos, Entity currentEntity, boolean deleteAllRows)  
   {
     List<Entity> entities = new ArrayList<Entity>();
-    if (deleteAllRows)
-    {
-      getLocalPersistenceManager().deleteAllRows(entityClass);
-    }
 
     InputStream is = new ByteArrayInputStream(xmlResponse.getBytes());
     XmlAnyDefinition collectionNode = null;

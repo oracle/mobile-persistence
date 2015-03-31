@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element ref="{http://www.oracle.com/ateam/mobile/persistenceMapping}classMappingDescriptor" maxOccurs="unbounded" minOccurs="0"/>
  *       &lt;/sequence>
  *       &lt;attribute name="showWebServiceTimings" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
+ *       &lt;attribute name="logWebServiceCalls" type="{http://www.w3.org/2001/XMLSchema}boolean" default="false" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -43,6 +44,8 @@ public class MobileObjectPersistence
   protected List<ClassMappingDescriptor> classMappingDescriptor;
   @XmlAttribute(name = "showWebServiceTimings")
   protected Boolean showWebServiceTimings;
+  @XmlAttribute(name = "logWebServiceCalls")
+  protected Boolean logWebServiceCalls;
 
   /**
    * Gets the value of the classMappingDescriptor property.
@@ -106,6 +109,39 @@ public class MobileObjectPersistence
   public void setShowWebServiceTimings(Boolean value)
   {
     this.showWebServiceTimings = value;
+  }
+
+  /**
+   * Gets the value of the logWebServiceCalls property.
+   *
+   * @return
+   *     possible object is
+   *     {@link Boolean }
+   *
+   */
+  public boolean isLogWebServiceCalls()
+  {
+    if (logWebServiceCalls == null)
+    {
+      return false;
+    }
+    else
+    {
+      return logWebServiceCalls;
+    }
+  }
+
+  /**
+   * Sets the value of the logWebServiceCalls property.
+   *
+   * @param value
+   *     allowed object is
+   *     {@link Boolean }
+   *
+   */
+  public void setLogWebServiceCalls(Boolean value)
+  {
+    this.logWebServiceCalls = value;
   }
 
 }

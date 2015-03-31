@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<amx:view xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amx="http://xmlns.oracle.com/adf/mf/amx"
+          xmlns:dvtm="http://xmlns.oracle.com/adf/mf/amx/dvt">
+  <amx:panelPage id="firstPage">
+    <amx:facet name="header">
+      <amx:outputText value="Web Service Calls" id="ot1"/>
+    </amx:facet>
+    <amx:facet name="primary"></amx:facet>
+    <amx:facet name="secondary">
+    </amx:facet>
+    <amx:panelStretchLayout id="psl1" scrollPolicy="scroll">
+      <amx:facet name="top">
+        <amx:panelGroupLayout id="pgl1" layout="horizontal">
+          <amx:inputText value="#{bindings.searchValue.inputValue}" hintText="Search Calls" label=""
+                         id="it1"/>
+          <amx:commandLink actionListener="#{bindings.findWebServiceCall.execute}" id="cb3">
+            <amx:image id="ifind" source="/images/ic_action_search.png" inlineStyle="height:32px; width:32px;"/>
+          </amx:commandLink>
+        </amx:panelGroupLayout>
+      </amx:facet>
+      <amx:facet name="center">
+        <amx:listView var="row" value="#{bindings.webServiceCalls.collectionModel}"
+                      fetchSize="#{bindings.webServiceCalls.rangeSize}" id="lv1"
+                      selectedRowKeys="#{bindings.webServiceCalls.collectionModel.selectedRow}"
+                      selectionListener="#{bindings.webServiceCalls.collectionModel.makeCurrent}"
+                      showMoreStrategy="autoScroll" bufferStrategy="viewport">
+          <amx:listItem id="li2" action="WebServiceCall">
+            <amx:tableLayout width="100%" id="tl1WebServiceCall">
+              <amx:rowLayout id="rl1WebServiceCall">
+                <amx:cellFormat width="10px" rowSpan="2" id="cf2WebServiceCall"/>
+                <amx:cellFormat width="100%" height="28px" id="cf3WebServiceCall" columnSpan="2">
+                  <amx:outputText value="#{row.method} #{row.request}" id="ot2WebServiceCall"/>
+                </amx:cellFormat>
+              </amx:rowLayout>
+              <amx:rowLayout id="rl2WebServiceCall">
+                <amx:cellFormat width="60%" height="12px" id="cf5WebServiceCall">
+                  <amx:outputText value="#{row.duration} ms" styleClass="adfmf-listItem-captionText"
+                                  id="ot4WebServiceCall"/>
+                </amx:cellFormat>
+                <amx:cellFormat width="40%" halign="end" id="cf6WebServiceCall">
+                  <amx:outputText value="#{row.timestamp}" styleClass="adfmf-listItem-captionText"
+                                  id="ot5WebServiceCall">
+                    <amx:convertDateTime id="cdt1" pattern="dd MMM yyyy hh:mm:ss"/>
+                  </amx:outputText>
+                </amx:cellFormat>
+              </amx:rowLayout>
+            </amx:tableLayout>
+          </amx:listItem>
+        </amx:listView>
+      </amx:facet>
+            <amx:facet name="bottom">
+        <amx:panelGroupLayout id="pgl2" layout="horizontal" halign="center">
+          <amx:commandButton actionListener="#{bindings.removeAll.execute}" text="Remove All" id="cb1"/>
+        </amx:panelGroupLayout>
+      </amx:facet>
+
+    </amx:panelStretchLayout>
+  </amx:panelPage>
+</amx:view>

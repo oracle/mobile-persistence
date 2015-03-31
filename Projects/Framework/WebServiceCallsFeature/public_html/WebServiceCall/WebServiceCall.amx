@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<amx:view xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:amx="http://xmlns.oracle.com/adf/mf/amx"
+          xmlns:dvtm="http://xmlns.oracle.com/adf/mf/amx/dvt">
+  <amx:navigationDragBehavior action="#{bindings.Previous.execute}" direction="back" id="ndb1"/>
+  <amx:navigationDragBehavior action="#{bindings.Next.execute}" direction="forward" id="ndb2"/>
+  <amx:panelPage id="pp1">
+    <amx:facet name="header">
+      <amx:outputText value="Web Service Call" id="ot1"/>
+    </amx:facet>
+    <amx:facet name="primary">
+      <amx:commandButton action="__back" id="cbbck" text="Back"/>
+    </amx:facet>
+    <amx:facet name="secondary">
+    </amx:facet>
+    <amx:panelStretchLayout id="psl1" scrollPolicy="scroll">
+      <amx:facet name="top">
+        <amx:panelFormLayout id="pfl1" fieldHalign="start" labelPosition="topStart">
+          <!--<amx:inputText value="#{bindings.connection.inputValue}" label="#{bindings.connection.hints.label}"
+                         readOnly="true" id="it2"></amx:inputText>-->
+          <amx:inputText value="#{bindings.method.inputValue} #{bindings.request.inputValue}" label="Request" readOnly="true"
+                         id="it3"></amx:inputText>
+          <amx:panelLabelAndMessage label="Date Time" id="plam1">
+            <amx:outputText value="#{bindings.timestamp.inputValue}" id="ot2">
+              <amx:convertDateTime pattern="dd MMM yyyy hh:mm:ss" id="cdt1"/>
+            </amx:outputText>
+          </amx:panelLabelAndMessage>
+          <amx:inputText value="#{bindings.duration.inputValue} ms" label="Duration"
+                         readOnly="true" inputType="number" id="it6">
+            <amx:convertNumber groupingUsed="false" id="cn6"/>
+          </amx:inputText>
+          <amx:inputText value="#{bindings.requestHeaders.inputValue}" label="Request Headers"
+                         readOnly="true" id="it5"></amx:inputText>
+          <amx:inputText value="#{bindings.requestPayload.inputValue}" label="Request Payload"
+                         readOnly="true" id="it7"></amx:inputText>
+          <amx:inputText value="#{bindings.responsePayload.inputValue}" label="Response Payload"
+                         readOnly="true" id="it8"></amx:inputText>
+          <amx:inputText value="#{bindings.errorMessage.inputValue}" label="Error Message"
+                         readOnly="true" id="it9"></amx:inputText>
+        </amx:panelFormLayout>
+      </amx:facet>
+      <amx:facet name="center"></amx:facet>
+    </amx:panelStretchLayout>
+  </amx:panelPage>
+</amx:view>

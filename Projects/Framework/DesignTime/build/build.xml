@@ -164,6 +164,9 @@ can't do that anymore because runtime uses Java 8 ....
       <fileset dir="${datasynch.deploy.dir}">
          <include name="*.jar"/>
       </fileset>
+      <fileset dir="${wscalls.deploy.dir}">
+         <include name="*.jar"/>
+      </fileset>
     </copy>
 
     <copy todir="${stage.samples.dir}" >

@@ -385,6 +385,20 @@ public class ClassMappingDescriptor
     return found;
   }
 
+  public AttributeMappingOneToMany findOneToManyMappingByAccessorAttribute(String accessorAttribute)
+  {
+    List<AttributeMappingOneToMany> mappings = getAttributeMappingsOneToMany();
+    AttributeMappingOneToMany oneToManyMapping = null;
+    for (AttributeMappingOneToMany mapping : mappings)
+    {
+      if (mapping.getAttributeName().equals(accessorAttribute))
+      {
+        oneToManyMapping = mapping;
+        break;
+      }
+    }
+    return oneToManyMapping;
+  }
 
   /**
    * Use this method for composite PK 

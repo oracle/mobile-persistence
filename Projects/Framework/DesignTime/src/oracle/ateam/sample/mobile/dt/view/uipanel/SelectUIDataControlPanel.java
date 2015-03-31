@@ -52,6 +52,8 @@ import oracle.ide.panels.TraversalException;
 
 import oracle.javatools.parser.java.v2.model.JavaClass;
 
+import oracle.javatools.parser.java.v2.model.JavaType;
+
 import oracle.jdeveloper.java.JavaManager;
 
 public class SelectUIDataControlPanel
@@ -116,14 +118,32 @@ public class SelectUIDataControlPanel
           StructureDefinition beanDef = adc.getDataControlDefinition().getStructure();
           String beanClass = beanDef.getFullName();
           JavaClass serviceObject = getClass(ProjectUtils.getViewControllerProject(),beanClass);
-          if (serviceObject!=null && serviceObject.getSuperclass()!=null 
-            && serviceObject.getSuperclass().getName().endsWith("EntityCRUDService"))
+          // one of superclasses should be EntityCRUDService, doesn't have to be direct superclass!
+          if (extendsEntityCRUDService(serviceObject))
           {
             dataControlMap.put(dc.getId(), dc);
             dclist.addItem(dc.getId());            
           }
         }
       }
+    }
+  }
+  
+  private boolean extendsEntityCRUDService(JavaType serviceObject)
+  {
+    if (serviceObject==null)
+    {
+      return false;
+    }
+    else if (serviceObject.getSuperclass()!=null 
+      && serviceObject.getSuperclass().getName().endsWith("EntityCRUDService"))
+    {
+      return true;
+    }
+    else 
+    {
+      // recursive call to walk up inheritance tree
+      return extendsEntityCRUDService(serviceObject.getSuperclass());
     }
   }
 
@@ -173,4 +193,6 @@ public class SelectUIDataControlPanel
     model.setEnableSecurity(secCheckbox.isSelected());
     super.onExit(tc);
   }
+
+
 }

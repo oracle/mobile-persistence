@@ -1,0 +1,56 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<SDM>
+   <OverallProperties
+      id="OverallProperties1">
+      <property
+         name="y">266.5</property>
+      <property
+         name="x">93.70703</property>
+   </OverallProperties>
+   <View
+      id="View2">
+      <property
+         name="activityId">WebServiceCallList</property>
+      <property
+         name="page">/WebServiceCall/WebServiceCallList.amx</property>
+      <property
+         name="start">true</property>
+      <property
+         name="description">&lt;html>&lt;p>&lt;b>WebServiceCallList&lt;/b> (Default Activity)&lt;/p>&lt;p>Activity Type:  View&lt;/p></property>
+      <property
+         name="exceptionHandler">false</property>
+      <property
+         name="y">99.36719</property>
+      <property
+         name="x">93.70703</property>
+   </View>
+   <View
+      id="View3">
+      <property
+         name="activityId">WebServiceCall</property>
+      <property
+         name="page">/WebServiceCall/WebServiceCall.amx</property>
+      <property
+         name="description">&lt;html>&lt;p>&lt;b>WebServiceCall&lt;/b>&lt;/p>&lt;p>Activity Type:  View&lt;/p></property>
+      <property
+         name="exceptionHandler">false</property>
+      <property
+         name="y">91.43359</property>
+      <property
+         name="x">270.88477</property>
+   </View>
+   <ControlFlowCase
+      islink="true"
+      id="ControlFlowCase4"
+      from="View2"
+      to="View3">
+      <property
+         name="fromOutcome">WebServiceCall</property>
+      <property
+         name="tosrcid">__2</property>
+      <property
+         name="fromsrcid">__1</property>
+      <property
+         name="sdm:polyPoints">R50,134.70703,99.30078,229.88477,91.36719,L50</property>
+   </ControlFlowCase>
+</SDM>

@@ -47,6 +47,7 @@ public class PersistenceMappingLoader
   
 //  private List<DataObjectInfo> dataObjects  = new ArrayList<DataObjectInfo>();
   public static final String DATA_SYNC_ACTION_CLASS = "oracle.ateam.sample.mobile.v2.persistence.service.DataSynchAction";
+  public static final String WEB_SERVICE_CALL_CLASS = "oracle.ateam.sample.mobile.logging.WebServiceCall";
   private Map<ClassMappingDescriptor,DataObjectInfo> dataObjects  = new HashMap<ClassMappingDescriptor,DataObjectInfo>();
   private Map<AttributeInfo,DirectMapping> parentPopulatedAttrs  = new HashMap<AttributeInfo,DirectMapping>();
 
@@ -72,6 +73,9 @@ public class PersistenceMappingLoader
   
   public MobileObjectPersistence loadJaxbModel(URL sourceURL)
   {
+    if (sourceURL==null) {
+        return null;
+    }
     InputStream is =FileUtils.getInputStream(sourceURL);
     MobileObjectPersistence persistenceModel = null;
     if (is != null)
@@ -101,7 +105,8 @@ public class PersistenceMappingLoader
       // first create all data objects
       for (ClassMappingDescriptor descriptor : mop.getClassMappingDescriptor())
       {
-        if (!DATA_SYNC_ACTION_CLASS.equals(descriptor.getClassName()))
+        if (!DATA_SYNC_ACTION_CLASS.equals(descriptor.getClassName())
+            && !WEB_SERVICE_CALL_CLASS.equals(descriptor.getClassName()))
         {
           DataObjectInfo doi = addDataObject(descriptor);        
           dataObjects.put(descriptor,doi);          
@@ -110,8 +115,9 @@ public class PersistenceMappingLoader
       // now we can process accessors because all data objects are present
       for (ClassMappingDescriptor descriptor : mop.getClassMappingDescriptor())
       {
-        if (!DATA_SYNC_ACTION_CLASS.equals(descriptor.getClassName()))
-        {
+        if (!DATA_SYNC_ACTION_CLASS.equals(descriptor.getClassName())
+            && !WEB_SERVICE_CALL_CLASS.equals(descriptor.getClassName()))
+        {  
           addChildAccessors(descriptor, dataObjects.get(descriptor));        
           addParentAccessors(descriptor, dataObjects.get(descriptor));        
         }

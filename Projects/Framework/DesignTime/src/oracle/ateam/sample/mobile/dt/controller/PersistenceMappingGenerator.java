@@ -61,7 +61,7 @@ public class PersistenceMappingGenerator
     mop = model.getExistingPersistenceMappingModel();
     if (mop==null)
     {
-      // create default model with dataSyncAction classmappingDescriptor using xml file in teplates dir
+      // create default model with dataSyncAction and wevServiceCall classmappingDescriptors using xml file in teplates dir
       String newPersistenceMappingFile = Ide.getOracleHomeDirectory()+"/jdev/extensions/oracle.ateam.mobile.persistence/templates/new-persistence-mapping.xml";
       final URL url = URLFactory.newFileURL(newPersistenceMappingFile);
       mop = new PersistenceMappingLoader().loadJaxbModel(url);
@@ -110,8 +110,9 @@ public class PersistenceMappingGenerator
     if (classMappingDescriptor == null)
     {
       classMappingDescriptor = objectFactory.createClassMappingDescriptor();
-      // add as last but one, so we keep data synch action desc at the bottom
-      int pos = mop.getClassMappingDescriptor().size()==0 ? 0 : mop.getClassMappingDescriptor().size()-1;
+      // add as last but two, so we keep data synch action and webServiceCall descs at the bottom
+      int descCount = mop.getClassMappingDescriptor().size();
+      int pos = descCount==0 ? 0 : (descCount==1 ? 1 : mop.getClassMappingDescriptor().size()-2);
       mop.getClassMappingDescriptor().add(pos,classMappingDescriptor);
       classMappingDescriptor.setClassName(fullyQualifiedClassName);
     }

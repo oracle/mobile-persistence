@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mobileObjectPersistence xmlns="http://www.oracle.com/ateam/mobile/persistenceMapping">
+<mobileObjectPersistence xmlns="http://www.oracle.com/ateam/mobile/persistenceMapping" logWebServiceCalls="true">
   <classMappingDescriptor className="oracle.ateam.sample.mobile.v2.persistence.service.DataSynchAction"
                           dateFormat="dd-MMM-yyyy" >
     <table name="DATA_SYNCH_ACTIONS">
@@ -27,4 +27,45 @@
                      columnDataType="VARCHAR" />
     </attributeMappings>
   </classMappingDescriptor>
+  <classMappingDescriptor className="oracle.ateam.sample.mobile.logging.WebServiceCall" persisted="true" orderBy="TIMESTAMP desc">
+    <crudServiceClass className="oracle.ateam.sample.mobile.logging.WebServiceCallService" autoIncrementPrimaryKey="true"
+                      localPersistenceManager="oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager"
+                      remoteReadInBackground="false" remoteWriteInBackground="false" showWebServiceInvocationErrors="false"
+                      autoQuery="true" enableOfflineTransactions="false"/>
+    <table name="WEB_SERVICE_CALL">
+      <primaryKeyColumn name="ID"/>
+    </table>
+    <attributeMappings>
+      <directMapping attributeName="id" payloadAttributeName="id" columnName="ID" columnDataType="NUMERIC"
+                     required="true" persisted="true" javaType="java.lang.Integer" keyAttribute="true"/>
+      <directMapping attributeName="connection" payloadAttributeName="connection" columnName="CONNECTION"
+                     columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String"
+                     keyAttribute="false"/>
+      <directMapping attributeName="request" payloadAttributeName="request" columnName="REQUEST"
+                     columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String"
+                     keyAttribute="false"/>
+      <directMapping attributeName="method" payloadAttributeName="method" columnName="METHOD" columnDataType="VARCHAR"
+                     required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
+      <directMapping attributeName="requestHeaders" payloadAttributeName="requestHeaders" columnName="REQUEST_HEADERS"
+                     columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String"
+                     keyAttribute="false"/>
+      <directMapping attributeName="duration" payloadAttributeName="duration" columnName="DURATION"
+                     columnDataType="NUMERIC" required="false" persisted="true" javaType="java.lang.Integer"
+                     keyAttribute="false"/>
+      <directMapping attributeName="requestPayload" payloadAttributeName="requestPayload" columnName="REQUEST_PAYLOAD"
+                     columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String"
+                     keyAttribute="false"/>
+      <directMapping attributeName="responsePayload" payloadAttributeName="responsePayload"
+                     columnName="RESPONSE_PAYLOAD" columnDataType="VARCHAR" required="false" persisted="true"
+                     javaType="java.lang.String" keyAttribute="false"/>
+      <directMapping attributeName="errorMessage" payloadAttributeName="errorMessage" columnName="ERROR_MESSAGE"
+                     columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String"
+                     keyAttribute="false"/>
+      <directMapping attributeName="timestamp" payloadAttributeName="timestamp" columnName="TIMESTAMP"
+                     columnDataType="DATE" required="false" persisted="true" javaType="java.util.Date"
+                     keyAttribute="false"/>
+    </attributeMappings>
+    <methods/>
+  </classMappingDescriptor>
+
 </mobileObjectPersistence>

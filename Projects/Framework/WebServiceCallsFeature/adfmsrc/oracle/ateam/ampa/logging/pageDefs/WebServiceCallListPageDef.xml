@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<pageDefinition xmlns="http://xmlns.oracle.com/adfm/uimodel" version="12.1.3.13.52" id="WebServiceCallListPageDef"
+                Package="oracle.ateam.ampa.logging.pageDefs">
+  <parameters/>
+  <executables>
+    <variableIterator id="variables">
+      <variable Name="find_searchValue" Type="java.lang.String"/>
+    </variableIterator>
+    <iterator id="WebServiceCallServiceIterator" Binds="root" DataControl="WebServiceCallService" RangeSize="25"/>
+    <accessorIterator id="webServiceCallsIterator" MasterBinding="WebServiceCallServiceIterator" Binds="webServiceCalls"
+                      BeanClass="oracle.ateam.sample.mobile.logging.WebServiceCall" DataControl="WebServiceCallService"
+                      RangeSize="25"/>
+  </executables>
+  <bindings>
+    <methodAction id="findWebServiceCall" RequiresUpdateModel="true" Action="invokeMethod"
+                  MethodName="findWebServiceCalls" DataControl="WebServiceCallService"
+                  InstanceName="data.WebServiceCallService.dataProvider" IsViewObjectMethod="false">
+      <NamedData NDName="searchValue" NDValue="${bindings.find_searchValue}" NDType="java.lang.String"/>
+    </methodAction>
+    <attributeValues id="searchValue" IterBinding="variables">
+      <AttrNames>
+        <Item Value="find_searchValue"/>
+      </AttrNames>
+    </attributeValues>
+    <tree id="webServiceCalls" IterBinding="webServiceCallsIterator">
+      <nodeDefinition Name="webServiceCalls0" DefName="oracle.ateam.sample.mobile.logging.WebServiceCall">
+        <AttrNames>
+          <Item Value="request"/>
+          <Item Value="method"/>
+          <Item Value="duration"/>
+          <Item Value="timestamp"/>
+        </AttrNames>
+      </nodeDefinition>
+    </tree>
+    <methodAction id="removeAll" RequiresUpdateModel="true" Action="invokeMethod" MethodName="removeAll"
+                  IsViewObjectMethod="false" DataControl="WebServiceCallService"
+                  InstanceName="data.WebServiceCallService.dataProvider"/>
+  </bindings>
+</pageDefinition>

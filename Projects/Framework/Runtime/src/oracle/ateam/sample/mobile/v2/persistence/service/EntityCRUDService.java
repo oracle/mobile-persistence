@@ -3,11 +3,8 @@
    
   $revision_history$
   19-mar-2015   Steven Davelaar
-  1.1           - Changed implementation of getCanonical: now executed in background when
-                remote-read-in-background is set to true in persistence-mapping.xml. Added overloaded
-                getCanonical method with additional argument to override the remote-read-in-background
-                setting in persistence-mapping.xml. Added executeGetCanonical method to easily add behavior
-                when executed in background.
+  1.1           - Overloaded implementation of getCanonical: now possible to executed in background.
+                - Added executeGetCanonical method to easily add behavior when executed in background.
                 - Added call to EntityUtils.refreshCurrentEntity in refreshEntityList method
                 to ensure UI is also refreshed correctly when child entities are shown in form layout 
                 - Added support for enableOfflineTransactions flag: report remote transaction errors
@@ -1000,22 +997,22 @@ public abstract class EntityCRUDService<E extends Entity>
     return instance;
   }
 
-  public void setShowWebServiceInvocationErrors(boolean showWebServiceInvocationErrors)
+  protected void setShowWebServiceInvocationErrors(boolean showWebServiceInvocationErrors)
   {
     this.showWebServiceInvocationErrors = showWebServiceInvocationErrors;
   }
 
-  public boolean isShowWebServiceInvocationErrors()
+  protected boolean isShowWebServiceInvocationErrors()
   {
     return showWebServiceInvocationErrors;
   }
 
-  public void setOfflineTransactionsEnabled(boolean offlineTransactionsEnabled)
+  protected void setOfflineTransactionsEnabled(boolean offlineTransactionsEnabled)
   {
     this.offlineTransactionsEnabled = offlineTransactionsEnabled;
   }
 
-  public boolean isOfflineTransactionsEnabled()
+  protected boolean isOfflineTransactionsEnabled()
   {
     return offlineTransactionsEnabled;
   }

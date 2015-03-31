@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Application xmlns="http://xmlns.oracle.com/adfm/application" version="12.1.3.13.52" id="DataBindings"
+             SeparateXMLFiles="false" Package="oracle.ateam.ampa.logging" ClientType="Generic">
+  <pageMap>
+    <page path="/WebServiceCall/WebServiceCallList.amx" usageId="mobile_pageDefs_WebServiceCallListPageDef"/>
+    <page path="/WebServiceCall/WebServiceCall.amx" usageId="mobile_pageDefs_WebServiceCallPageDef"/>
+  </pageMap>
+  <pageDefinitionUsages>
+    <page id="mobile_pageDefs_WebServiceCallListPageDef"
+          path="oracle.ateam.ampa.logging.pageDefs.WebServiceCallListPageDef"/>
+    <page id="mobile_pageDefs_WebServiceCallPageDef" path="oracle.ateam.ampa.logging.pageDefs.WebServiceCallPageDef"/>
+  </pageDefinitionUsages>
+  <dataControlUsages>
+    <dc id="ApplicationFeatures" path="application.ApplicationFeatures"/>
+    <dc id="DeviceFeatures" path="application.DeviceFeatures"/>
+    <dc id="WebServiceCallService" path="oracle.ateam.ampa.logging.WebServiceCallService"/>
+  </dataControlUsages>
+</Application>
