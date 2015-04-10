@@ -1,4 +1,4 @@
-<extension id="oracle.ateam.mobile.persistence" version="12.1.3.1.30" 
+<extension id="oracle.ateam.mobile.persistence" version="12.1.3.2.30" 
            xmlns="http://jcp.org/jsr/198/extension-manifest" esdk-version="1.0">
   <name>A-Team Mobile Persistence Accelerator</name>
   <required-bundles>
@@ -137,8 +137,10 @@
 
         <item rule="project-has-adfmf-techscope">
           <name>oracle.ateam.sample.mobile.dt.view.wizard.BusinessObjectsFromWSDataControlWizard</name>
-          <description>MAF Business Objects From Web Service Data Control</description>
-          <help>Launches the Create MAF Business Objects From Web Service Data Control wizard, in which you generate Java data objects and service objects that can be used to read and write data from the data control web service, as well as from the on-device SQLite database, allowing you to use your mobile application in off-line mode. A SQL DDL script to auto-create the on-device SQLite database is also generated. To build the MAF user interface, you can create a data control from the generated service objects. To enable this option, you must select an MAF project or a file within such a project in the Application Navigator.</help>
+          <description>MAF Business Objects From Web Service Data Control (Deprecated)</description>
+          <help>Launches the Create MAF Business Objects From Web Service Data Control wizard, in which you generate Java data objects and service objects that can be used to read and write data from the data control web service, as well as from the on-device SQLite database, allowing you to use your mobile application in off-line mode. A SQL DDL script to auto-create the on-device SQLite database is also generated. To build the MAF user interface, you can create a data control from the generated service objects. To enable this option, you must select an MAF project or a file within such a project in the Application Navigator. 
+
+This wizard is deprecated, use the REST wizard instead to get better performance of your mobile app.</help>
           <icon>res:/AddinWizard.gif</icon>
           <category>Business Tier</category>
           <folder>Mobile Application Framework</folder>

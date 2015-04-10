@@ -2,6 +2,9 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 31-mar-2015   Steven Davelaar 
+ 1.2           If date parsing fails, try with english locale. API's like JCS have date formats
+               like Thu Feb 12 ..., this fails when default locale is something else than english
  19-mar-2015   Steven Davelaar / Puja Subramanyam
  1.1           Fix in convertToDate to keep time component 
  01-jul-2013   Steven Davelaar
@@ -15,6 +18,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
 import java.util.Date;
+
+import java.util.Locale;
 
 import oracle.adfmf.framework.exception.AdfException;
 
@@ -42,6 +47,7 @@ public class DateUtils
       value = value.substring(0,length-3)+value.substring(length-2);
     }
     Date dateValue = null;
+    // first try using default locale, then use english locale
     SimpleDateFormat sdf = new SimpleDateFormat(format);
     try
     {
@@ -49,7 +55,15 @@ public class DateUtils
     }
     catch (ParseException e)
     {
-      // do nothing, return null;
+        sdf = new SimpleDateFormat(format,Locale.ENGLISH);
+        try
+        {
+            dateValue = sdf.parse(value);
+        }
+        catch (ParseException e2)
+        {
+          // do nothing, return null;
+        }
     }
     return dateValue;
   }

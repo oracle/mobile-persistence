@@ -64,7 +64,7 @@ public class BusinessObjectsFromWSDataControlWizard extends Wizard
   static final String STATE_OPTIONS = "options";
 
 //  private String wizardTitle = "Create Mobile Web Service Proxy and Persistence Provider";
-  private String wizardTitle = "MAF Business Objects From Web Service Data Control";
+  private String wizardTitle = "MAF Business Objects From Web Service Data Control (Deprecated)";
   private String logTitle = wizardTitle+ " Generator";
   
   public boolean runWizard(Component parent, final Project project)
@@ -78,6 +78,7 @@ public class BusinessObjectsFromWSDataControlWizard extends Wizard
       Step welcomeStep =
         WelcomePanel.newStep(wizardTitle, "Welcome to the "+wizardTitle+" Wizard",
          "This wizard helps you to generate Java data objects and service objects that can be used to read and write data from a web service, as well as from the on-device SQLite database, allowing you to use your mobile application in off-line mode. A SQL DDL script to auto-create the on-device SQLite database is also generated. To build the MAF user interface, you can create a data control from the generated service objects. To enable this option, you must select a MAF project or a file within such a project in the Application Navigator."                    
+          +"\n\nThis wizard is deprecated, use the REST wizard instead to get better performance of your mobile app. " // No help topic.
 //                             "This wizard helps you to create 'data object' Java classes that can act as a proxy to a remote web service and " +
 //        " 'service object' Java classes that use the proxy to make a request to and retrieve a response from the web service. The service object " +
 //        " class also takes care of storing the data in  the on-device SQLite database allowing the mobile application to work in off-line mode as well." 
