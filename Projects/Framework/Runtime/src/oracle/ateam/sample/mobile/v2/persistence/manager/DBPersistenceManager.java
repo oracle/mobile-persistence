@@ -1332,6 +1332,7 @@ public class DBPersistenceManager
         for (Entity child : children)
         {
           mergeEntity(child, doCommit);
+          child.setIsNewEntity(false);
         }        
       }
     }
