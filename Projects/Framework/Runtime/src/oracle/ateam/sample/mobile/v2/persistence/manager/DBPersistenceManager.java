@@ -2,6 +2,9 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  11-apr-2015   Steven Davelaar
+  1.1           Child entity new state was never set to false. Added statement to do this in mergeChildren method
+                (Thanks to Gokhan Coban for reporting this issue on GitHub)
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
@@ -1352,6 +1355,7 @@ public class DBPersistenceManager
         for (Entity child : children)
         {
           mergeEntity(child, doCommit);
+          child.setIsNewEntity(false);
         }        
       }
     }

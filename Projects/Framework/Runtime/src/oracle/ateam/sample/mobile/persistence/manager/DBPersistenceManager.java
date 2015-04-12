@@ -2,6 +2,9 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 11-apr-2015   Steven Davelaar
+ 1.4           Child entity new state was never set to false. Added statement to do this in mergeChildren method
+               (Thanks to Gokhan Coban for reporting this issue on GitHub)
  25-aug-2014   Steven Davelaar
  1.3           made all methods public so they can easily be used in service classes
                for custom SQL statements
@@ -1362,6 +1365,7 @@ public class DBPersistenceManager
         {
           Entity child = (Entity) children.get(j);
           mergeEntity(child, doCommit);
+          child.setIsNewEntity(false);
         }        
       }
     }
