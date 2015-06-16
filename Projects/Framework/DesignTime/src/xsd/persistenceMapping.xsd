@@ -127,7 +127,7 @@
           <xs:sequence>
             <xs:element ref="foreignKeyColumnReference" minOccurs="1" maxOccurs="unbounded"/>
           </xs:sequence>
-          <xs:attribute type="xs:string" name="accessorMethod" use="required"/>
+          <xs:attribute type="xs:string" name="accessorMethod" />
           <xs:attribute type="xs:string" name="referenceClassName" use="required"/>
         </xs:extension>
       </xs:complexContent>

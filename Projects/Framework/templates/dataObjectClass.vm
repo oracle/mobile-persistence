@@ -74,6 +74,7 @@ public class ${WSM.currentDataObject.className} extends Entity
     {
       this.${child.childAccessorName}.clear();
       this.${child.childAccessorName}.addAll(${child.childAccessorName});
+      getProviderChangeSupport().fireProviderRefresh("${child.childAccessorName}");
     }
 
     /**

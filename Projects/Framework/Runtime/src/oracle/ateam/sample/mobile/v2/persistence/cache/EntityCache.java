@@ -2,6 +2,8 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 20-apr-2015   Steven Davelaar
+ 1.1           Bug in removeEntity causing NPE, entityCache variable was not initialized
  08-jan-2015   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -74,9 +76,8 @@ public class EntityCache
 
   public <E extends Entity> void removeEntity(E entity)
   {
-    Map<EntityKey,E> entityCache = null;
     Class cls = entity.getClass();
-    Map<EntityCache.EntityKey, E> cache = findOrCreateEntityCache(cls);
+    Map<EntityCache.EntityKey, E> entityCache = findOrCreateEntityCache(cls);
     entityCache.remove(new EntityKey(EntityUtils.getEntityKey(entity)));
   }
 

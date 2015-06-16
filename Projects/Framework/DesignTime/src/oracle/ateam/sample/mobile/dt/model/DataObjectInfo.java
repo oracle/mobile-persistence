@@ -467,7 +467,7 @@ public class DataObjectInfo
    */
   public DataObjectInfo getParent()
   {
-    if (parent!=null && !parent.isGenerate())
+    if ((parent!=null && !parent.isGenerate()) || parent==this)
     {
       return null;
     }

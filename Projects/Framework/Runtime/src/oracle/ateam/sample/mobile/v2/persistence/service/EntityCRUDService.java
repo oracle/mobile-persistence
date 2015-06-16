@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  22-may-2015   Steven Davelaar
+  1.2           - resteEntity: remove entity from list when new
   19-mar-2015   Steven Davelaar
   1.1           - Overloaded implementation of getCanonical: now possible to executed in background.
                 - Added executeGetCanonical method to easily add behavior when executed in background.
@@ -853,11 +855,14 @@ public abstract class EntityCRUDService<E extends Entity>
   {
     if (entity.getIsNewEntity())
     {
+      List oldEntities = getEntityList();
       getEntityList().remove(entity);
+      refreshEntityList(oldEntities);
     }
     else if (getLocalPersistenceManager() != null)
     {
       getLocalPersistenceManager().resetEntity(entity);
+      EntityUtils.refreshCurrentEntity(getEntityListName(), getEntityList(), providerChangeSupport);
     }
   }
 

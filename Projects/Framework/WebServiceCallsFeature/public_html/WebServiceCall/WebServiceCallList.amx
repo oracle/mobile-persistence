@@ -5,7 +5,11 @@
     <amx:facet name="header">
       <amx:outputText value="Web Service Calls" id="ot1"/>
     </amx:facet>
-    <amx:facet name="primary"></amx:facet>
+    <amx:facet name="primary">
+      <amx:commandLink  id="cb31" rendered="#{GoToFeature.previousFeatureId!=null}" actionListener="#{GoToFeature.goToPreviousFeature}">
+          <amx:image id="iback" source="/images/ic_action_previous_item.png" inlineStyle="height:32px; width:32px;"/>
+      </amx:commandLink>
+    </amx:facet>
     <amx:facet name="secondary">
     </amx:facet>
     <amx:panelStretchLayout id="psl1" scrollPolicy="scroll">
