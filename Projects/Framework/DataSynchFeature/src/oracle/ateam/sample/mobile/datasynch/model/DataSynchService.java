@@ -1,7 +1,9 @@
 /*******************************************************************************
- Copyright © 2014, Oracle and/or its affiliates. All rights reserved.
+ Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 23-jun-2015   Steven Davelaar
+ 1.1           When removing data synch action in UI, it was not removed from DB
  06-feb-2013   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -50,4 +52,15 @@ public class DataSynchService extends EntityCRUDService
     return dataObjects;
   }
 
+  /**
+   * This method is automatically called when using the Delete operation on the dataSynchAction collection
+   * in the data control palette. It removes the dataSynchAction instance passed in from the dataSynchAction list, deletes the
+   * corresponding row from the database.
+   * Do NOT drag and drop this method from the data control palette, use the Delete operation instead to ensure
+   * that iterator binding and dataSynchAction list stay in sync.
+   * @param department
+   */
+  public void removeDataSynchAction(DataSynchAction dataSynchAction) {
+      removeEntity(dataSynchAction);
+  }
 }

@@ -59,21 +59,7 @@ public class DataSynchAction extends Entity
     this.action = action;
     this.entityClassString = entity.getClass().getName();
     this.serviceClass = serviceClass;
-    // we do not store the enity passed in directly, because it might be changed later on, and
-    // we need to save the state as it is now. So we convert it to jsonobject, which we need anyway for
-    // serialization, and then we convert it back to entity instance
-//    this.entity = entity;
-    try
-    {
-            
-      String json = JSONBeanSerializationHelper.toJSON(entity).toString();
-      setEntityAsJSONString(json);
-      createEntityFromJSONString();
-    }
-    catch (Exception e)
-    {
-      MessageUtils.handleError(e);
-    }
+    setEntity(entity);
     this.dateCreated = new Date();
     this.lastSynchAttempt = new Date();
   }
@@ -141,7 +127,21 @@ public class DataSynchAction extends Entity
 
   public void setEntity(Entity entity)
   {
-    this.entity = entity;
+    // we do not store the enity passed in directly, because it might be changed later on, and
+    // we need to save the state as it is now. So we convert it to jsonobject, which we need anyway for
+    // serialization, and then we convert it back to entity instance
+    //    this.entity = entity;
+    try
+    {
+            
+      String json = JSONBeanSerializationHelper.toJSON(entity).toString();
+      setEntityAsJSONString(json);
+      createEntityFromJSONString();
+    }
+    catch (Exception e)
+    {
+      MessageUtils.handleError(e);
+    }
   }
 
   public Entity getEntity()

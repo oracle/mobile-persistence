@@ -2,6 +2,9 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  16-jun-2015   Steven Davelaar
+  1.2           Fixed NPE in getColumnValueFromResultSet when timestamp from DB returns null (can happen
+                when wrong date format is used to insert the value)
   11-apr-2015   Steven Davelaar
   1.1           Child entity new state was never set to false. Added statement to do this in mergeChildren method
                 (Thanks to Gokhan Coban for reporting this issue on GitHub)
@@ -1074,7 +1077,11 @@ public class DBPersistenceManager
         // dates are saved to SQLIte as timestamp to not loose time part
         Timestamp ts = resultSet.getTimestamp(mapping.getColumnName());
 //        value = resultSet.getDate(mapping.getColumnName());
-        value = new java.sql.Date(ts.getTime());
+        // ts can be null when stored using wrong format, should be dd-MM-yyyy hh:mm:ss
+        if (ts!=null)
+        {
+          value = new java.sql.Date(ts.getTime());          
+        }
       }
       else if (javaType == Time.class || javaType == Timestamp.class)
       {

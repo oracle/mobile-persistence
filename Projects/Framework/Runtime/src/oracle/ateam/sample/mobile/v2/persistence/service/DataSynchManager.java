@@ -8,6 +8,7 @@
  package oracle.ateam.sample.mobile.v2.persistence.service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import java.util.Map;
@@ -19,6 +20,8 @@ import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.model.ChangeEventSupportable;
 import oracle.ateam.sample.mobile.util.MessageUtils;
 import oracle.ateam.sample.mobile.util.TaskExecutor;
+import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
+import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 
 
 /**
@@ -160,6 +163,11 @@ public class DataSynchManager
     List<DataSynchAction> oldList = getDataSynchActions();
     // set the id, first retrieve current max id
     int maxId= 0;
+    boolean isMerged = mergeWithExistingDataSyncActionIfNeeded(synchAction);
+    if (isMerged)
+    {
+      return;
+    }
     for (DataSynchAction action : oldList)
     {
       if (action.getId().intValue()>maxId)
@@ -179,6 +187,60 @@ public class DataSynchManager
     }
   }
   
+  /**
+   * If a sync action for the same entity instance already exists, we merge the new sync action with
+   * the existing one. This saves a server roundtrip and is needed when the existing sync action is a 
+   * create action where the server derives a new primary key. Then the second (update sync action)
+   * will fail because the primary key has changed. If the existing sync action is a create action
+   * and the new sync action is a remove, we remove both sync actions.
+   * @param synchAction
+   * @return returns true when the new sync has been merged and does not need its own registration
+   */
+  protected boolean mergeWithExistingDataSyncActionIfNeeded(DataSynchAction synchAction)
+  {
+    boolean merged = false;
+    DataSynchAction actionToRemove = null;
+    for (DataSynchAction action : getDataSynchActions())
+    {
+      if (action.getEntityClassString().equals(synchAction.getEntityClassString()))
+      {
+        Entity existing = action.getEntity();
+        Entity newEntity = synchAction.getEntity();
+        boolean same = EntityUtils.compareKeys(EntityUtils.getEntityKey(existing), EntityUtils.getEntityKey(newEntity));
+        if (same) 
+        {
+          if ((action.getAction().equals(DataSynchAction.INSERT_ACTION)
+               ||   action.getAction().equals(DataSynchAction.UPDATE_ACTION  ))
+               && synchAction.getAction().equals(DataSynchAction.UPDATE_ACTION))
+          {
+            // merge the new update with existing insert/update
+            // we use all attr values of new instance, except for isNewEntit
+            newEntity.setIsNewEntity(existing.getIsNewEntity());
+            action.setEntity(newEntity);
+            saveDataSynchAction(action);
+            merged = true;
+            break;
+          }
+          else if (action.getAction().equals(DataSynchAction.INSERT_ACTION)
+                   && synchAction.getAction().equals(DataSynchAction.REMOVE_ACTION))
+          {
+            // entity created and deleted again, we remove the create data sync action and ignore
+            // the delete 
+            actionToRemove = action;
+            merged = true;
+            break;
+          }
+        }
+      }
+    }
+    if (actionToRemove!=null)
+    {
+      getDataSynchActions().remove(actionToRemove);
+      getDBPersistenceManager().removeEntity(actionToRemove, true);
+    }
+    return merged;
+  }
+
   /**
    * Save data synch action to local DB. We do a merge action because the row might already exist
    * if the sync action has failed multiple times.
