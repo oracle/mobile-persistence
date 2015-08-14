@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  14-aug-2015   Steven Davelaar
+  1.1           delegate check for offline to service class
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
@@ -223,13 +225,12 @@ public class IndirectList<E extends Entity>
   protected List<E> buildDelegate()
   {
     final ClassMappingDescriptor referenceDescriptor = mapping.getReferenceClassMappingDescriptor();
-    String status = DeviceManagerFactory.getDeviceManager().getNetworkStatus();
-    boolean offline = "NotReachable".equals(status) || "unknown".equals(status);
+    final EntityCRUDService service = EntityUtils.getEntityCRUDService(referenceDescriptor);  
+    boolean offline = service.isOffline();
     if (mapping.getAccessorMethod() != null && !offline)
     {
       sLog.fine("Getter method for attribute " + this.mapping.getAttributeName() +
                 " called for the first time, calling find-all-in-parent web service method");
-      final EntityCRUDService service = EntityUtils.getEntityCRUDService(referenceDescriptor);  
       boolean inBackground = service.isDoRemoteReadInBackground();
       if (inBackground)
       {

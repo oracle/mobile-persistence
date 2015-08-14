@@ -2,6 +2,10 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  14-aug-2015   Steven Davelaar
+  1.2           Improved method mergeWithExistingDataSyncActionIfNeeded
+  24-jun-2015   Steven Davelaar
+  1.1           Added code to merge data sync actions if needed
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
@@ -43,7 +47,7 @@ public class DataSynchManager
   private transient EntityCRUDService crudService;
   private transient List dataSynchActions = new ArrayList();
   private transient boolean dataSynchRunning = false;
-  
+
   // dummy attrs to prevent JSON serialization
   private transient List<DataSynchManager> registeredDataSynchManagers;
 
@@ -51,16 +55,17 @@ public class DataSynchManager
   {
     super();
     this.crudService = crudService;
-//    loadSynchActionsFromFile();
+    //    loadSynchActionsFromFile();
     loadSynchActionsFromDB();
     // register after loading actions from DB, loading might fail, and then we registered invalid
     // manager
     registerDataSynchManager();
   }
-  
+
   public static List<DataSynchManager> getRegisteredDataSynchManagers()
   {
-    List<DataSynchManager> syncManagers = (List<DataSynchManager>) AdfmfJavaUtilities.evaluateELExpression("#{applicationScope.dataSynchManagers}");
+    List<DataSynchManager> syncManagers =
+      (List<DataSynchManager>) AdfmfJavaUtilities.evaluateELExpression("#{applicationScope.dataSynchManagers}");
     return syncManagers;
   }
 
@@ -68,7 +73,7 @@ public class DataSynchManager
   {
     DataSynchManager curManager = null;
     List<DataSynchManager> managers = getRegisteredDataSynchManagers();
-    for (DataSynchManager manager : managers)
+    for (DataSynchManager manager: managers)
     {
       if (entityClass.equals(manager.getCrudService().getEntityClass().getName()))
       {
@@ -81,12 +86,13 @@ public class DataSynchManager
 
   protected void registerDataSynchManager()
   {
-    List<DataSynchManager> syncManagers = (List<DataSynchManager>) AdfmfJavaUtilities.evaluateELExpression("#{applicationScope.dataSynchManagers}");
-    if (syncManagers==null)
+    List<DataSynchManager> syncManagers =
+      (List<DataSynchManager>) AdfmfJavaUtilities.evaluateELExpression("#{applicationScope.dataSynchManagers}");
+    if (syncManagers == null)
     {
       syncManagers = new ArrayList<DataSynchManager>();
       Map appscope = (Map) AdfmfJavaUtilities.evaluateELExpression("#{applicationScope}");
-      appscope.put("dataSynchManagers",syncManagers);
+      appscope.put("dataSynchManagers", syncManagers);
     }
     syncManagers.add(this);
   }
@@ -100,9 +106,9 @@ public class DataSynchManager
     DataSynchPayload payload = new DataSynchPayload();
     payload.setDataSynchActions(getDataSynchActions());
     DataSynchronizer syncher = new DataSynchronizer(this, payload);
-//   we now clear a synch action after succesfull processing in DataSynchronizer class
-//    clearDataSynchActions();
-    TaskExecutor.getInstance().execute(inBackground,syncher);
+    //   we now clear a synch action after succesfull processing in DataSynchronizer class
+    //    clearDataSynchActions();
+    TaskExecutor.getInstance().execute(inBackground, syncher);
   }
 
   protected String toJSON(DataSynchPayload payload)
@@ -141,20 +147,20 @@ public class DataSynchManager
     return crudService;
   }
 
-//  protected void clearDataSynchActions()
-//  {
-//    DataSynchAction[] oldArray = getDataSynchActions();
-//    dataSynchActionList.clear();
-//    // TODO remove from DB
-//    refreshDataSynchActionsList(oldArray);
-//  }
+  //  protected void clearDataSynchActions()
+  //  {
+  //    DataSynchAction[] oldArray = getDataSynchActions();
+  //    dataSynchActionList.clear();
+  //    // TODO remove from DB
+  //    refreshDataSynchActionsList(oldArray);
+  //  }
 
   /**
    * Register remote data sync action. If we are online and the sync action does not contain
    * a "last sync error" then we do not save the sync action in the local SQLITE db yet, because it will
    * be processed right away. If we are offline, or the data sync action contains a last sync error, then we also
-   * store it in SQLite DB when offline transactions are supported. With this approach we prevent creating a data 
-   * sync row and subsequent removal of that same row in the normal scenario where we are online and the sync action 
+   * store it in SQLite DB when offline transactions are supported. With this approach we prevent creating a data
+   * sync row and subsequent removal of that same row in the normal scenario where we are online and the sync action
    * is processed succesfully right away.
    * @param synchAction
    */
@@ -162,34 +168,34 @@ public class DataSynchManager
   {
     List<DataSynchAction> oldList = getDataSynchActions();
     // set the id, first retrieve current max id
-    int maxId= 0;
+    int maxId = 0;
     boolean isMerged = mergeWithExistingDataSyncActionIfNeeded(synchAction);
     if (isMerged)
     {
       return;
     }
-    for (DataSynchAction action : oldList)
+    for (DataSynchAction action: oldList)
     {
-      if (action.getId().intValue()>maxId)
+      if (action.getId().intValue() > maxId)
       {
         maxId = action.getId().intValue();
       }
     }
-    synchAction.setId(new Integer(maxId+1));
+    synchAction.setId(new Integer(maxId + 1));
     dataSynchActions.add(synchAction);
-   // call to refresh list causes unpredictable behavior, not really needed here anyway
-//    refreshDataSynchActionsList(oldArray);
-    refreshHasDataSynchActions(oldList.size()>0);
-    // we save to DB when last synch error is not null. 
-    if (synchAction.getLastSynchError()!=null && crudService.isOfflineTransactionsEnabled() )
+    // call to refresh list causes unpredictable behavior, not really needed here anyway
+    //    refreshDataSynchActionsList(oldArray);
+    refreshHasDataSynchActions(oldList.size() > 0);
+    // we save to DB when last synch error is not null.
+    if (synchAction.getLastSynchError() != null && crudService.isOfflineTransactionsEnabled())
     {
       saveDataSynchAction(synchAction);
     }
   }
-  
+
   /**
    * If a sync action for the same entity instance already exists, we merge the new sync action with
-   * the existing one. This saves a server roundtrip and is needed when the existing sync action is a 
+   * the existing one. This saves a server roundtrip and is needed when the existing sync action is a
    * create action where the server derives a new primary key. Then the second (update sync action)
    * will fail because the primary key has changed. If the existing sync action is a create action
    * and the new sync action is a remove, we remove both sync actions.
@@ -200,18 +206,18 @@ public class DataSynchManager
   {
     boolean merged = false;
     DataSynchAction actionToRemove = null;
-    for (DataSynchAction action : getDataSynchActions())
+    for (DataSynchAction action: getDataSynchActions())
     {
       if (action.getEntityClassString().equals(synchAction.getEntityClassString()))
       {
         Entity existing = action.getEntity();
         Entity newEntity = synchAction.getEntity();
         boolean same = EntityUtils.compareKeys(EntityUtils.getEntityKey(existing), EntityUtils.getEntityKey(newEntity));
-        if (same) 
+        if (same)
         {
-          if ((action.getAction().equals(DataSynchAction.INSERT_ACTION)
-               ||   action.getAction().equals(DataSynchAction.UPDATE_ACTION  ))
-               && synchAction.getAction().equals(DataSynchAction.UPDATE_ACTION))
+          if ((action.getAction().equals(DataSynchAction.INSERT_ACTION) ||
+               action.getAction().equals(DataSynchAction.UPDATE_ACTION)) &&
+              synchAction.getAction().equals(DataSynchAction.UPDATE_ACTION))
           {
             // merge the new update with existing insert/update
             // we use all attr values of new instance, except for isNewEntit
@@ -221,19 +227,28 @@ public class DataSynchManager
             merged = true;
             break;
           }
-          else if (action.getAction().equals(DataSynchAction.INSERT_ACTION)
-                   && synchAction.getAction().equals(DataSynchAction.REMOVE_ACTION))
+          else if (action.getAction().equals(DataSynchAction.INSERT_ACTION) &&
+                   synchAction.getAction().equals(DataSynchAction.REMOVE_ACTION))
           {
             // entity created and deleted again, we remove the create data sync action and ignore
-            // the delete 
+            // the delete
             actionToRemove = action;
             merged = true;
+            break;
+          }
+          else if (action.getAction().equals(DataSynchAction.UPDATE_ACTION) &&
+                   synchAction.getAction().equals(DataSynchAction.REMOVE_ACTION))
+          {
+            // entity updated and deleted, we remove the update data sync action and save the delete
+            actionToRemove = action;
+            merged = true;
+            saveDataSynchAction(synchAction);
             break;
           }
         }
       }
     }
-    if (actionToRemove!=null)
+    if (actionToRemove != null)
     {
       getDataSynchActions().remove(actionToRemove);
       getDBPersistenceManager().removeEntity(actionToRemove, true);
@@ -252,11 +267,11 @@ public class DataSynchManager
     pm.mergeEntity(synchAction, true);
     synchAction.setIsNewEntity(false);
   }
-  
+
   protected DBPersistenceManager getDBPersistenceManager()
   {
     DBPersistenceManager pm = getCrudService().getLocalPersistenceManager();
-    if (pm==null)
+    if (pm == null)
     {
       // use default pm
       pm = new DBPersistenceManager();
@@ -267,10 +282,11 @@ public class DataSynchManager
   protected void refreshDataSynchActionsList(List<DataSynchAction> oldList)
   {
     List<DataSynchAction> newList = getDataSynchActions();
-    boolean oldHasDataSynchActions = oldList.size()>0;
-    if (getHasDataSynchActions()!=oldHasDataSynchActions)
+    boolean oldHasDataSynchActions = oldList.size() > 0;
+    if (getHasDataSynchActions() != oldHasDataSynchActions)
     {
-      getPropertyChangeSupport().firePropertyChange("hasDataSynchActions", oldHasDataSynchActions, getHasDataSynchActions());      
+      getPropertyChangeSupport().firePropertyChange("hasDataSynchActions", oldHasDataSynchActions,
+                                                    getHasDataSynchActions());
     }
     getPropertyChangeSupport().firePropertyChange("dataSynchActions", oldList, newList);
     getProviderChangeSupport().fireProviderRefresh("dataSynchActions");
@@ -292,15 +308,15 @@ public class DataSynchManager
    */
   protected void refreshHasDataSynchActions(boolean oldValue)
   {
-    String name = getCrudService().getEntityListName()+"_dataSyncActionsCount";
-    AdfmfJavaUtilities.setELValue("#{applicationScope."+name+"}", new Integer(getDataSynchActions().size()));
-    if (getHasDataSynchActions()!=oldValue)
+    String name = getCrudService().getEntityListName() + "_dataSyncActionsCount";
+    AdfmfJavaUtilities.setELValue("#{applicationScope." + name + "}", new Integer(getDataSynchActions().size()));
+    if (getHasDataSynchActions() != oldValue)
     {
-      getPropertyChangeSupport().firePropertyChange("hasDataSynchActions", oldValue, getHasDataSynchActions());      
+      getPropertyChangeSupport().firePropertyChange("hasDataSynchActions", oldValue, getHasDataSynchActions());
     }
     if (AdfmfJavaUtilities.isBackgroundThread())
     {
-       AdfmfJavaUtilities.flushDataChangeEvent();
+      AdfmfJavaUtilities.flushDataChangeEvent();
     }
   }
 
@@ -330,57 +346,57 @@ public class DataSynchManager
 
   public void removeDataSynchAction(DataSynchAction synchAction)
   {
- //   MessageUtils.handleMessage(AdfException.INFO, "sync sction removed: "+synchAction.getId());
+    //   MessageUtils.handleMessage(AdfException.INFO, "sync sction removed: "+synchAction.getId());
     getDataSynchActions().remove(synchAction);
-    if (synchAction.getLastSynchError()!=null)
+    if (synchAction.getLastSynchError() != null)
     {
-      DBPersistenceManager pm = getDBPersistenceManager(); 
-      pm.removeEntity(synchAction, true);      
+      DBPersistenceManager pm = getDBPersistenceManager();
+      pm.removeEntity(synchAction, true);
     }
-    refreshHasDataSynchActions(true);      
+    refreshHasDataSynchActions(true);
   }
 
-//  protected String getFilePath()
-//  {
-//    String dir = AdfmfJavaUtilities.getDirectoryPathRoot(AdfmfJavaUtilities.ApplicationDirectory);
-//    String path = dir + "/" + crudService.getEntityClass() + "DataSynchActions.json";
-//    return path;
-//  }
+  //  protected String getFilePath()
+  //  {
+  //    String dir = AdfmfJavaUtilities.getDirectoryPathRoot(AdfmfJavaUtilities.ApplicationDirectory);
+  //    String path = dir + "/" + crudService.getEntityClass() + "DataSynchActions.json";
+  //    return path;
+  //  }
 
-//  public void saveSynchActionsToFile()
-//  {
-//    if (getDataSynchActionList().size()==0)
-//    {
-//      return;
-//    }
-//    DataSynchPayload payload = new DataSynchPayload();
-//    payload.setDataSynchActions(getDataSynchActions());
-//    String json = toJSON(payload);    
-//    PrintStream out = null;
-//    try
-//    {
-//      out = new PrintStream(new FileOutputStream(getFilePath()));
-//      out.print(json);
-//    }
-//    catch (FileNotFoundException e)
-//    {
-//      throw new AdfException("Cannot save synch actions to file: "+e.getLocalizedMessage(),AdfException.ERROR);
-//    }
-//    finally
-//    {
-//      if (out != null)
-//        out.close();
-//    }
-//  }
+  //  public void saveSynchActionsToFile()
+  //  {
+  //    if (getDataSynchActionList().size()==0)
+  //    {
+  //      return;
+  //    }
+  //    DataSynchPayload payload = new DataSynchPayload();
+  //    payload.setDataSynchActions(getDataSynchActions());
+  //    String json = toJSON(payload);
+  //    PrintStream out = null;
+  //    try
+  //    {
+  //      out = new PrintStream(new FileOutputStream(getFilePath()));
+  //      out.print(json);
+  //    }
+  //    catch (FileNotFoundException e)
+  //    {
+  //      throw new AdfException("Cannot save synch actions to file: "+e.getLocalizedMessage(),AdfException.ERROR);
+  //    }
+  //    finally
+  //    {
+  //      if (out != null)
+  //        out.close();
+  //    }
+  //  }
 
   public void saveSynchActionsToDB()
   {
-    if (getDataSynchActions().size()==0)
+    if (getDataSynchActions().size() == 0)
     {
       return;
     }
-    DBPersistenceManager pm = getDBPersistenceManager(); 
-    for (DataSynchAction action : getDataSynchActions())
+    DBPersistenceManager pm = getDBPersistenceManager();
+    for (DataSynchAction action: getDataSynchActions())
     {
       pm.mergeEntity(action, true);
     }
@@ -391,16 +407,15 @@ public class DataSynchManager
     DBPersistenceManager pm = getCrudService().getLocalPersistenceManager();
     List<String> attrNamesToSearch = new ArrayList<String>();
     attrNamesToSearch.add("serviceClass");
-    this.dataSynchActions =
-       pm.find(DataSynchAction.class, getCrudService().getClass().getName(), attrNamesToSearch);
+    this.dataSynchActions = pm.find(DataSynchAction.class, getCrudService().getClass().getName(), attrNamesToSearch);
     for (int i = 0; i < dataSynchActions.size(); i++)
     {
       // create entity instance in synch action from json string
       // When adding the logic in createEntityFromJSONString directly in method
-      // setEntityAsJSONString (which is eecuted during JSOn serialization of the data synch action, 
+      // setEntityAsJSONString (which is eecuted during JSOn serialization of the data synch action,
       // an outOfmemoryError is thrown for unclear reasons. When doing the create entity instance
       // action after the DataSynch actions are created, as below, it works fine
-      DataSynchAction action = (DataSynchAction)dataSynchActions.get(i);
+      DataSynchAction action = (DataSynchAction) dataSynchActions.get(i);
       action.createEntityFromJSONString();
     }
     refreshHasDataSynchActions(false);
@@ -411,7 +426,7 @@ public class DataSynchManager
    */
   public boolean getHasDataSynchActions()
   {
-    return getDataSynchActions().size()>0;
+    return getDataSynchActions().size() > 0;
   }
 
 }

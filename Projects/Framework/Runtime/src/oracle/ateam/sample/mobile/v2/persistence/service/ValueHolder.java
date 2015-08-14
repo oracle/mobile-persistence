@@ -61,14 +61,13 @@ public class ValueHolder
   {
     ClassMappingDescriptor referenceDescriptor = mapping.getReferenceClassMappingDescriptor();
     DBPersistenceManager pm = EntityUtils.getLocalPersistenceManager(referenceDescriptor);
-    String status = DeviceManagerFactory.getDeviceManager().getNetworkStatus();
-    boolean offline = "NotReachable".equals(status) || "unknown".equals(status);
+    EntityCRUDService service = EntityUtils.getEntityCRUDService(referenceDescriptor);  
+    boolean offline = service.isOffline();
     String accessorAttribute = mapping.getAttributeName();
     if (mapping.getAccessorMethod() != null && !offline)
     {
       sLog.fine("Getter method for attribute " + this.mapping.getAttributeName() +
                 " called for the first time, calling get-as-parent web service method");
-      EntityCRUDService service = EntityUtils.getEntityCRUDService(referenceDescriptor);  
       if (service.getRemotePersistenceManager() == null)
       {
         sLog.fine("Cannot execute GetAsParent, no remote persistence manager configured");
