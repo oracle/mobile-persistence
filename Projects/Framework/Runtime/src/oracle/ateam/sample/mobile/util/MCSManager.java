@@ -3,7 +3,10 @@
  
  $revision_history$
  21-aug-2015   Steven Davelaar
- 1.1           Made instance variable transient to prevent recursion loop with serialization
+ 1.1           Made instance variable transient to prevent recursion loop with serialization causing
+               app startup time on ANdorid devices to become exceptionally long (>1 minute)
+               Also commented out the line to store the instance on app scope, otherwise issue
+               was still seen.
  28-may-2015   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -62,7 +65,7 @@ public class MCSManager
     if (instance == null)
     {
       instance = new MCSManager();
-      AdfmfJavaUtilities.setELValue("#{applicationScope.ampa_mcs_manager}", instance);
+//      AdfmfJavaUtilities.setELValue("#{applicationScope.ampa_mcs_manager}", instance);
     }
     return instance;
   }
