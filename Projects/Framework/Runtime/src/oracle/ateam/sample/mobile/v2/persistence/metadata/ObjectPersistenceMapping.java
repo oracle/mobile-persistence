@@ -2,12 +2,16 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  17-aug-2015   Steven Davelaar
+  1.2           Prevent ClassNotFoundException when loading maping descriptors in
+                context of ApplicationController project
   20-mar-2015   Steven Davelaar
   1.1           Added method isShowWebServiceTimings
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
  package oracle.ateam.sample.mobile.v2.persistence.metadata;
+
 import java.io.InputStream;
 
 import java.util.HashMap;
@@ -29,8 +33,8 @@ public class ObjectPersistenceMapping
   extends XmlAnyDefinition
 {
   private static ObjectPersistenceMapping instance = null;
-  private Map<String,ClassMappingDescriptor> classMappingDescriptors = null;
-  private Map<String,OAuthConfig> OAuthConfigSet = null;
+  private Map<String, ClassMappingDescriptor> classMappingDescriptors = null;
+  private Map<String, OAuthConfig> OAuthConfigSet = null;
 
   public ObjectPersistenceMapping()
   {
@@ -64,16 +68,28 @@ public class ObjectPersistenceMapping
    * Returs map with fully-qualified class name as the key and associated ClassMappingDescriptoras instance as value
    * @return
    */
-  public Map<String,ClassMappingDescriptor> getClassMappingDescriptors()
+  public Map<String, ClassMappingDescriptor> getClassMappingDescriptors()
   {
     if (classMappingDescriptors == null)
     {
-      classMappingDescriptors = new HashMap<String,ClassMappingDescriptor>();
+      classMappingDescriptors = new HashMap<String, ClassMappingDescriptor>();
       List<XmlAnyDefinition> descriptors = this.getChildDefinitions("classMappingDescriptor");
-      for (XmlAnyDefinition descriptor : descriptors)
+      for (XmlAnyDefinition descriptor: descriptors)
       {
         ClassMappingDescriptor cmd = new ClassMappingDescriptor(descriptor);
-        classMappingDescriptors.put(cmd.getClazz().getName(), cmd);
+        try
+        {
+          // do not fetch className through class loading, this causes ClassNotFundException
+          // when this code is executed in context of ApplicationController and some of the model
+          // classes are located in ViewController project
+//          classMappingDescriptors.put(cmd.getClazz().getName(), cmd);
+          classMappingDescriptors.put(cmd.getClassName(), cmd);
+        }
+        catch (Exception e)
+        {
+          // TODO: Add catch code
+          e.printStackTrace();
+        }
       }
     }
     return classMappingDescriptors;
@@ -93,14 +109,14 @@ public class ObjectPersistenceMapping
    * Return OAuth configurations as defined in persistenceMapping.xml
    * @return
    */
-  public Map<String,OAuthConfig> getOAuthConfigMap()
+  public Map<String, OAuthConfig> getOAuthConfigMap()
   {
     if (OAuthConfigSet == null)
     {
-      OAuthConfigSet = new HashMap<String,OAuthConfig>();
+      OAuthConfigSet = new HashMap<String, OAuthConfig>();
       XmlAnyDefinition configSet = this.getChildDefinition("oauthConfigSet");
       List<XmlAnyDefinition> configDefs = configSet.getChildDefinitions("oauthConfig");
-      for (XmlAnyDefinition configDef : configDefs)
+      for (XmlAnyDefinition configDef: configDefs)
       {
         OAuthConfig oauthConfig = new OAuthConfig(configDef);
         OAuthConfigSet.put(oauthConfig.getConfigName(), oauthConfig);
@@ -118,7 +134,7 @@ public class ObjectPersistenceMapping
   {
     return getOAuthConfigMap().get(configName);
   }
-  
+
   /**
    * Returns the value of showWebServiceTimings in persistence-mapping.xml. If the value is false
    * it also checks for EL expression #{applicationScope.showWebServiceTimings} allowing you to
@@ -127,14 +143,14 @@ public class ObjectPersistenceMapping
    */
   public boolean isShowWebServiceTimings()
   {
-    boolean value = getAttributeBooleanValue("showWebServiceTimings",false);
+    boolean value = getAttributeBooleanValue("showWebServiceTimings", false);
     if (!value)
     {
       Object elValue = AdfmfJavaUtilities.evaluateELExpression("#{applicationScope.showWebServiceTimings}");
-      if (elValue!=null)
+      if (elValue != null)
       {
-        value = (Boolean)elValue; 
-      }      
+        value = (Boolean) elValue;
+      }
     }
     return value;
   }
@@ -147,16 +163,16 @@ public class ObjectPersistenceMapping
    */
   public boolean isLogWebServiceCalls()
   {
-    boolean value = getAttributeBooleanValue("logWebServiceCalls",false);
+    boolean value = getAttributeBooleanValue("logWebServiceCalls", false);
     if (!value)
     {
       Object elValue = AdfmfJavaUtilities.evaluateELExpression("#{applicationScope.logWebServiceCalls}");
-      if (elValue!=null)
+      if (elValue != null)
       {
-        value = (Boolean)elValue; 
-      }      
+        value = (Boolean) elValue;
+      }
     }
     return value;
   }
-  
+
 }
