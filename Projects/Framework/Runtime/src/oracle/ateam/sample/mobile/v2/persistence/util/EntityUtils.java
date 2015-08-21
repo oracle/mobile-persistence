@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  21-aug-2015   Steven Davelaar
+  1.3           Added check ib.getIterator is not null in refreshCurrentEntity
   19-mar-2015   Steven Davelaar
   1.2           Added method refreshCurrentEntity
   20-jan-2015   Steven Davelaar
@@ -575,7 +577,9 @@ public class EntityUtils
     {
       AmxIteratorBinding ib =
           (AmxIteratorBinding) AdfmfJavaUtilities.evaluateELExpression("#{bindings."+iteratorBindingName+"}");
-      if (ib!=null)
+      // when initializing iterator which results in calling findAll and this refresh the iterator is not yet
+      // available
+      if (ib!=null && ib.getIterator()!=null)
       {
         // we do not want to use ib.refresh because this resets the current row to the first row, potentially
         // firing some unwanted REST calls, instead we acll fireProviderChange passing in the current entity and row key
