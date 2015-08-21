@@ -2,6 +2,8 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 21-aug-2015   Steven Davelaar
+ 1.1           Made instance variable transient to prevent recursion loop with serialization
  28-may-2015   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -45,7 +47,7 @@ public class MCSManager
   private String userName;
   private String connectionName;
   private String anonymousKey;
-  private static MCSManager instance;
+  private transient static MCSManager instance;
 
   private MCSManager()
   {
