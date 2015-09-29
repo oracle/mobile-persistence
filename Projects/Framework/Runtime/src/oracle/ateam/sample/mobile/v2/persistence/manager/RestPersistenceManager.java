@@ -2,6 +2,8 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
  $revision_history$
+ 24-sep-2015   Steven Davelaar
+ 1.2           - Check requestType of custom method, when GET call handleReadResponse insteaf handleWriteResponse
  20-mar-2015   Steven Davelaar
  1.1           - Added method logRestCall
                - Now deleting local rows in findAll and findAllInParent methods (was done in handleResponse before)
@@ -666,7 +668,14 @@ public abstract class RestPersistenceManager
       String restResponse = invokeRestService(customMethod, paramValues);
       if (restResponse != null)
       {
-        handleWriteResponse(entity, customMethod, null, restResponse);
+        if ("GET".equalsIgnoreCase(customMethod.getRequestType()))
+        {
+          handleReadResponse(restResponse, entityClass, customMethod.getPayloadElementName(), customMethod.getPayloadRowElementName(), null, customMethod.isDeleteLocalRows());
+        }
+        else
+        {
+          handleWriteResponse(entity, customMethod, null, restResponse);          
+        }
       }
     }
     catch (Exception e)

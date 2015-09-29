@@ -306,7 +306,12 @@ public abstract class AbstractRemotePersistenceManager
     }
     // get the key of the new instance and check the cache, if an instance is already present in the cache
     // we need to update this instance and return it, instead of the new entity instance just created
-    E existingEntity = EntityCache.getInstance().findByUID(entityClass, EntityUtils.getEntityKey(newEntity));
+    // SDA 26-9-2015: if the entity is not found in cache, there still miught be a matching row in the local
+    // DB that has not been ueried yet. We need to check for this as well, because the local row might have
+    // local-only attributes that would be lost otherwise. By calling findByKey on DBPersistenceMabager we
+    // first check the cache and if not instance is found, we check the DB table (if entity is persistable)
+    E existingEntity = (E)new DBPersistenceManager().findByKey(entityClass, EntityUtils.getEntityKey(newEntity)); 
+//    E existingEntity = EntityCache.getInstance().findByUID(entityClass, EntityUtils.getEntityKey(newEntity));
     if (existingEntity != null)
     {
       // do not copy null values, currentInstance might contain attributes that are only saved

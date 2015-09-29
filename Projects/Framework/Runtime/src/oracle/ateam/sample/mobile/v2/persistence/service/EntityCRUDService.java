@@ -2,8 +2,15 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  22-sep-2015   Steven Davelaar
+  1.4           synrhonize method should NOT check for enableOfflineTransactions. This is done inside synchronization
+                code: if sync fails and offline transactions is enabled, we store it as pending data sync action, otherwise
+                we throw an error
+  25-aug-2015   Steven Davelaar
+  1.3           Added method isPersisted. use this method everywhere instead of getLocalPersistenceManager!=null
+                check to prevent unnecesssary DB reads when entity is not persisted.
   22-may-2015   Steven Davelaar
-  1.2           - resteEntity: remove entity from list when new
+  1.2           - resetEntity: remove entity from list when new
   19-mar-2015   Steven Davelaar
   1.1           - Overloaded implementation of getCanonical: now possible to executed in background.
                 - Added executeGetCanonical method to easily add behavior when executed in background.
@@ -80,9 +87,9 @@ public abstract class EntityCRUDService<E extends Entity>
   private EntityList<E> entityList = new EntityList<E>(this);
 
   /**
-   * Default constructor, initializes properties based on settings in persistenceMapping.xml and also initializes the 
-   * DataSynchManager which loads any pending data synch actions from the database. 
-   * If auto-query is set to true for this entity in the persistenceMapping.xml, the findALl method 
+   * Default constructor, initializes properties based on settings in persistenceMapping.xml and also initializes the
+   * DataSynchManager which loads any pending data synch actions from the database.
+   * If auto-query is set to true for this entity in the persistenceMapping.xml, the findALl method
    * will be executed as well.
    */
   public EntityCRUDService()
@@ -99,26 +106,26 @@ public abstract class EntityCRUDService<E extends Entity>
     }
   }
 
-    /** 
-     * Constructor, initializes properties based on settings in persistenceMapping.xml except for
-     * auto-query setting and also initializes the 
-     * DataSynchManager which loads any pending data synch actions from the database. 
-     * If auto-query parameter passed inis true, the findALl method 
-     * will be executed as well. Use this constructor if you want to ignore the auto-query settng as specified
-     * in the persistenceMapping.xml
-     */
-    public EntityCRUDService(boolean doAutoQuery)
+  /**
+   * Constructor, initializes properties based on settings in persistenceMapping.xml except for
+   * auto-query setting and also initializes the
+   * DataSynchManager which loads any pending data synch actions from the database.
+   * If auto-query parameter passed inis true, the findALl method
+   * will be executed as well. Use this constructor if you want to ignore the auto-query settng as specified
+   * in the persistenceMapping.xml
+   */
+  public EntityCRUDService(boolean doAutoQuery)
+  {
+    super();
+    initialize();
+    // we call getDataSynchManager so any pending data synch actions are loaded from the DB
+    // and processed just before the first read/write operation
+    getDataSynchManager();
+    if (doAutoQuery)
     {
-      super();
-      initialize();
-      // we call getDataSynchManager so any pending data synch actions are loaded from the DB
-      // and processed just before the first read/write operation
-      getDataSynchManager();
-      if (doAutoQuery)
-      {
-        findAll();
-      }
+      findAll();
     }
+  }
 
   /**
    * This method returns the type of the entity you want to have CRUD opertaions on.
@@ -142,13 +149,13 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void findAll()
   {
-    if (getLocalPersistenceManager() != null)
+    if (isPersisted())
     {
       setEntityList(executeLocalFindAll());
     }
-    if ((!isRemoteFindAllExecuted() || localPersistenceManager == null) && remotePersistenceManager != null && isOnline())
+    if ((!isRemoteFindAllExecuted() || !isPersisted()) && remotePersistenceManager != null && isOnline())
     {
-      // also do remote find 
+      // also do remote find
       doRemoteFindAll();
     }
     setLastNewEntityIndex(-1);
@@ -210,7 +217,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void find(String searchValue)
   {
-    if (getLocalPersistenceManager() != null)
+    if (isPersisted())
     {
       setEntityList(getLocalPersistenceManager().find(getEntityClass(), searchValue, getQuickSearchAttributeNames()));
       setLastNewEntityIndex(-1);
@@ -250,7 +257,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected Entity findEntityByKey(Object[] key)
   {
-    if (getLocalPersistenceManager() != null)
+    if (isPersisted())
     {
       return getLocalPersistenceManager().findByKey(getEntityClass(), key);
     }
@@ -284,11 +291,11 @@ public abstract class EntityCRUDService<E extends Entity>
 
   /**
    * Insert, update or remove an entity, or perform a custom action using the remote persistence manager.
-   * If CRUD or custom action fails because the device is offline or the service call fails for some reason,  
-   * and offline transactions are enabled, the data sync action will be saved for later execution and the end 
-   * user will not see an error message: the next time the end user tries to perform a remote data action, 
+   * If CRUD or custom action fails because the device is offline or the service call fails for some reason,
+   * and offline transactions are enabled, the data sync action will be saved for later execution and the end
+   * user will not see an error message: the next time the end user tries to perform a remote data action,
    * these pending data sync actions will be replayed first.
-   * If offline transactions are disabled, the error message will be displayed immediately to the end user 
+   * If offline transactions are disabled, the error message will be displayed immediately to the end user
    * (by calling method reportFailedTransaction), and the transaction is "lost", it will not be saved nor retried later.
    * @param dataSynchAction the sync action
    */
@@ -304,7 +311,7 @@ public abstract class EntityCRUDService<E extends Entity>
     dataSynchAction.setLastSynchError(isOnline()?
                                       (getDataSynchManager().isDataSynchRunning()?
                                        "Previous data synchronization still in progress": null): "Device is offline");
-    if (dataSynchAction.getLastSynchError()!=null && !isOfflineTransactionsEnabled())
+    if (dataSynchAction.getLastSynchError() != null && !isOfflineTransactionsEnabled())
     {
       reportFailedTransaction(dataSynchAction);
     }
@@ -314,7 +321,7 @@ public abstract class EntityCRUDService<E extends Entity>
       if (isOnline())
       {
         synchronize(isDoRemoteWriteInBackground());
-      }      
+      }
     }
   }
 
@@ -340,18 +347,19 @@ public abstract class EntityCRUDService<E extends Entity>
    * @param succeededDataSynchActions
    * @param failedDataSynchActions
    */
-  protected void dataSynchFinished(List<DataSynchAction> succeededDataSynchActions, List<DataSynchAction> failedDataSynchActions)
+  protected void dataSynchFinished(List<DataSynchAction> succeededDataSynchActions,
+                                   List<DataSynchAction> failedDataSynchActions)
   {
     refreshEntityList(getEntityList());
     if (isDoRemoteWriteInBackground())
     {
       AdfmfJavaUtilities.flushDataChangeEvent();
     }
-  //    int ok = succeededDataSynchActions.size();
-  //    int fails = failedDataSynchActions.size();
-  //    int total = ok + fails;
-  //    MessageUtils.handleMessage(AdfException.INFO,
-  //                               total + " data synch actions completed. Successful: " + ok + ", Failed: " + fails);
+    //    int ok = succeededDataSynchActions.size();
+    //    int fails = failedDataSynchActions.size();
+    //    int total = ok + fails;
+    //    MessageUtils.handleMessage(AdfException.INFO,
+    //                               total + " data synch actions completed. Successful: " + ok + ", Failed: " + fails);
   }
 
   /**
@@ -402,7 +410,7 @@ public abstract class EntityCRUDService<E extends Entity>
     }
     if (remotePersistenceManager != null && remotePersistenceManager.isUpdateSupported(entity.getClass()))
     {
-      writeEntityRemote(new DataSynchAction(DataSynchAction.UPDATE_ACTION, entity,this.getClass().getName()));
+      writeEntityRemote(new DataSynchAction(DataSynchAction.UPDATE_ACTION, entity, this.getClass().getName()));
     }
   }
 
@@ -445,7 +453,7 @@ public abstract class EntityCRUDService<E extends Entity>
    * Removes an entity using the configured local and remote persistence managers.
    * Note that this method assumes that the entity is ALREADY removed from the entity list
    * because this method is typically (indirectly) called through overridden remove method in EntityList
-   * which fires when using the standard Remove operation in the data control palette. 
+   * which fires when using the standard Remove operation in the data control palette.
    * @param entity
    */
   protected void removeEntity(Entity entity)
@@ -459,7 +467,7 @@ public abstract class EntityCRUDService<E extends Entity>
       }
       if (remotePersistenceManager != null && remotePersistenceManager.isRemoveSupported(entity.getClass()))
       {
-        writeEntityRemote(new DataSynchAction(DataSynchAction.REMOVE_ACTION, entity,this.getClass().getName()));
+        writeEntityRemote(new DataSynchAction(DataSynchAction.REMOVE_ACTION, entity, this.getClass().getName()));
       }
     }
   }
@@ -473,8 +481,8 @@ public abstract class EntityCRUDService<E extends Entity>
     getPropertyChangeSupport().firePropertyChange(getEntityListName(), oldEntityList, getEntityList());
     getProviderChangeSupport().fireProviderRefresh(getEntityListName());
     // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
-    // a list view. 
-    EntityUtils.refreshCurrentEntity(getEntityListName(),getEntityList(),getProviderChangeSupport());
+    // a list view.
+    EntityUtils.refreshCurrentEntity(getEntityListName(), getEntityList(), getProviderChangeSupport());
     if (AdfmfJavaUtilities.isBackgroundThread())
     {
       AdfmfJavaUtilities.flushDataChangeEvent();
@@ -513,10 +521,7 @@ public abstract class EntityCRUDService<E extends Entity>
     }
     if (remotePersistenceManager != null && isOnline())
     {
-      TaskExecutor.getInstance().execute(isDoRemoteWriteInBackground()
-          , () -> {
-                    remotePersistenceManager.commmit();
-                  });    
+      TaskExecutor.getInstance().execute(isDoRemoteWriteInBackground(), () -> { remotePersistenceManager.commmit(); });
     }
   }
 
@@ -533,10 +538,7 @@ public abstract class EntityCRUDService<E extends Entity>
     }
     if (remotePersistenceManager != null && isOnline())
     {
-      TaskExecutor.getInstance().execute(isDoRemoteWriteInBackground()
-          , () -> {
-                    remotePersistenceManager.rollback();
-                  });    
+      TaskExecutor.getInstance().execute(isDoRemoteWriteInBackground(), () -> { remotePersistenceManager.rollback(); });
     }
     EntityCache.getInstance().clear(getEntityClass());
   }
@@ -615,18 +617,18 @@ public abstract class EntityCRUDService<E extends Entity>
       return;
     }
     setRemoteFindAllExecuted(true);
-    TaskExecutor.getInstance().execute(isDoRemoteReadInBackground()
-        , () -> {
-                  // auto synch any pending actions first, pass false for inBackground because
-                  // we want to proces pending actions before we do remote read
-                  synchronize(false);
-                  List<E> entities = executeRemoteFindAll();
-                  if (entities != null)
-                  {
-                    // when an error occurs (for example server not available, the method returns null
-                    setEntityList(entities);
-                  }
-                });    
+    TaskExecutor.getInstance().execute(isDoRemoteReadInBackground(), () ->
+      {
+        // auto synch any pending actions first, pass false for inBackground because
+        // we want to proces pending actions before we do remote read
+        synchronize(false);
+        List<E> entities = executeRemoteFindAll();
+        if (entities != null)
+        {
+          // when an error occurs (for example server not available, the method returns null
+          setEntityList(entities);
+        }
+      });
   }
 
   /**
@@ -651,18 +653,18 @@ public abstract class EntityCRUDService<E extends Entity>
       sLog.fine("Cannot execute doRemoteFindAllInParent, no network connection");
       return;
     }
-    TaskExecutor.getInstance().execute(isDoRemoteReadInBackground()
-        , () -> {
-                  // auto synch any pending actions first, pass false for inBackground because
-                  // we want to proces pending actions before we do remote read
-                  synchronize(false);
-                  List<E> entities = executeRemoteFindAllInParent(parent, accessorAttribute);
-                  if (entities != null)
-                  {
-                    // when an error occurs (for example server not available, the method returns null
-                    setEntityList(entities);
-                  }
-                });    
+    TaskExecutor.getInstance().execute(isDoRemoteReadInBackground(), () ->
+      {
+        // auto synch any pending actions first, pass false for inBackground because
+        // we want to proces pending actions before we do remote read
+        synchronize(false);
+        List<E> entities = executeRemoteFindAllInParent(parent, accessorAttribute);
+        if (entities != null)
+        {
+          // when an error occurs (for example server not available, the method returns null
+          setEntityList(entities);
+        }
+      });
 
   }
 
@@ -688,18 +690,18 @@ public abstract class EntityCRUDService<E extends Entity>
       sLog.fine("Cannot execute doRemoteFind, no network connection");
       return;
     }
-    TaskExecutor.getInstance().execute(isDoRemoteReadInBackground()
-        , () -> {
-                  // auto synch any pending actions first, pass false for inBackground because
-                  // we are already running in background thread
-                  synchronize(false);
-                  List<E> entities = executeRemoteFind(searchValue);
-                  if (entities != null)
-                  {
-                    // when an error occurs (for example server not available, the method returns null
-                    setEntityList(entities);
-                  }
-                });    
+    TaskExecutor.getInstance().execute(isDoRemoteReadInBackground(), () ->
+      {
+        // auto synch any pending actions first, pass false for inBackground because
+        // we are already running in background thread
+        synchronize(false);
+        List<E> entities = executeRemoteFind(searchValue);
+        if (entities != null)
+        {
+          // when an error occurs (for example server not available, the method returns null
+          setEntityList(entities);
+        }
+      });
   }
 
   protected void setDoRemoteReadInBackground(boolean doRemoteReadInBackground)
@@ -751,7 +753,7 @@ public abstract class EntityCRUDService<E extends Entity>
   }
 
   /**
-   * Returns the dataSynchManager for this CRUD service. 
+   * Returns the dataSynchManager for this CRUD service.
    * @return
    */
   protected DataSynchManager getDataSynchManager()
@@ -762,7 +764,7 @@ public abstract class EntityCRUDService<E extends Entity>
     }
     return dataSynchManager;
   }
-  
+
   protected void setAutoGeneratePrimaryKey(boolean autoGeneratePrimaryKey)
   {
     this.autoGeneratePrimaryKey = autoGeneratePrimaryKey;
@@ -770,7 +772,7 @@ public abstract class EntityCRUDService<E extends Entity>
 
   protected boolean isAutoGeneratePrimaryKey()
   {
-    return autoGeneratePrimaryKey;
+    return isPersisted() && autoGeneratePrimaryKey;
   }
 
   /**
@@ -809,24 +811,24 @@ public abstract class EntityCRUDService<E extends Entity>
   }
 
   /**
-   * Process any pending data synch actions
+   * Process any pending data synch actions.
    * @param inBackground
    */
   protected void synchronize(Boolean inBackground)
   {
-    getDataSynchManager().synchronize(inBackground.booleanValue());
+      getDataSynchManager().synchronize(inBackground.booleanValue());      
   }
 
   protected String getRemoteFindAllExecutedExpression()
   {
     String entityName = StringUtils.substitute(getEntityClass().getName(), ".", "_");
-    return "#{applicationScope."+entityName+"RemoteFindAllExecuted}";
+    return "#{applicationScope." + entityName + "RemoteFindAllExecuted}";
   }
 
-  /** 
+  /**
    * This method stores the executed value in an applicationScoped variable named
    * [entityClassName]RemoteFindAllExecuted. It is not stored in a member varuable of this
-   * service class because the remoteFindAll might already be executed in the context of another 
+   * service class because the remoteFindAll might already be executed in the context of another
    * feature which has its own class loader and its own instance of this service class
    */
   protected void setRemoteFindAllExecuted(boolean executed)
@@ -836,14 +838,14 @@ public abstract class EntityCRUDService<E extends Entity>
 
   /**
    * This method is called to determine whether a remoteFindAll needs to be executed when the findAll method
-   * is called. This method inspects a boolean applicationScoped property as returned by method  
+   * is called. This method inspects a boolean applicationScoped property as returned by method
    * getRemoteFindAllExecutedExpression().
    * @return
    */
   protected boolean isRemoteFindAllExecuted()
   {
-      Boolean value = (Boolean) AdfmfJavaUtilities.evaluateELExpression(getRemoteFindAllExecutedExpression());
-    return value!=null ? value.booleanValue() : false;
+    Boolean value = (Boolean) AdfmfJavaUtilities.evaluateELExpression(getRemoteFindAllExecutedExpression());
+    return value != null? value.booleanValue(): false;
   }
 
   /**
@@ -859,11 +861,29 @@ public abstract class EntityCRUDService<E extends Entity>
       getEntityList().remove(entity);
       refreshEntityList(oldEntities);
     }
-    else if (getLocalPersistenceManager() != null)
+    else if (isPersisted(entity.getClass()))
     {
       getLocalPersistenceManager().resetEntity(entity);
       EntityUtils.refreshCurrentEntity(getEntityListName(), getEntityList(), providerChangeSupport);
     }
+  }
+
+  /**
+   * Return true when the entity is persisted to local SQLite DB.
+   * @return
+   */
+  protected boolean isPersisted()
+  {
+    return isPersisted(getEntityClass());
+  }
+
+  /**
+   * Return true when the entity is persisted to local SQLite DB.
+   * @return
+   */
+  protected boolean isPersisted(Class entityClass)
+  {
+    return ClassMappingDescriptor.getInstance(entityClass).isPersisted() && getLocalPersistenceManager() != null;
   }
 
   /**
@@ -874,9 +894,9 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void getCanonical(Entity entity)
   {
-    getCanonical(entity,false);
+    getCanonical(entity, false);
   }
-  
+
   /**
    * Invokes the getCanonical method on the remote persistence manager if this has not happened yet
    * for this instance during this application session. The corresponding row in the local database is also updated if
@@ -888,36 +908,36 @@ public abstract class EntityCRUDService<E extends Entity>
   protected void getCanonical(Entity entity, boolean executeInBackground)
   {
     if (isOnline() && getRemotePersistenceManager() != null && !entity.canonicalGetExecuted())
-    {      
+    {
       // immediately set flag to false, so we can call this method from some get Attribute method without
       // causing endless loop
       entity.setCanonicalGetExecuted(true);
 
-      TaskExecutor.getInstance().execute(executeInBackground
-          , () -> {
-                    executeGetCanonical(entity);                
-                    if (executeInBackground)
-                    {
-                      AdfmfJavaUtilities.flushDataChangeEvent();
-                    }
-                  });    
+      TaskExecutor.getInstance().execute(executeInBackground, () ->
+        {
+          executeGetCanonical(entity);
+          if (executeInBackground)
+          {
+            AdfmfJavaUtilities.flushDataChangeEvent();
+          }
+        });
     }
   }
 
   /**
    * Executes getCanonical method against remote persistence manager.
-   * Convenience method that you can override to perform additional actions before or after. 
+   * Convenience method that you can override to perform additional actions before or after.
    * Note that this method is executed in the background if getCanonical is called with executeInBackground set to true.
    * @return
    */
   protected void executeGetCanonical(Entity entity)
   {
     getRemotePersistenceManager().getCanonical(entity);
-    if (getLocalPersistenceManager() != null && ClassMappingDescriptor.getInstance(getEntityClass()).isPersisted())
+    if (isPersisted(entity.getClass()))
     {
       getLocalPersistenceManager().mergeEntity(entity, true);
     }
-    EntityUtils.refreshCurrentEntity(getEntityListName(),getEntityList(),getProviderChangeSupport());                          
+    EntityUtils.refreshCurrentEntity(getEntityListName(), getEntityList(), getProviderChangeSupport());
   }
 
 
@@ -937,21 +957,23 @@ public abstract class EntityCRUDService<E extends Entity>
   {
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(getEntityClass());
     String className = descriptor.getLocalPersistenceManagerClassName();
-    Object pm = getClassInstance(className);
-    if (pm instanceof DBPersistenceManager)
+    if (className != null && !"".equals(className))
     {
-      setLocalPersistenceManager((DBPersistenceManager) pm);
-    }
-    else if (pm != null)
-    {
-      throw new AdfException("Local persistence manager class " + className + ": should extend DBPersisenceManager",
-                             AdfException.ERROR);
-
+      Object pm = getClassInstance(className);
+      if (pm instanceof DBPersistenceManager)
+      {
+        setLocalPersistenceManager((DBPersistenceManager) pm);
+      }
+      else if (pm != null)
+      {
+        throw new AdfException("Local persistence manager class " + className + ": should extend DBPersistenceManager",
+                               AdfException.ERROR);
+      }
     }
     className = descriptor.getRemotePersistenceManagerClassName();
-    if (className!=null && !"".equals(className))
+    if (className != null && !"".equals(className))
     {
-      pm = getClassInstance(className);
+      Object pm = getClassInstance(className);
       if (pm instanceof RemotePersistenceManager)
       {
         RemotePersistenceManager rpm = (RemotePersistenceManager) pm;
@@ -961,7 +983,7 @@ public abstract class EntityCRUDService<E extends Entity>
       {
         throw new AdfException("Remote persistence manager class " + className +
                                ": should implement RemotePersistenceManager interface", AdfException.ERROR);
-      }      
+      }
     }
     setDoRemoteReadInBackground(descriptor.isRemoteReadInBackground());
     setDoRemoteWriteInBackground(descriptor.isRemoteWriteInBackground());
@@ -981,7 +1003,7 @@ public abstract class EntityCRUDService<E extends Entity>
     try
     {
       Class clazz = Utility.loadClass(className);
-//      Class clazz = Class.forName(className, false, Thread.currentThread().getContextClassLoader());
+      //      Class clazz = Class.forName(className, false, Thread.currentThread().getContextClassLoader());
       instance = clazz.newInstance();
     }
     catch (InstantiationException e)

@@ -70,7 +70,7 @@ public class InitDBLifeCycleListener
    */
   public void activate()
   {
-    MCSManager.getInstance().startSession();
+//    MCSManager.getInstance().startSession();
   }
 
   /**
@@ -79,7 +79,7 @@ public class InitDBLifeCycleListener
    */
   public void deactivate()
   {
-    MCSManager.getInstance().endSession();
+//    MCSManager.getInstance().endSession();
     DBConnectionFactory.closeConnectionIfNeeded();
     TaskExecutor.shutDown();
   }

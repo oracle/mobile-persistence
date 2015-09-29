@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  04-sep-2015   Steven Davelaar
+  1.3           Only load sync actions from DB when offline transactions is enabled
   14-aug-2015   Steven Davelaar
   1.2           Improved method mergeWithExistingDataSyncActionIfNeeded
   24-jun-2015   Steven Davelaar
@@ -24,6 +26,7 @@ import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.model.ChangeEventSupportable;
 import oracle.ateam.sample.mobile.util.MessageUtils;
 import oracle.ateam.sample.mobile.util.TaskExecutor;
+import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 
@@ -56,7 +59,10 @@ public class DataSynchManager
     super();
     this.crudService = crudService;
     //    loadSynchActionsFromFile();
-    loadSynchActionsFromDB();
+    if (ClassMappingDescriptor.getInstance(crudService.getEntityClass()).isEnableOfflineTransactions())
+    {
+      loadSynchActionsFromDB();      
+    }
     // register after loading actions from DB, loading might fail, and then we registered invalid
     // manager
     registerDataSynchManager();

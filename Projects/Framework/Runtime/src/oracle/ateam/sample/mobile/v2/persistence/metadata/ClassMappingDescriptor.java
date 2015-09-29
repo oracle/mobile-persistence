@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  09-sep-2015   Steven Davelaar
+  1.2           - Allow persisted atribute to be overridden
   19-mar-2015   Steven Davelaar
   1.1           - Default dateTimeFormat to dateFormat
                 - Allow runtime config of showWebServiceInvocationErrors
@@ -46,6 +48,8 @@ public class ClassMappingDescriptor
   private List<AttributeMappingOneToOne> attributeMappingsOneToOne = null;
   private List<AttributeMappingOneToMany> attributeMappingsOneToMany = null;
   private String orderBy = null;
+  // member to allow temporary override of persisted value in persistence-mapping.xml
+  private Boolean persisted;
 
 
   public static ClassMappingDescriptor getInstance(Class clazz)
@@ -248,7 +252,20 @@ public class ClassMappingDescriptor
 
   public boolean isPersisted()
   {
+    if (this.persisted!=null)
+    {
+      return this.persisted;
+    }
     return  !("false".equalsIgnoreCase(getAttributeStringValue("persisted")));
+  }
+  
+  /**
+   * using this method you can (temporarily) override the persisted value as set in persistence-mapping.xml
+   * @param persisted
+   */
+  public void setPersisted(Boolean persisted)
+  {
+    this.persisted = persisted;
   }
 
   public List<AttributeMapping> getAttributeMappings()

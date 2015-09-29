@@ -394,7 +394,12 @@ public class RestJSONPersistenceManager
         {
           // skip this mapping as it needs to fire another rest call, we want lazy loading
           // when the child list is really needed in UI
-          continue;
+          // 24-sep-2015: UNLESS the child list is NOT empty, then we might be in offline optimization
+          // scenario where all parent and child rows are retrieved in one go
+          if (rawValue==null || (rawValue instanceof JSONArray && ((JSONArray)rawValue).length()==0 ))
+          {
+            continue;            
+          }
         }
         // some restful service return an object instead of list when there is only one item in the list
         if (rawValue instanceof JSONArray || rawValue instanceof JSONObject)

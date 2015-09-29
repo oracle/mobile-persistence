@@ -70,6 +70,7 @@ public class DBPersistenceManager
   public static final String SQL_SELECT_KEYWORD = "SELECT ";
   public static final String SQL_UPDATE_KEYWORD = "UPDATE ";
   public static final String SQL_INSERT_KEYWORD = "INSERT INTO ";
+  public static final String SQL_INSERT_OR_REPLACE_KEYWORD = "INSERT OR REPLACE INTO ";
   public static final String SQL_DELETE_KEYWORD = "DELETE FROM ";
   public static final String SQL_WHERE_KEYWORD = " WHERE ";
   public static final String SQL_FROM_KEYWORD = " FROM ";
@@ -200,16 +201,19 @@ public class DBPersistenceManager
    * @param doCommit
    */
   public void mergeEntity(Entity entity, boolean doCommit)
-  {
-    boolean doInsert = entity.getIsNewEntity();
-    if (doInsert)
-    {
-      insertEntity(entity, doCommit);
-    }
-    else
-    {
-      updateEntity(entity, doCommit);
-    }
+  {    
+//    boolean doInsert = entity.getIsNewEntity();
+//    if (doInsert)
+//    {
+//      insertEntity(entity, doCommit);
+//    }
+//    else
+//    {
+//      updateEntity(entity, doCommit);
+//    }
+    List<BindParamInfo> bindParamInfos = getBindParamInfos(entity,false,true);
+    mergeRow(bindParamInfos, doCommit);
+    mergeChildren(entity,doCommit);
   }
 
   /**
@@ -271,14 +275,18 @@ public class DBPersistenceManager
     }
     if (primaryKeyBindParamInfos.size()>0)
     {
-      if (isRowExistsInDB(primaryKeyBindParamInfos))   
-      {
-        updateRow(bindParamInfos, doCommit);
-      }
-      else
-      {
-        insertRow(bindParamInfos, doCommit);
-      }
+      StringBuffer sql = getSqlInsertOrReplaceIntoPart(bindParamInfos);
+      sql.append(getSqlInsertValuesPart(bindParamInfos));
+      executeSqlDml(sql.toString(), bindParamInfos, doCommit);
+
+//      if (isRowExistsInDB(primaryKeyBindParamInfos))   
+//      {
+//        updateRow(bindParamInfos, doCommit);
+//      }
+//      else
+//      {
+//        insertRow(bindParamInfos, doCommit);
+//      }
     }
   }
 
@@ -405,6 +413,23 @@ public class DBPersistenceManager
   {
     BindParamInfo firstValue = bindParamInfos.get(0);
     StringBuffer insertSQL = new StringBuffer(SQL_INSERT_KEYWORD);
+    insertSQL.append(firstValue.getTableName());
+    insertSQL.append(" (");
+    insertSQL.append(getSqlColumnNamesCommaSeparated(bindParamInfos));
+    insertSQL.append(") ");
+    return insertSQL;
+  }
+
+  /**
+   * Helper method to create the INSERT OR REPLACE INTO part of the SQL statement. 
+   * For each BindParamInfo in the list, a column is added to the INSERT statement.
+   * @param bindParamInfos
+   * @return
+   */
+  public StringBuffer getSqlInsertOrReplaceIntoPart(List<BindParamInfo> bindParamInfos)
+  {
+    BindParamInfo firstValue = bindParamInfos.get(0);
+    StringBuffer insertSQL = new StringBuffer(SQL_INSERT_OR_REPLACE_KEYWORD);
     insertSQL.append(firstValue.getTableName());
     insertSQL.append(" (");
     insertSQL.append(getSqlColumnNamesCommaSeparated(bindParamInfos));
@@ -703,6 +728,10 @@ public class DBPersistenceManager
       }
       ObjectPersistenceMapping persMapping = ObjectPersistenceMapping.getInstance();
       ClassMappingDescriptor descriptor = persMapping.findClassMappingDescriptor(entityClass.getName());
+      if (!descriptor.isPersisted())
+      {
+        return null;
+      }
       StringBuffer sql = getSqlSelectFromPart(descriptor);
       constructWhereClause(sql, keyBindParamInfos);      
       ResultSet set = executeSqlSelect(sql.toString(), keyBindParamInfos);
