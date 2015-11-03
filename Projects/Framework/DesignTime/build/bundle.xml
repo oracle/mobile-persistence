@@ -13,7 +13,7 @@ It contains object-relational mapping functionality which makes it  easy to cach
 After you installed this extension, a readme file will be displayed that explains how to get started.
 </u:description>
       <u:requirements>
-         <u:requires-extension id="oracle.j2ee" minVersion="12.1.3.0.0" maxVersion="12.1.3.99.99"/>
+         <u:requires-extension id="oracle.j2ee" minVersion="12.1.3.0.0" maxVersion="12.9.9.99.99"/>
       </u:requirements>
       <u:post-startup-hook>oracle.ateam.sample.mobile.dt.MobileController</u:post-startup-hook>
    </u:update>
