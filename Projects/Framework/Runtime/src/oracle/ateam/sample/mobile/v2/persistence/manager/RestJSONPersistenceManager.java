@@ -27,6 +27,7 @@ import oracle.adfmf.json.JSONObject;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.StringUtils;
 import oracle.ateam.sample.mobile.v2.persistence.db.BindParamInfo;
+import oracle.ateam.sample.mobile.v2.persistence.db.DBConnectionFactory;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingOneToMany;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
@@ -191,6 +192,8 @@ public class RestJSONPersistenceManager
   protected <E extends Entity> List<E> handleResponse(String json, Class entityClass, String collectionElementName,
                                     String rowElementName, List<BindParamInfo> parentBindParamInfos, E currentEntity, boolean deleteAllRows)
   {
+      
+    long startTime = System.currentTimeMillis();
     String jsonResponse = substituteNullValuesInPayload(json); 
     List<E> entities = new ArrayList<E>();
     if (!jsonResponse.startsWith("{") && !jsonResponse.startsWith("["))
@@ -231,6 +234,10 @@ public class RestJSONPersistenceManager
 //      MessageUtils.handleError(e.getLocalizedMessage());
       throw new AdfException(e);
     }
+// once we switch ff auto-commit for each row, we need to commit here.
+//    new DBPersistenceManager().commmit();
+    long duration = System.currentTimeMillis() - startTime;
+    sLog.fine("handleResponse for "+entityClass.getName()+": "+duration+" ms");
     return entities;
   }
 
@@ -430,6 +437,11 @@ public class RestJSONPersistenceManager
       if (isAllPrimaryKeyBindParamInfosPopulated(descriptor, bindParamInfos))
       {
         DBPersistenceManager dbpm = getLocalPersistenceManager();
+        // we want to set auto-comit to false, and then do the commit at the end of handleResponse method
+        // this increases DB write performance with about 20%.
+        // For this to work, we need to enable WAL (can be done now through db.use.WAL in persistence-config) 
+        // , but still causes issues on Android "Error in SQL step", 
+        // so keep it to false for now
         dbpm.mergeRow(bindParamInfos, true);
       }
       else

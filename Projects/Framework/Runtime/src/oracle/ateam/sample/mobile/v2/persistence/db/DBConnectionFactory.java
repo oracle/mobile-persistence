@@ -2,6 +2,12 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  19-nov-2015   Steven Davelaar
+  1.2           Password needs to be prefixed with encryption type, otherwise non-default encrytpion
+                types will not work (Thanks Tim Lam for reprotig this)
+  05-nov-2015   Steven Davelaar
+  1.1           Allows multiple threads to use same connection, is no longer a problems since we are
+                now using Write Ahead Logging, see DBPersistenceManager.initDB
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
@@ -18,23 +24,28 @@ import oracle.adfmf.framework.exception.AdfException;
 
 import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
-import oracle.ateam.sample.mobile.util.MessageUtils;
 
 
 /**
  * Class that returns a Database Connection. The database name is read from
  * mobile-persistence-config.properties file that should be stored in the META-INF directory of the
- * ApplicationController project. Since SQLite is a single-user database it can be accessed by only one DB connection 
- * at a time. Since multiple background threads might want to access the database simultaneously, this class 
- * ensures that only one connection is used for the main thread and all background threads. This is implemented by 
- * a "wait": if a connection is requested, and the connection is still "in use" by another thread, it will wait for at
- * most 30 seconds to see whether the connection has been released in the meantime by the other thread. 
- * After 30 seconds an error is thrown.
- * For this mechanism to work correctly, you always need to call releaseConnection() in the finally block of your 
- * code when calling getConnection() in the try block.
+ * ApplicationController project.
+ * Since we are using Write Ahead Logging when creating the DB (see https://www.sqlite.org/wal.html) we
+ * can have concurrent read operations, write operations will be executed sequentially by SQLite
+ *
  */
 public class DBConnectionFactory
 {
+
+  // This was the old way this worked befire we switched to WAL:
+  //    * Since SQLite is a single-user database it can be accessed by only one DB connection
+  //    * at a time. Since multiple background threads might want to access the database simultaneously, this class
+  //    * ensures that only one connection is used for the main thread and all background threads. This is implemented by
+  //    * a "wait": if a connection is requested, and the connection is still "in use" by another thread, it will wait for at
+  //    * most 30 seconds to see whether the connection has been released in the meantime by the other thread.
+  //    * After 30 seconds an error is thrown.
+  //    * For this mechanism to work correctly, you always need to call releaseConnection() in the finally block of your
+  //    * code when calling getConnection() in the try block.
 
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(DBConnectionFactory.class);
   protected static Connection conn = null;
@@ -50,21 +61,22 @@ public class DBConnectionFactory
         // create a database connection
         String dir = AdfmfJavaUtilities.getDirectoryPathRoot(AdfmfJavaUtilities.ApplicationDirectory);
         String connStr = "jdbc:sqlite:" + dir + "/" + PersistenceConfig.getDatabaseName();
-        sLog.fine("Creating SQLite database connection using "+connStr);
+        sLog.fine("Creating SQLite database connection using " + connStr);
         JDBCDataSource dataSource = new JDBCDataSource(connStr);
         // specifiy password if DB is/should be encrypted
         if (PersistenceConfig.encryptDatabase())
         {
-          conn = dataSource.getConnection(null, PersistenceConfig.getDatabasePassword());
+          String pwString = PersistenceConfig.getEncryptionType()+":"+PersistenceConfig.getDatabasePassword();
+          conn = dataSource.getConnection(null, pwString);
         }
         else
         {
-          conn = dataSource.getConnection();          
+          conn = dataSource.getConnection();
         }
       }
       catch (SQLException e)
       {
-        sLog.severe("Could not create SQLite database connection: "+e.getLocalizedMessage());
+        sLog.severe("Could not create SQLite database connection: " + e.getLocalizedMessage());
         // database not found
         throw new AdfException(e);
       }
@@ -73,21 +85,26 @@ public class DBConnectionFactory
         throw e;
       }
     }
-    long startTime = System.currentTimeMillis();
-    while (connectionInUse)
-    {
-      // another thread is still using the connection, wait until released
-      // with a maximum of 30 seconds
-      if (System.currentTimeMillis()-startTime > 30000)
-      {
-        sLog.severe("Cannot acquire DB connection, another process might still be using the connection or connection is not properly released.");
-        MessageUtils.handleError("Cannot acquire DB connection, another process might still be using the connection or connection is not properly released. Try again later.");
-      }
-    }
-    connectionInUse = true;
+    // We are now using Write Ahead Logging, so SQLite will take care of serailizing write calls, concurrent read calls are
+    // supported with WAL, see https://www.sqlite.org/wal.html
+    //    long startTime = System.currentTimeMillis();
+    //    while (connectionInUse)
+    //    {
+    //      // another thread is still using the connection, wait until released
+    //      // with a maximum of 30 seconds
+    //      if (System.currentTimeMillis()-startTime > 30000)
+    //      {
+    //        sLog.severe("Cannot acquire DB connection, another process might still be using the connection or connection is not properly released.");
+    //        MessageUtils.handleError("Cannot acquire DB connection, another process might still be using the connection or connection is not properly released. Try again later.");
+    //      }
+    //    }
+    //    connectionInUse = true;
     return conn;
   }
 
+  /**
+   * @deprecated No need to call this method since we are now using Write Ahead Logging
+   */
   public static void releaseConnection()
   {
     connectionInUse = false;
@@ -95,21 +112,20 @@ public class DBConnectionFactory
 
   public static void closeConnectionIfNeeded()
   {
-    if (conn!=null)
+    if (conn != null)
     {
       try
       {
         sLog.info("Closing SQLite DB connection");
         conn.close();
-        conn=null;
+        conn = null;
       }
       catch (SQLException e)
       {
-        sLog.severe("Error closing connection "+e.getMessage());
+        sLog.severe("Error closing connection " + e.getMessage());
       }
     }
   }
-
 
 
 }

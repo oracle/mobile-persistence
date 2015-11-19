@@ -2,6 +2,8 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
  $revision_history$
+ 08-nov-2015   Steven Davelaar
+ 1.3           - Fixed bug in deriving child attr name to exclude in getPayloadKeyValuePairs (thanks Vik Kumar for reporting)
  24-sep-2015   Steven Davelaar
  1.2           - Check requestType of custom method, when GET call handleReadResponse insteaf handleWriteResponse
  20-mar-2015   Steven Davelaar
@@ -199,7 +201,7 @@ public abstract class RestPersistenceManager
             String attrName = attributesToExclude.get(k);
             if (attrName.startsWith(childDataObjectName+"."))
             {
-              childAttrsToIgnore.add(attrName.substring(childDataObjectName.length()));
+              childAttrsToIgnore.add(attrName.substring(childDataObjectName.length()+1));
             }            
           }
         }

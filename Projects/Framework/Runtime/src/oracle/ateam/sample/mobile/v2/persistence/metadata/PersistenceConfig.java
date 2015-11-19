@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  19-nov-2015   Steven Davelaar
+  1.1           Added db.use.WAL property
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
@@ -51,6 +53,21 @@ public class PersistenceConfig
       return true;
     }
 //    return true;
+  }
+
+  public static boolean useWAL()
+  {
+    // switch to set Write Ahead Logging
+    try
+    {
+      String useWAL = config.getString("db.use.WAL");
+      return "true".equalsIgnoreCase(useWAL);    
+    }
+    catch (MissingResourceException e)
+    {
+      // property not found, encrypt the db by default
+      return false;
+    }
   }
   
   /**

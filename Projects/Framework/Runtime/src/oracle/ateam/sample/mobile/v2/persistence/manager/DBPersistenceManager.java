@@ -2,6 +2,10 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  03-nov-2015   Steven Davelaar
+  1.3           Use SQLite Write Ahead Loggindg (WAL) when db.use.WAL is set in persistence-config
+                to improve performance with 40% and to allow autoCommit to
+                be turned off. (Thanks to Julien Brodier from Talium for figuring this out).
   16-jun-2015   Steven Davelaar
   1.2           Fixed NPE in getColumnValueFromResultSet when timestamp from DB returns null (can happen
                 when wrong date format is used to insert the value)
@@ -1204,6 +1208,16 @@ public class DBPersistenceManager
         // when rows are deleted. See http://www.sqlite.org/pragma.html#pragma_auto_vacuum
         PreparedStatement stmt = connection.prepareStatement("PRAGMA auto_vacuum = FULL;");
         stmt.execute();
+        if (PersistenceConfig.useWAL())
+        {
+          // to be able to disable auto-commit, we must use Write Ahead Logging
+          // To prevent issues on Android with WAL, we also need to set temp_store to MEMORY
+          // (Special thanks to Julien Brodier from Talium for figuring this out)
+          stmt = connection.prepareStatement("PRAGMA journal_mode = WAL;");
+          stmt.execute();
+          stmt = connection.prepareStatement("PRAGMA temp_store = MEMORY;");
+          stmt.execute();          
+        }
       }
       catch (Exception e)
       {
