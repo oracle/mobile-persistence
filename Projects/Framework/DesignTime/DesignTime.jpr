@@ -228,7 +228,7 @@
          <hash n="debug">
             <value n="custom" v="false"/>
             <value n="name" v="debug"/>
-            <url n="targetURL" path="../../../../../jdev1213MAF21/jdeveloper/jdev/bin/jdev.conf"/>
+            <url n="targetURL" path="../../../../../jdev1213/jdeveloper/jdev/bin/jdev.conf"/>
             <value n="VMName" v="server"/>
          </hash>
       </hash>

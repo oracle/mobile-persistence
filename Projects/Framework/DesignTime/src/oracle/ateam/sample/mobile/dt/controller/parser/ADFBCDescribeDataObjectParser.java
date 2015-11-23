@@ -20,8 +20,10 @@ import java.util.List;
 import java.util.Map;
 
 import oracle.ateam.sample.mobile.dt.model.AccessorInfo;
+import oracle.ateam.sample.mobile.dt.model.AccessorInfo.AttributeMapping;
 import oracle.ateam.sample.mobile.dt.model.AttributeInfo;
 import oracle.ateam.sample.mobile.dt.model.DCMethod;
+import oracle.ateam.sample.mobile.dt.model.DCMethodParameter;
 import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
 import oracle.ateam.sample.mobile.dt.model.HeaderParam;
 import oracle.ateam.sample.mobile.dt.util.StringUtils;
@@ -49,14 +51,6 @@ public class ADFBCDescribeDataObjectParser
 
   public List<DataObjectInfo> run()
   {
-    String contentType = "application/vnd.oracle.adf.resource+json";
-    HeaderParam contentTypeParam = new HeaderParam();
-    contentTypeParam.setName("Content-Type");
-    contentTypeParam.setValue(contentType);
-    if (!headerParams.contains(contentTypeParam))
-    {
-      headerParams.add(contentTypeParam);
-    }    
     HashMap map = gson.fromJson(describeContent, HashMap.class);
     Map<String,Map> resources = (Map<String,Map>) map.get("Resources");
     Iterator<String> keys = resources.keySet().iterator(); 
@@ -92,6 +86,8 @@ public class ADFBCDescribeDataObjectParser
   private void createDataObject(String name, Map desc, DataObjectInfo parentDataObject, Map parentDesc, boolean processChildren)
   {
     DataObjectInfo doi = new DataObjectInfo(name,name);
+    doi.setPayloadDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    doi.setPayloadDateTimeFormat("yyyy-MM-dd'T'HH:mm:ss");
     // this works because equals method is implemented comparing the name of the data objects
     int index = dataObjectInfos.indexOf(doi);
     if (index>-1)
@@ -133,7 +129,9 @@ public class ADFBCDescribeDataObjectParser
       else
       {
         DCMethod findAllMethod = new DCMethod(connectionName,uri,"GET");
-        doi.setPayloadListElementName(name);      
+        // set existing to true to prevent override of layload element name when we exit dataObjects wizard page
+        findAllMethod.setExisting(true);
+        findAllMethod.setPayloadElementName("items");      
         doi.setFindAllMethod(findAllMethod);
       }
       String canonicalResource = getCanonicalResource(desc);
@@ -143,6 +141,11 @@ public class ADFBCDescribeDataObjectParser
         DCMethod canonicalMethod = new DCMethod(connectionName,canonicalResource,"GET");
         doi.setGetCanonicalMethod(canonicalMethod);
         canonicalMethod.setParameterValueProviderDataObject(doi);      
+        // path params are not set up when is is child do because then we have both id and id1 in path
+        if (parentDataObject!=null)
+        {
+          setUpPathParams(parentDataObject, doi, canonicalMethod);
+        }
       //    }
 
       // add crud resource methods
@@ -204,21 +207,59 @@ public class ADFBCDescribeDataObjectParser
       }      
     }
   }
+  
+  public String getAccessorName(DataObjectInfo doi)
+  {
+    String name = doi.getName();
+    String attrNameWithUnderscores = StringUtils.substitute(name, ".", "_");
+    return StringUtils.startWithLowerCase(StringUtils.toCamelCase(attrNameWithUnderscores));
+  }
+
+  private void setUpPathParams(DataObjectInfo parentDataObject, DataObjectInfo doi, DCMethod method)
+  {
+    AccessorInfo acc =parentDataObject.findChildAccessor(getAccessorName(doi));
+    if (acc!=null)
+    {
+      if (acc.getAttributeMappings().size()>0)
+      {
+        AttributeMapping am = acc.getAttributeMappings().get(0);
+        for (DCMethodParameter param : method.getPathParams())
+        {
+          if (param.getName().equals("id"))
+          {
+            param.setValueProvider(DCMethodParameter.DATA_OBJECT_ATTRIBUTE);
+            param.setDataObjectAttribute(am.getChildAttr().getAttrName());
+          }
+          else if (param.getName().equals("id1"))
+          {
+            if (doi.getKeyAttributes().size()>0)
+            {
+              param.setValueProvider(DCMethodParameter.DATA_OBJECT_ATTRIBUTE);
+              param.setDataObjectAttribute(doi.getKeyAttributes().get(0).getAttrName());              
+            }
+          }
+        }        
+      }
+    }
+  }
 
   private void createChildAccessor(DataObjectInfo parentDataObject, Map parentDesc, DataObjectInfo doi, String uri)
   {
 //    DCMethod childAccessorMethod = new DCMethod(doi.getName()+"List",connectionName, uri, "GET");
-    DCMethod childAccessorMethod = new DCMethod(doi.getName(),connectionName, uri, "GET");
+    String accessorName = getAccessorName(doi);
+    DCMethod childAccessorMethod = new DCMethod(accessorName,connectionName, uri, "GET");
     childAccessorMethod.setParameterValueProviderDataObject(parentDataObject);
     // we assume payload structure is same as one used to discover dthe data objects
-    childAccessorMethod.setPayloadElementName(doi.getPayloadListElementName());
+    
+//    childAccessorMethod.setPayloadElementName(doi.getPayloadListElementName());
+    childAccessorMethod.setPayloadElementName("items");
     childAccessorMethod.setPayloadRowElementName(doi.getPayloadRowElementName());
 
     //      doi.setPayloadListElementName(currentDataObject.getPayloadListElementName());
     AccessorInfo childAccessor = new AccessorInfo(parentDataObject, doi);
     doi.addFindAllInParentMethod(childAccessorMethod);
     childAccessor.setChildAccessorMethod(childAccessorMethod);
-    childAccessor.setChildAccessorName(doi.getName());            
+    childAccessor.setChildAccessorName(accessorName);            
     
     Map<String,String> attributeMapping = getChildAccessorAttributeMapping(doi.getName(), parentDesc);
     for (String sourceAttr :attributeMapping.keySet())
@@ -282,18 +323,31 @@ public class ADFBCDescribeDataObjectParser
   private String getResourceUri(Map desc)
   {
     Map collection = (Map) desc.get("collection");
-    Map links = (Map) collection.get("links");
-    Map self = (Map) links.get("self");
-    String url = (String) self.get("href");
-    if (url.startsWith(connectionUri))
+    List links = (List) collection.get("links");
+    Map self = null;
+    for (int i = 0; i < links.size(); i++)
     {
-      return url.substring(connectionUri.length());
+      Map map = (Map) links.get(i);
+      if ("self".equals(map.get("rel")))
+      {
+        self = map;
+        break;
+      }
     }
-    else
+    if (self!=null) 
     {
-      // this should never happen
-      return null;
+      String url = (String) self.get("href");
+      if (url.startsWith(connectionUri))
+      {
+        return url.substring(connectionUri.length());
+      }
+      else
+      {
+        // this should never happen
+        return null;
+      }      
     }
+    return null;
   }
 
   private List<String> getkeyAttributes(Map desc)
@@ -321,8 +375,17 @@ public class ADFBCDescribeDataObjectParser
   private Map<String,String> getChildAccessorAttributeMapping(String accessorName, Map parentDesc)
   {
     Map collection = (Map) parentDesc.get("item");
-    Map links = (Map) collection.get("links");
-    Map child = (Map) links.get(accessorName);
+    List links = (List) collection.get("links");
+    Map child = null;
+    for (int i = 0; i < links.size(); i++)
+    {
+      Map map = (Map) links.get(i);
+      if (accessorName.equals(map.get("name")))
+      {
+        child = map;
+        break;
+      }
+    }
     Map cardinality = (Map) child.get("cardinality");
     String sourceAttributes = (String) cardinality.get("sourceAttributes");
     String destinationAttributes = (String) cardinality.get("destinationAttributes");
@@ -341,8 +404,17 @@ public class ADFBCDescribeDataObjectParser
   private String getCanonicalResource(Map desc)
   {
     Map collection = (Map) desc.get("item");
-    Map links = (Map) collection.get("links");
-    Map canonical = (Map) links.get("canonical");
+    List links = (List) collection.get("links");
+    Map canonical = null;
+    for (int i = 0; i < links.size(); i++)
+    {
+      Map map = (Map) links.get(i);
+      if ("canonical".equals(map.get("rel")))
+      {
+        canonical = map;
+        break;
+      }
+    }
     if (canonical!=null)
     {
       String fullResource = (String) canonical.get("href");
@@ -384,11 +456,29 @@ public class ADFBCDescribeDataObjectParser
     if (isCrudActionSupported(desc,action))
     {
       DCMethod method = new DCMethod(connectionName,resource,requestMethod);
-      method.setPayloadElementName(doi.getPayloadListElementName());
+      // ADF BC Rest changed format in 12.2.1., items [] no longer used for crud opers
+//      method.setPayloadElementName(doi.getPayloadListElementName());
+      method.setPayloadElementName(null);
       method.setParameterValueProviderDataObject(doi);
-      if (!"delete".equals(action))
+      // set existing to true to prevent override of layload element name when we exit dataObjects wizard page
+      method.setExisting(true);
+      
+      if ("delete".equalsIgnoreCase(action))
       {
-        method.setSendSerializedDataObjectAsPayload(true);        
+        method.setSendSerializedDataObjectAsPayload(false);        
+      }
+      else
+      {
+        method.setSendSerializedDataObjectAsPayload(true);                
+        String contentType = "application/vnd.oracle.adf.resourceitem+json";
+        HeaderParam contentTypeParam = new HeaderParam();
+        contentTypeParam.setName("Content-Type");
+        contentTypeParam.setValue(contentType);
+        method.addHeaderParam(contentTypeParam);  
+      }
+      if (parentDataObject!=null)
+      {
+        setUpPathParams(parentDataObject,doi,method);        
       }
       return method;
     }

@@ -359,7 +359,10 @@ public class DCMethod
         if (getQueryParams().size()==0)
         {
           // no params, so we can assume the serialized dataobject will be sent
-          setSendSerializedDataObjectAsPayload(true);          
+          if (!"DELETE".equalsIgnoreCase(getRequestType()) && !isExisting())
+          {
+            setSendSerializedDataObjectAsPayload(true);                      
+          }
         }
         else if (getQueryParams().size()==1)
         {
