@@ -317,7 +317,7 @@ public class ADFBCDescribeDataObjectParser
   //         }, {
   //           "name" : "delete",
   //           "method" : "DELETE"
-  //         } ]
+  //         } ]/Users/sdavelaar/ateam-persistence-framework/git/Projects/Framework/DesignTime/src/orange.gif
   //       },
 
   private String getResourceUri(Map desc)
@@ -344,7 +344,7 @@ public class ADFBCDescribeDataObjectParser
       else
       {
         // this should never happen
-        return null;
+        throw new RuntimeException("href attribute of self link ("+url+") should start with same path as connection URI: "+connectionUri);
       }      
     }
     return null;

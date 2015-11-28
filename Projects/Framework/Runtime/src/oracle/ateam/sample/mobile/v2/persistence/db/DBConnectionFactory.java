@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  25-nov-2015   Steven Davelaar
+  1.3           Allow multiple threads to use same DB connection when WAL is enabled.
   19-nov-2015   Steven Davelaar
   1.2           Password needs to be prefixed with encryption type, otherwise non-default encrytpion
                 types will not work (Thanks Tim Lam for reprotig this)
@@ -24,6 +26,7 @@ import oracle.adfmf.framework.exception.AdfException;
 
 import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.util.MessageUtils;
 
 
 /**
@@ -85,20 +88,24 @@ public class DBConnectionFactory
         throw e;
       }
     }
-    // We are now using Write Ahead Logging, so SQLite will take care of serailizing write calls, concurrent read calls are
-    // supported with WAL, see https://www.sqlite.org/wal.html
-    //    long startTime = System.currentTimeMillis();
-    //    while (connectionInUse)
-    //    {
-    //      // another thread is still using the connection, wait until released
-    //      // with a maximum of 30 seconds
-    //      if (System.currentTimeMillis()-startTime > 30000)
-    //      {
-    //        sLog.severe("Cannot acquire DB connection, another process might still be using the connection or connection is not properly released.");
-    //        MessageUtils.handleError("Cannot acquire DB connection, another process might still be using the connection or connection is not properly released. Try again later.");
-    //      }
-    //    }
-    //    connectionInUse = true;
+     // if we are  using Write Ahead Logging, then SQLite will take care of serailizing write calls, concurrent read calls are
+     // supported with WAL, see https://www.sqlite.org/wal.html, otherwise, we allow only one thread to use the cnnection and only hand it out once
+    // it has been released again
+    if (!PersistenceConfig.useWAL())
+    {
+        long startTime = System.currentTimeMillis();
+        while (connectionInUse)
+        {
+          // another thread is still using the connection, wait until released
+          // with a maximum of 30 seconds
+          if (System.currentTimeMillis()-startTime > 30000)
+          {
+            sLog.severe("Cannot acquire DB connection, another process might still be using the connection or connection is not properly released.");
+            MessageUtils.handleError("Cannot acquire DB connection, another process might still be using the connection or connection is not properly released. Try again later.");
+          }
+        }
+        connectionInUse = true;
+    }   
     return conn;
   }
 
