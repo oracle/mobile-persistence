@@ -2,6 +2,9 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  10-dec-2015   Steven Davelaar
+  1.4           Call createDatabasePassword instead of getDatabasePassword on PersistenceConfig to
+                allow for pw generation using MAF GeneratedPassword class
   03-nov-2015   Steven Davelaar
   1.3           Use SQLite Write Ahead Loggindg (WAL) when db.use.WAL is set in persistence-config
                 to improve performance with 40% and to allow autoCommit to
@@ -1228,11 +1231,10 @@ public class DBPersistenceManager
         DBConnectionFactory.releaseConnection();
       }
       // check whether we need to encrypt the database
-      // always encrypt now
       if (PersistenceConfig.encryptDatabase())
       {
         sLog.info("Encrypting SQLite database");
-        String pwString = PersistenceConfig.getEncryptionType()+":"+PersistenceConfig.getDatabasePassword();
+        String pwString = PersistenceConfig.createDatabasePassword();
         try
         {
           AdfmfJavaUtilities.encryptDatabase(DBConnectionFactory.getConnection(), pwString);

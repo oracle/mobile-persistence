@@ -396,7 +396,14 @@ public class RAMLParser
     // payload row element attributes have the correct values for this method.
     method.setPayloadElementName(doi.getPayloadListElementName());
     method.setPayloadRowElementName(doi.getPayloadRowElementName());
-    method.setSendSerializedDataObjectAsPayload(true);
+    if ("DELETE".equalsIgnoreCase(requestType))
+    {
+      method.setSendSerializedDataObjectAsPayload(false);      
+    }
+    else
+    {
+      method.setSendSerializedDataObjectAsPayload(true);      
+    }
     // set existing to true, to prevent that we override the values of PayloadElementName and PayloadRowElementName
     /// later on in the wizard
     method.setExisting(true);

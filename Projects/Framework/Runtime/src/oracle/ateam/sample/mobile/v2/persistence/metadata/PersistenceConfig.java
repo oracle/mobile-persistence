@@ -2,6 +2,10 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  10-dec-2015   Steven Davelaar
+  1.2           - Added support for storing passwiord in credential store using GeneratedPassword class
+                To use this, add db.generate.password=true to persistence-config.properties
+                - Added encryption type prefix to password
   19-nov-2015   Steven Davelaar
   1.1           Added db.use.WAL property
   08-jan-2015   Steven Davelaar
@@ -13,6 +17,7 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
+import oracle.adfmf.framework.api.GeneratedPassword;
 
 /**
  *  Helper class that returns the information defined in the mobile-persistence-config.properties file,
@@ -23,6 +28,8 @@ public class PersistenceConfig
   private static String CONFIG_FILE = "META-INF/mobile-persistence-config";
   private static ResourceBundle config =
     ResourceBundle.getBundle(CONFIG_FILE, Locale.getDefault(), Thread.currentThread().getContextClassLoader());
+  private static String PASSWORD_GEN_KEY = "_may_the_p0wer_0f_aMpA_be_with_y0u";
+  private static String PASSWORD_KEY = "PASSWORD_KEY";
 
   public static String getDatabaseName()
   {
@@ -105,10 +112,27 @@ public class PersistenceConfig
     }
   }
 
+  public static String createDatabasePassword()
+  {
+    GeneratedPassword.setPassword(PASSWORD_KEY,PASSWORD_GEN_KEY);
+    return getDatabasePassword();
+  }
+
   public static String getDatabasePassword()
   {
-    // TODO use new password generation utlity when it is availabe in MAF 2.0
-    return "Znsk2rio8XKDFI";
+    String password = null;
+    char[] genPw = GeneratedPassword.getPassword(PASSWORD_KEY);
+    if (genPw!=null)
+    {
+      password = new String(genPw);      
+    }
+    else
+    {
+      // this DB was created while using older version of AMPA, use old
+      // hardcoded password
+      password = "Znsk2rio8XKDFI";
+    }
+    return getEncryptionType()+":"+password;
   }
 
   public static String getDatabaseFilePath()

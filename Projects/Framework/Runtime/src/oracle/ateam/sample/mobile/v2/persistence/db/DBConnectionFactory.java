@@ -2,11 +2,13 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  10-dec-2015   Steven Davelaar
+  1.4           Password encryption type prefix now added in PersistenceConfig.getDatabasePassword method
   25-nov-2015   Steven Davelaar
   1.3           Allow multiple threads to use same DB connection when WAL is enabled.
   19-nov-2015   Steven Davelaar
   1.2           Password needs to be prefixed with encryption type, otherwise non-default encrytpion
-                types will not work (Thanks Tim Lam for reprotig this)
+                types will not work (Thanks Tim Lam for reporting this)
   05-nov-2015   Steven Davelaar
   1.1           Allows multiple threads to use same connection, is no longer a problems since we are
                 now using Write Ahead Logging, see DBPersistenceManager.initDB
@@ -69,7 +71,7 @@ public class DBConnectionFactory
         // specifiy password if DB is/should be encrypted
         if (PersistenceConfig.encryptDatabase())
         {
-          String pwString = PersistenceConfig.getEncryptionType()+":"+PersistenceConfig.getDatabasePassword();
+          String pwString = PersistenceConfig.getDatabasePassword();
           conn = dataSource.getConnection(null, pwString);
         }
         else
@@ -110,7 +112,7 @@ public class DBConnectionFactory
   }
 
   /**
-   * @deprecated No need to call this method since we are now using Write Ahead Logging
+   * No need to call this method when you are using Write Ahead Logging
    */
   public static void releaseConnection()
   {

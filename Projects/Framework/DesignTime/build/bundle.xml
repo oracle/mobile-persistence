@@ -4,7 +4,7 @@
   xmlns:u="http://xmlns.oracle.com/jdeveloper/update">
    <u:update id="oracle.ateam.mobile.persistence">
       <u:name>A-Team Mobile Persistence Accelerator</u:name>
-      <u:version>12.1.3.2.38</u:version>
+      <u:version>12.1.3.2.39</u:version>
       <u:author>Oracle Fusion Middleware A-Team (Steven Davelaar)</u:author>
       <u:author-url>http://www.ateam-oracle.com/?cat=1023</u:author-url>
       <u:description>
