@@ -2,6 +2,8 @@
   Copyright ? 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  10-dec-2015   Steven Davelaar
+  1.3           Changed log level to info when something is not found in JSON payload
   24-mar-2015   Steven Davelaar
   1.2           removed deletion of local rows from handleResponse method. Now done in findAll, findAllInParent methods
                 in RestPersistenceManager
@@ -284,7 +286,7 @@ public class RestJSONPersistenceManager
           Object realRow = getJSONElement(row, rowElementName, true);
           if (realRow == null)
           {
-            sLog.severe("Cannot find row element name " + rowElementName);
+            sLog.info("Cannot find row element name " + rowElementName);
             //              MessageUtils.handleError("Cannot find row element name " + rowElementName);
             continue;
           }
@@ -355,7 +357,7 @@ public class RestJSONPersistenceManager
         else
         {
           value = null;
-          sLog.severe("Cannot find JSON element " + element + " in payload");
+          sLog.info("Cannot find JSON element " + element + " in payload");
           break;
         }
       }
