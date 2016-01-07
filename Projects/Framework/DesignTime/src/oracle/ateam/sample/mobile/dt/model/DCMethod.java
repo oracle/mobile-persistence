@@ -57,6 +57,7 @@ public class DCMethod
   private String samplePayload;
   private String dataControlName;
   private boolean existing = false;
+  private boolean ramlCreated = false;
 
   public void setExisting(boolean existing)
   {
@@ -621,5 +622,15 @@ public class DCMethod
   public String getAccessorAttribute()
   {
     return accessorAttribute;
+  }
+
+  public void setRamlCreated(boolean ramlCreated)
+  {
+    this.ramlCreated = ramlCreated;
+  }
+
+  public boolean isRamlCreated()
+  {
+    return ramlCreated;
   }
 }

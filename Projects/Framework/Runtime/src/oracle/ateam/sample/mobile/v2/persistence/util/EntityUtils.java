@@ -275,10 +275,9 @@ public class EntityUtils
 
   public static Map<String, Object> getEntityAttributeValues(Entity entity)
   {
-    ObjectPersistenceMapping mapping = ObjectPersistenceMapping.getInstance();
-    ClassMappingDescriptor descriptor = mapping.findClassMappingDescriptor(entity.getClass().getName());
-    List<AttributeMappingDirect> attrMappings = descriptor.getAttributeMappingsDirect();
     HashMap<String, Object> attrs = new HashMap<String, Object>();
+    ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entity.getClass());
+    List<AttributeMappingDirect> attrMappings = descriptor.getAttributeMappingsDirect();
     for (AttributeMappingDirect attrMapping: attrMappings)
     {
       attrs.put(attrMapping.getAttributeName(), entity.getAttributeValue(attrMapping.getAttributeName()));

@@ -2,6 +2,9 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
  $revision_history$
+ 29-dec-2015   Steven Davelaar
+ 1.4           - HTTP status codes < 300 are no longer treated as exception (work around  for MAF bug still throwing an exception 
+                 if status code is not 200)
  08-nov-2015   Steven Davelaar
  1.3           - Fixed bug in deriving child attr name to exclude in getPayloadKeyValuePairs (thanks Vik Kumar for reporting)
  24-sep-2015   Steven Davelaar
@@ -306,9 +309,20 @@ public abstract class RestPersistenceManager
     }
     catch (Exception e)
     {
-      logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,null,startTime,e);
       setLastResponseHeaders(restService.getResponseHeaders());
-      return handleInvokeRestServiceError(requestType,uri,e);
+      // check whether response is in 200 range, MAF incorrevty throws an error when response status is 201 or 202
+      if (restService.getResponseStatus() < 300)
+      {
+        // return detail message as response if available
+        String causeMessage = e.getCause() != null? e.getCause().getLocalizedMessage() : null;
+        logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,causeMessage,startTime,e);
+        return causeMessage;
+      }
+      else
+      {
+        logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,null,startTime,e);
+        return handleInvokeRestServiceError(requestType,uri,e);        
+      }
     }
   }
 

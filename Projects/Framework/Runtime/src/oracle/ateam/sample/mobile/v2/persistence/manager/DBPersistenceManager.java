@@ -179,6 +179,13 @@ public class DBPersistenceManager
     catch (Exception e)
     {
       sLog.severe("Error executing SQL statement "+sql+": "+e.getLocalizedMessage());
+      if (bindParamInfos!=null)
+      {
+        for (BindParamInfo bp : bindParamInfos)
+        {
+          sLog.severe("... bind param "+bp.getColumnName()+"="+bp.getValue());          
+        }
+      }
       throw new AdfException(e);
     }
     finally
@@ -1297,7 +1304,7 @@ public class DBPersistenceManager
       {
         Statement pStmt = connection.createStatement();
         String sql = stmts.get(i);
-        sLog.severe("Processing SQL script "+script+", executing statement "+sql);
+        sLog.fine("Processing SQL script "+script+", executing statement "+sql);
         try
         {
           pStmt.executeUpdate(sql);

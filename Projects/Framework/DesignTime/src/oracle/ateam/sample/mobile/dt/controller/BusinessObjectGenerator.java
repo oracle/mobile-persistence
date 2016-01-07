@@ -67,11 +67,11 @@ public class BusinessObjectGenerator
   private BusinessObjectGeneratorModel model;
   private Project project;
 
-  public BusinessObjectGenerator(Project project, BusinessObjectGeneratorModel model)
+  public BusinessObjectGenerator(BusinessObjectGeneratorModel model)
   {
     super();
     this.model = model;
-    this.project = project;
+    this.project = model.getGeneratorProject();
   }
 
   public void run()

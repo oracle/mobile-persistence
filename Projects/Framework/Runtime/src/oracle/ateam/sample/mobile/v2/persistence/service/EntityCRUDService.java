@@ -37,6 +37,7 @@ import oracle.adfmf.util.Utility;
 
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.MessageUtils;
+import oracle.ateam.sample.mobile.util.OfflineUtils;
 import oracle.ateam.sample.mobile.util.StringUtils;
 import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.v2.persistence.cache.EntityCache;
@@ -736,20 +737,12 @@ public abstract class EntityCRUDService<E extends Entity>
 
   protected boolean isOffline()
   {
-    //    String status = (String) AdfmfJavaUtilities.evaluateELExpression("#{deviceScope.hardware.networkStatus}");
-    String status = DeviceManagerFactory.getDeviceManager().getNetworkStatus();
-    boolean offline = NETWORK_NOT_REACHABLE.equals(status) || "unknown".equals(status);
-    //    boolean offline2 = NETWORK_NOT_REACHABLE.equals(status);
-    //    if (offline!=offline2)
-    //    {
-    //      MessageUtils.handleError("Not same, EL value: "+offline2);
-    //    }
-    return offline;
+    return OfflineUtils.isOffline();
   }
 
   protected boolean isOnline()
   {
-    return !isOffline();
+    return OfflineUtils.isOnline();
   }
 
   /**

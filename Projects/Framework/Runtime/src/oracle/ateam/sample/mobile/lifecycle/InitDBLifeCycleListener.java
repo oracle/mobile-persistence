@@ -14,7 +14,6 @@ import oracle.adfmf.application.LifeCycleListener;
 import oracle.ateam.sample.mobile.v2.persistence.db.DBConnectionFactory;
 import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
-import oracle.ateam.sample.mobile.util.MCSManager;
 import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.util.UsageTracker;
 
@@ -70,7 +69,6 @@ public class InitDBLifeCycleListener
    */
   public void activate()
   {
-//    MCSManager.getInstance().startSession();
   }
 
   /**
@@ -79,7 +77,6 @@ public class InitDBLifeCycleListener
    */
   public void deactivate()
   {
-//    MCSManager.getInstance().endSession();
     DBConnectionFactory.closeConnectionIfNeeded();
     TaskExecutor.shutDown();
   }

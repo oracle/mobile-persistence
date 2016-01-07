@@ -48,9 +48,7 @@ public class UsageTracker
 
   protected boolean isOffline()
   {
-    String networkStatus = DeviceManagerFactory.getDeviceManager().getNetworkStatus();
-    boolean offline = "NotReachable".equals(networkStatus) || "unknown".equals(networkStatus);
-    return offline;
+    return OfflineUtils.isOffline();
   }
 
   protected String getCurrentDateTime()

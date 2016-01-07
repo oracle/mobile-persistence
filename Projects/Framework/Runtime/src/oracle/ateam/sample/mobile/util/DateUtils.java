@@ -2,6 +2,8 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 29-dec-2015   Steven Davelaar 
+ 1.2           added methods getCurrentDateTime, getCurrentTimeZone
  31-mar-2015   Steven Davelaar 
  1.2           If date parsing fails, try with english locale. API's like JCS have date formats
                like Thu Feb 12 ..., this fails when default locale is something else than english
@@ -86,6 +88,34 @@ public class DateUtils
       convertedValue = new Timestamp(convertedValue.getTime());
     }
     return convertedValue;
+  }
+
+  /**
+   * Get current date/time as string using format yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
+   * @return
+   */
+  public static String getCurrentDateTime()
+  {
+    //    String pattern = "yyyy-MM-dd HH:mm:ss Z";
+    String pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+    Date now = new Date();
+    SimpleDateFormat sdf = new SimpleDateFormat(pattern);
+    String sdate = sdf.format(now);
+    return sdate;
+  }
+
+  /**
+   * Get current time zone
+   * @return
+   */
+  public static String getCurrentTimeZone()
+  {
+    //        String pattern = "zzzz";
+    String pattern = "Z";
+    Date now = new Date();
+    SimpleDateFormat sdf = new SimpleDateFormat(pattern);
+    String sdate = sdf.format(now);
+    return sdate;
   }
 
 }

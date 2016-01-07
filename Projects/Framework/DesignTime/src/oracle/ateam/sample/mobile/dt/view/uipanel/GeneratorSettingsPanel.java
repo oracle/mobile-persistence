@@ -12,20 +12,31 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import oracle.ateam.sample.mobile.dt.model.BusinessObjectGeneratorModel;
 
+import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
+import oracle.ateam.sample.mobile.dt.util.ProjectUtils;
 import oracle.ateam.sample.mobile.dt.view.wizard.BusinessObjectsFromWSDataControlWizard;
 
+import oracle.ide.model.Project;
 import oracle.ide.panels.DefaultTraversablePanel;
 import oracle.ide.panels.TraversableContext;
 
 
 public class GeneratorSettingsPanel extends DefaultTraversablePanel {
+  private JLabel projectLabel = new JLabel("Add Classes to Project");
+  JComboBox projectList = new JComboBox();
+
   private JLabel packageLabel = new JLabel("Data Objects Package");
   private JTextField packageField = new JTextField();
   private JLabel servicePackageLabel = new JLabel("Service Objects Package");
@@ -36,12 +47,15 @@ public class GeneratorSettingsPanel extends DefaultTraversablePanel {
   private JCheckBox overwriteServiceObjectsField = new JCheckBox();
   private JLabel usageTrackingLabel = new JLabel("Enable Usage Tracking?");
   private JCheckBox usageTrackingField = new JCheckBox();
+  transient Map<String, Project> projects = ProjectUtils.getProjects();
 
     public GeneratorSettingsPanel() {
       // GridBagConstraints(int gridx, int gridy, int gridwidth, int gridheight, double weightx, double weighty
       //                  , int anchor, int fill, Insets insets, int ipadx, int ipady)
       // Insets(int top, int left, int bottom, int right)
-
+    
+      projectList.setModel(new DefaultComboBoxModel(projects.keySet().toArray()));
+    
       setLayout( new BorderLayout( 0,15 ) );
 
             JPanel contentPanel = new JPanel();
@@ -59,8 +73,10 @@ public class GeneratorSettingsPanel extends DefaultTraversablePanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         gbc.insets = new Insets(0, 0, 5, 5);
-        contentPanel.add(packageLabel, gbc);
-        gbc.gridy++;
+      contentPanel.add(projectLabel, gbc);
+      gbc.gridy++;
+      contentPanel.add(packageLabel, gbc);
+      gbc.gridy++;
         contentPanel.add(servicePackageLabel, gbc);
       gbc.gridy++;
       contentPanel.add(overwriteDataObjectsLabel, gbc);
@@ -76,8 +92,10 @@ public class GeneratorSettingsPanel extends DefaultTraversablePanel {
         gbc.weightx = 1.0f;
         gbc.insets = new Insets(0, 0, 5, 0);
 
-        contentPanel.add(packageField, gbc);
-        gbc.gridy++;
+      contentPanel.add(projectList, gbc);
+      gbc.gridy++;
+      contentPanel.add(packageField, gbc);
+      gbc.gridy++;
         contentPanel.add(servicePackageField, gbc);
       gbc.gridy++;
       contentPanel.add(overwriteDataObjectsField, gbc);
@@ -109,5 +127,6 @@ public class GeneratorSettingsPanel extends DefaultTraversablePanel {
       model.setOverwriteDataObjectClasses(overwriteDataObjectsField.isSelected());
       model.setOverwriteServiceObjectClasses(overwriteServiceObjectsField.isSelected());
       model.setEnableUsageTracking(usageTrackingField.isSelected());
+      model.setGeneratorProject(projects.get(projectList.getSelectedItem()));
     }
 }

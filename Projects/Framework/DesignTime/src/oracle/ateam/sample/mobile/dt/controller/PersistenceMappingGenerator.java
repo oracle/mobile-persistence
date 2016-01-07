@@ -307,7 +307,11 @@ public class PersistenceMappingGenerator
       {
         jaxbMethod.setName(wizardMethod.getAccessorAttribute());
       }
-      jaxbMethod.setUri(wizardMethod.getName());
+      // if it is a new method, then we must prefix with the (part of) the RAML base URI that is not
+      // included at the end of the connection URI (If no RAML was used the uriPrefix is always
+      // an empty string
+      String uri = wizardMethod.isExisting() ? wizardMethod.getName() : model.getUriPrefix()+wizardMethod.getName();
+      jaxbMethod.setUri(uri);
       jaxbMethod.setConnectionName(wizardMethod.getConnectionName());
 //      jaxbMethod.setRequestType(RequestType.fromValue(wizardMethod.getRequestType()));
       jaxbMethod.setRequestType(wizardMethod.getRequestType());

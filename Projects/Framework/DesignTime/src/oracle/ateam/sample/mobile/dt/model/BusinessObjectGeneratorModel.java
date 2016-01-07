@@ -25,6 +25,8 @@ import oracle.ateam.sample.mobile.dt.model.jaxb.MobileObjectPersistence;
 
 import oracle.ateam.sample.mobile.dt.util.FileUtils;
 
+import oracle.ateam.sample.mobile.dt.util.ProjectUtils;
+
 import oracle.ide.Ide;
 
 import oracle.ide.model.Project;
@@ -58,6 +60,8 @@ public class BusinessObjectGeneratorModel {
   private boolean overwriteServiceObjectClasses = false;
   private boolean enableUsageTracking = false;
   private boolean maf20Style = false;
+  private String uriPrefix = "";
+  private Project generatorProject = ProjectUtils.getViewControllerProject();
 
   public void setMaf20Style(boolean maf20Style)
   {
@@ -447,4 +451,30 @@ public class BusinessObjectGeneratorModel {
       }
     }
   }
+
+
+  public void setUriPrefix(String uriPrefix)
+  {
+    this.uriPrefix = uriPrefix;
+  }
+
+  /**
+   * Returns the prefix that must be added to URI property of each CRUD method
+   * @return
+   */
+  public String getUriPrefix()
+  {
+    return uriPrefix;
+  }
+
+  public void setGeneratorProject(Project generatorProject)
+  {
+    this.generatorProject = generatorProject;
+  }
+
+  public Project getGeneratorProject()
+  {
+    return generatorProject;
+  }
+
 }

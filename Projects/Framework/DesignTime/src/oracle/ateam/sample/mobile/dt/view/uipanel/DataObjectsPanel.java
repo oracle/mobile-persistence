@@ -152,13 +152,13 @@ public class DataObjectsPanel
         if (doi.getParent()==null && doi.getFindAllMethod()!=null)
         {
           // We ONLY do this for new methods, we should preserve the values manually set in persistence-mapping
-          if (!doi.getFindAllMethod().isExisting())
+          if (!doi.getFindAllMethod().isExisting() && !doi.getFindAllMethod().isRamlCreated())
           {
             doi.getFindAllMethod().setPayloadElementName(doi.getPayloadListElementName());            
             doi.getFindAllMethod().setPayloadRowElementName(doi.getPayloadRowElementName());            
           } 
         }
-        else if (doi.getFindAllMethod()!=null && !doi.getFindAllMethod().isExisting())
+        else if (doi.getFindAllMethod()!=null && !doi.getFindAllMethod().isExisting() && !doi.getFindAllMethod().isRamlCreated())
         {
           // clear find-all method that might be set for child data objects UNLESS it is an "existing" method
           doi.setFindAllMethod(null);            

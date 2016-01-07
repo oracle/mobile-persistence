@@ -13,7 +13,6 @@
  ******************************************************************************/
  package oracle.ateam.sample.mobile.v2.persistence.metadata;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
@@ -22,17 +21,20 @@ import oracle.adfmf.framework.exception.AdfException;
 import oracle.adfmf.util.Utility;
 import oracle.adfmf.util.XmlAnyDefinition;
 
+import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 
 /**
  * Class that returns entity-level information about the mapping of this entity to a database table.
  *
  * The information is read from the persistenceMapping xml file as configured in
- * mobile-persistence-config.properties 
+ * mobile-persistence-config.properties
  */
 public class ClassMappingDescriptor
   extends XmlAnyDefinition
 {
+  private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(ClassMappingDescriptor.class);
+
   private static final String FIND_ALL_METHOD = "findAllMethod";
   private static final String FIND_ALL_IN_PARENT_METHOD = "findAllInParentMethod";
   private static final String GET_AS_PARENT_METHOD = "getAsParentMethod";
@@ -54,7 +56,12 @@ public class ClassMappingDescriptor
 
   public static ClassMappingDescriptor getInstance(Class clazz)
   {
-    return getInstance(clazz.getName());
+    ClassMappingDescriptor descriptor = getInstance(clazz.getName());
+    if (descriptor==null)
+    {
+      sLog.severe("Cannot find descriptor in persistence-mapping.xml for entity "+clazz.getName());      
+    }
+    return descriptor;
   }
 
   public static ClassMappingDescriptor getInstance(String className)

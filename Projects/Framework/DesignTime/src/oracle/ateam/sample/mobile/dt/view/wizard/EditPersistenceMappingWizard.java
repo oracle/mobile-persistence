@@ -209,7 +209,7 @@ public class EditPersistenceMappingWizard extends Wizard
     {
       BusinessObjectGeneratorModel model = (BusinessObjectGeneratorModel) context.get(MODEL_KEY);
       model.setLogTitle(logTitle);
-      BusinessObjectGenerator generator = new BusinessObjectGenerator(ProjectUtils.getViewControllerProject(),model);
+      BusinessObjectGenerator generator = new BusinessObjectGenerator(model);
       generator.run();
     }
     catch (IOException ioe)

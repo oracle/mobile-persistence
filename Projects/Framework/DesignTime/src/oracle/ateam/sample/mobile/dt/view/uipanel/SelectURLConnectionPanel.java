@@ -41,7 +41,6 @@ public class SelectURLConnectionPanel
     super();
     this.setLayout(new BorderLayout(0, 15));
     //    this.setDefaultTitle(m_resourceManager.getString("JMIG_TGT_RES_0002"));
-    //    connUI.setConnectionPrompt(getInstructions());
     this.add(connUI, BorderLayout.NORTH);
   }
 
@@ -59,6 +58,9 @@ public class SelectURLConnectionPanel
     // There is a bug in RestConnectionPanel getSourceURI(). it is returning the value from the label "Source URI:"
 //    String uri = connUI.getSourceURI();
     String uri = getConnectionUri(connection);
+    if (uri!=null && uri.endsWith("/")) {
+        throw new TraversalException("Connection URI should not end with a slash");
+    }
     model.setConnectionUri(uri);
 
     super.onExit(tc);

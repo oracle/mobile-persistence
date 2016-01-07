@@ -364,7 +364,8 @@ public class CRUDMethodsRESTPanel
     // so we set payloadElementName to and payloadRowElementName (might be null in case of JSON)
     // to the names stored on the DataObjectInfo when discovering it.
     // We ONLY do this for new methods, we should preserve the values manually set in persistence-mapping
-    if (!method.isExisting())
+    // and we only do this when method is not created through RAML parsing
+    if (!method.isExisting() && !method.isRamlCreated())
     {
       method.setPayloadElementName(getCurrentDataObject().getPayloadListElementName()); 
       method.setPayloadRowElementName(getCurrentDataObject().getPayloadRowElementName());       

@@ -1260,7 +1260,7 @@ public class DBPersistenceManager
       {
         Statement pStmt = connection.createStatement();
         String sql = (String) stmts.get(i);
-        sLog.severe("Processing SQL script "+script+", executing statement "+sql);
+        sLog.info("Processing SQL script "+script+", executing statement "+sql);
         try
         {
           pStmt.executeUpdate(sql);

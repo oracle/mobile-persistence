@@ -409,9 +409,10 @@ public class RESTResourcesPanel
        {
          throw new TraversalException("Please select a RAML file from the file system");
        }
-//       RAMLParser ramlParser = new RAMLParser(ramlField.getText(), connectionName, connectionUri, headerParams,flattenNestedObjectsRaml.isSelected());
-       RAMLParser ramlParser = new RAMLParser(ramlFileField.getText(), connectionName, connectionUri, headerParams,flattenNestedObjectsRaml.isSelected());
-       model.setDataObjectInfos(ramlParser.run());
+       RAMLParser ramlParser = new RAMLParser(ramlFileField.getText(), connectionName, headerParams,flattenNestedObjectsRaml.isSelected());
+       ramlParser.run();
+       model.setDataObjectInfos(ramlParser.getParsedDataObjects());
+       model.setUriPrefix(ramlParser.getUriPrefix(connectionUri));
      }
    }
     catch (ParseException e)

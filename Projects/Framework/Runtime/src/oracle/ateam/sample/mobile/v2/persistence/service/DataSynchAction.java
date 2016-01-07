@@ -2,6 +2,9 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  29-dec-2015   Steven Davelaar
+  1.1           Added constructor so we can use this class to store pending MCS analytics 
+                events as well (they do not extend from Entity class)
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
@@ -60,6 +63,17 @@ public class DataSynchAction extends Entity
     this.entityClassString = entity.getClass().getName();
     this.serviceClass = serviceClass;
     setEntity(entity);
+    this.dateCreated = new Date();
+    this.lastSynchAttempt = new Date();
+  }
+
+  public DataSynchAction(String action, String entityClassName, String entityAsJSONString, String serviceClass)
+  {
+    super();
+    this.action = action;
+    this.entityClassString = entityClassName;
+    this.serviceClass = serviceClass;
+    this.entityAsJSONString = entityAsJSONString;
     this.dateCreated = new Date();
     this.lastSynchAttempt = new Date();
   }
@@ -169,6 +183,11 @@ public class DataSynchAction extends Entity
 
   public String getData()
   {
+    if (getEntity()==null)
+    {
+      // can happen with analytics event which we also store using data sync action when offline
+      return getEntityAsJSONString();
+    }
     StringBuffer data = new StringBuffer("");
     Map<String,Object> values = getAttributeValues();
     Iterator<String> attrs = values.keySet().iterator();
@@ -221,17 +240,6 @@ public class DataSynchAction extends Entity
   public void setEntityAsJSONString(String entityAsJSONString)
   {
     this.entityAsJSONString = entityAsJSONString;
-//    try
-//    {
-//      entity = (Entity) JSONBeanSerializationHelper.fromJSON(getEntityClass(), entityAsJSONString);
-//    }
-//    catch (Exception e)
-//    {
-//      // the question is what we do in this case,
-//      // as the JSON data is invalid... This should just never happen... so let's throw message
-//      // to end user
-//      MessageUtils.handleError(e);
-//    }
   }
 
   public void createEntityFromJSONString()
@@ -244,9 +252,7 @@ public class DataSynchAction extends Entity
       }
       catch (Exception e)
       {
-        // the question is what we do in this case,
-        // as the JSON data is invalid... This should just never happen... so let's throw message
-        // to end user
+        // This should never happen
         MessageUtils.handleError(e);
       }      
     }
