@@ -2,6 +2,9 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  07-jan-2016   Steven Davelaar
+  1.5           Reverted change to use INSERT or REPLACE in mergeRow/mergeEntity methods, when not all attrs are included in
+                bind params, the values of columns not included are wiped out!
   10-dec-2015   Steven Davelaar
   1.4           Call createDatabasePassword instead of getDatabasePassword on PersistenceConfig to
                 allow for pw generation using MAF GeneratedPassword class
@@ -216,18 +219,18 @@ public class DBPersistenceManager
    */
   public void mergeEntity(Entity entity, boolean doCommit)
   {    
-//    boolean doInsert = entity.getIsNewEntity();
-//    if (doInsert)
-//    {
-//      insertEntity(entity, doCommit);
-//    }
-//    else
-//    {
-//      updateEntity(entity, doCommit);
-//    }
-    List<BindParamInfo> bindParamInfos = getBindParamInfos(entity,false,true);
-    mergeRow(bindParamInfos, doCommit);
-    mergeChildren(entity,doCommit);
+    boolean doInsert = entity.getIsNewEntity();
+    if (doInsert)
+    {
+      insertEntity(entity, doCommit);
+    }
+    else
+    {
+      updateEntity(entity, doCommit);
+    }
+//    List<BindParamInfo> bindParamInfos = getBindParamInfos(entity,false,true);
+//    mergeRow(bindParamInfos, doCommit);
+//    mergeChildren(entity,doCommit);
   }
 
   /**
@@ -289,18 +292,20 @@ public class DBPersistenceManager
     }
     if (primaryKeyBindParamInfos.size()>0)
     {
-      StringBuffer sql = getSqlInsertOrReplaceIntoPart(bindParamInfos);
-      sql.append(getSqlInsertValuesPart(bindParamInfos));
-      executeSqlDml(sql.toString(), bindParamInfos, doCommit);
+      // Cannot use INSERT or REPLACE: when not all attrs are included in
+      // bind params, the values of columns not included are wiped out!      
+//      StringBuffer sql = getSqlInsertOrReplaceIntoPart(bindParamInfos);
+//      sql.append(getSqlInsertValuesPart(bindParamInfos));
+//      executeSqlDml(sql.toString(), bindParamInfos, doCommit);
 
-//      if (isRowExistsInDB(primaryKeyBindParamInfos))   
-//      {
-//        updateRow(bindParamInfos, doCommit);
-//      }
-//      else
-//      {
-//        insertRow(bindParamInfos, doCommit);
-//      }
+      if (isRowExistsInDB(primaryKeyBindParamInfos))   
+      {
+        updateRow(bindParamInfos, doCommit);
+      }
+      else
+      {
+        insertRow(bindParamInfos, doCommit);
+      }
     }
   }
 
