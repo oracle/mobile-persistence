@@ -7,6 +7,9 @@
 ******************************************************************************/
 package oracle.ateam.sample.mobile.dt.model;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+
 import java.net.URL;
 
 import java.util.ArrayList;
@@ -62,6 +65,10 @@ public class BusinessObjectGeneratorModel {
   private boolean maf20Style = false;
   private String uriPrefix = "";
   private Project generatorProject = ProjectUtils.getViewControllerProject();
+  private boolean useMCS = false;
+  private String mcsBackendId;
+  private String mcsAnonymousAccessKey;
+  private PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
   public void setMaf20Style(boolean maf20Style)
   {
@@ -477,4 +484,50 @@ public class BusinessObjectGeneratorModel {
     return generatorProject;
   }
 
+
+  public void setUseMCS(boolean useMCS)
+  {
+    boolean oldUseMCS = this.useMCS;
+    this.useMCS = useMCS;
+    propertyChangeSupport.firePropertyChange("useMCS", oldUseMCS, useMCS);
+  }
+
+  public boolean isUseMCS()
+  {
+    return useMCS;
+  }
+
+  public void setMcsBackendId(String mcsBackendId)
+  {
+    String oldMcsBackendId = this.mcsBackendId;
+    this.mcsBackendId = mcsBackendId;
+    propertyChangeSupport.firePropertyChange("mcsBackendId", oldMcsBackendId, mcsBackendId);
+  }
+
+  public String getMcsBackendId()
+  {
+    return mcsBackendId;
+  }
+
+  public void setMcsAnonymousAccessKey(String mcsAnonymousAccessKey)
+  {
+    String oldMcsAnonymousAccessKey = this.mcsAnonymousAccessKey;
+    this.mcsAnonymousAccessKey = mcsAnonymousAccessKey;
+    propertyChangeSupport.firePropertyChange("mcsAnonymousAccessKey", oldMcsAnonymousAccessKey, mcsAnonymousAccessKey);
+  }
+
+  public String getMcsAnonymousAccessKey()
+  {
+    return mcsAnonymousAccessKey;
+  }
+
+  public void addPropertyChangeListener(PropertyChangeListener l)
+  {
+    propertyChangeSupport.addPropertyChangeListener(l);
+  }
+
+  public void removePropertyChangeListener(PropertyChangeListener l)
+  {
+    propertyChangeSupport.removePropertyChangeListener(l);
+  }
 }

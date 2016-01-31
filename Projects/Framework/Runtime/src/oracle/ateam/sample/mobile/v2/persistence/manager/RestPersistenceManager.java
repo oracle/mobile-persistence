@@ -67,6 +67,7 @@ public abstract class RestPersistenceManager
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(RestPersistenceManager.class);
 //  private static final String AUTH_HEADER_PARAM_NAME = "Authorization";
   private Map lastResponseHeaders;
+  private int lastResponseStatus;
 
   public RestPersistenceManager()
   {
@@ -265,6 +266,45 @@ public abstract class RestPersistenceManager
                                   Map<String,String> headerParamMap, int retryLimit, boolean secured)
   {
     boolean isGET = "GET".equals(requestType);
+    RestServiceAdapter restService = setupRestServiceCall( connectionName,  requestType,  requestUri,  payload,
+                                  headerParamMap,  retryLimit);
+
+    String response = "";
+    String uri = restService.getRequestURI();
+    long startTime = System.currentTimeMillis();
+    try
+    {
+      response = restService.send((isGET? null: payload));      
+      logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,response,startTime,null);
+      setLastResponseHeaders(restService.getResponseHeaders());
+      setLastResponseStatus(restService.getResponseStatus());
+      return response;
+    }
+    catch (Exception e)
+    {
+      setLastResponseHeaders(restService.getResponseHeaders());
+      setLastResponseStatus(restService.getResponseStatus());
+      // check whether response is in 200 range, MAF incorrevty throws an error when response status is 201 or 202
+      // 304 is Not Modified, happens when eTag is same as on server
+      if (restService.getResponseStatus() < 300 || restService.getResponseStatus()==304)
+      {
+        // return detail message as response if available
+        String causeMessage = e.getCause() != null? e.getCause().getLocalizedMessage() : null;
+        logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,causeMessage,startTime,e);
+        return causeMessage;
+      }
+      else
+      {
+        logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,null,startTime,e);
+        return handleInvokeRestServiceError(requestType,uri,e);        
+      }
+    }
+  }
+
+  public RestServiceAdapter setupRestServiceCall(String connectionName, String requestType, String requestUri, String payload,
+                                  Map<String,String> headerParamMap, int retryLimit)
+  {
+    boolean isGET = "GET".equals(requestType);
     RestServiceAdapter restService = Model.createRestServiceAdapter();
     restService.clearRequestProperties();
     restService.setConnectionName(connectionName);
@@ -298,30 +338,43 @@ public abstract class RestPersistenceManager
     boolean payloadSet = payload != null && !"".equals(payload.trim());
     uri = isGET? uri + (payloadSet? "?" + payload: ""): uri;
     restService.setRequestURI(uri);
-    String response = "";
+      return restService;    
+  }
+
+  public byte[] invokeByteArrayRestService(String connectionName, String requestType, String requestUri, String payload,
+                                  Map<String,String> headerParamMap, int retryLimit)
+  {
+
+    RestServiceAdapter restService = setupRestServiceCall(connectionName,  requestType,  requestUri,  payload,
+                                   headerParamMap,  retryLimit);
+    byte[] response = null;
     long startTime = System.currentTimeMillis();
+    boolean isGET = "GET".equals(requestType);
+    String uri = restService.getRequestURI();
     try
     {
-      response = restService.send((isGET? null: payload));      
-      logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,response,startTime,null);
+      response = restService.sendReceive((isGET? null: payload));      
+      logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,"byte[]",startTime,null);
       setLastResponseHeaders(restService.getResponseHeaders());
+      setLastResponseStatus(restService.getResponseStatus());
       return response;
     }
     catch (Exception e)
     {
       setLastResponseHeaders(restService.getResponseHeaders());
+      setLastResponseStatus(restService.getResponseStatus());
       // check whether response is in 200 range, MAF incorrevty throws an error when response status is 201 or 202
       if (restService.getResponseStatus() < 300)
       {
         // return detail message as response if available
         String causeMessage = e.getCause() != null? e.getCause().getLocalizedMessage() : null;
         logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,causeMessage,startTime,e);
-        return causeMessage;
+        throw new AdfException(causeMessage,AdfException.ERROR);
       }
       else
       {
         logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,null,startTime,e);
-        return handleInvokeRestServiceError(requestType,uri,e);        
+        throw new AdfException(e,AdfException.ERROR);
       }
     }
   }
@@ -888,6 +941,17 @@ public abstract class RestPersistenceManager
   public Map getLastResponseHeaders()
   {
     return lastResponseHeaders;
+  }
+
+
+  public void setLastResponseStatus(int lastResponseStatus)
+  {
+    this.lastResponseStatus = lastResponseStatus;
+  }
+
+  public int getLastResponseStatus()
+  {
+    return lastResponseStatus;
   }
 
   protected abstract String getSerializedDataObject(Entity entity, String collectionElementName, String rowElementName,

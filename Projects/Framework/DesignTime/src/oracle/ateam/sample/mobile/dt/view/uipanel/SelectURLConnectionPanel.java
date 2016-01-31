@@ -9,9 +9,23 @@ package oracle.ateam.sample.mobile.dt.view.uipanel;
 
 import java.awt.BorderLayout;
 
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+
+import java.awt.event.ActionEvent;
+
+import java.awt.event.ActionListener;
+
 import javax.naming.Context;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
+
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import javax.swing.JTextField;
 
 import oracle.adf.model.adapter.DTContext;
 import oracle.adf.model.connection.rest.RestConnection;
@@ -21,6 +35,7 @@ import oracle.adf.model.connection.url.URLConnectionProxy;
 import oracle.adfdtinternal.model.adapter.webservice.wizard.rest.RestConnectionPanel;
 
 import oracle.ateam.sample.mobile.dt.model.BusinessObjectGeneratorModel;
+import oracle.ateam.sample.mobile.dt.model.UIDataObjectInfo;
 import oracle.ateam.sample.mobile.dt.view.wizard.BusinessObjectsFromWSDataControlWizard;
 
 import oracle.ide.panels.DefaultTraversablePanel;
@@ -29,19 +44,72 @@ import oracle.ide.panels.TraversalException;
 import oracle.ide.wizard.WizardCallbacks;
 
 
-public class SelectURLConnectionPanel
-  extends DefaultTraversablePanel
+public class SelectURLConnectionPanel   
+  extends DefaultTraversablePanel implements ActionListener
 {
 
   private RestConnectionPanel connUI = new RestConnectionPanel(true);
   private WizardCallbacks callbacks;
 
+  private JLabel mcsLabel = new JLabel("MCS Connection");
+  private JCheckBox mcsField = new JCheckBox();
+  private JLabel backendIdLabel = new JLabel("MCS Mobile Backend ID");
+  private JTextField backendIdField = new JTextField();
+  private JLabel anonymousLabel = new JLabel("MCS Anonymous Access Key");
+  private JTextField anonymousField = new JTextField();
+
   public SelectURLConnectionPanel()
   {
     super();
+    mcsField.addActionListener(this);
+
     this.setLayout(new BorderLayout(0, 15));
     //    this.setDefaultTitle(m_resourceManager.getString("JMIG_TGT_RES_0002"));
-    this.add(connUI, BorderLayout.NORTH);
+//    this.add(connUI, BorderLayout.NORTH);
+
+    JPanel contentPanel = new JPanel();
+    add(contentPanel, BorderLayout.NORTH);
+
+    GridBagLayout containerLayout = new GridBagLayout();
+    contentPanel.setLayout(containerLayout);
+
+    GridBagConstraints gbc = new GridBagConstraints();
+    gbc.gridx = 0;
+    gbc.gridy = 0;
+    gbc.gridwidth = 6;
+    gbc.gridheight = 1;
+    gbc.anchor = GridBagConstraints.NORTHWEST;
+    gbc.fill = GridBagConstraints.HORIZONTAL;
+
+    gbc.insets = new Insets(0, 0, 20, 5);
+    contentPanel.add(connUI, gbc);
+
+    gbc.insets = new Insets(0, 0, 5, 5);
+    gbc.gridwidth = 1;
+    gbc.gridy++;
+    contentPanel.add(mcsLabel, gbc);
+    gbc.gridx++;
+    gbc.weightx = 1.0f;
+    contentPanel.add(mcsField, gbc);
+    gbc.weightx = 0;
+
+    gbc.insets = new Insets(0, 0, 5, 5);
+    gbc.gridy++;
+    gbc.gridx = 0;
+    contentPanel.add(backendIdLabel, gbc);
+    gbc.gridx++;
+    gbc.weightx = 1.0f;
+    contentPanel.add(backendIdField, gbc);
+    gbc.weightx = 0;
+
+    gbc.insets = new Insets(0, 0, 5, 5);
+    gbc.gridy++;
+    gbc.gridx = 0;
+    contentPanel.add(anonymousLabel, gbc);
+    gbc.gridx++;
+    gbc.weightx = 1.0f;
+    contentPanel.add(anonymousField, gbc);
+    gbc.weightx = 0;
   }
 
   public void onExit(TraversableContext tc)
@@ -50,7 +118,7 @@ public class SelectURLConnectionPanel
     String connection = connUI.getSrcConnection();
     if (connection == null)
     {
-      throw new TraversalException("You need to select a URL connection.");
+      throw new TraversalException("You need to select a REST Service Connection.");
     }
     BusinessObjectGeneratorModel model =
       (BusinessObjectGeneratorModel) tc.get(BusinessObjectsFromWSDataControlWizard.MODEL_KEY);
@@ -58,11 +126,17 @@ public class SelectURLConnectionPanel
     // There is a bug in RestConnectionPanel getSourceURI(). it is returning the value from the label "Source URI:"
 //    String uri = connUI.getSourceURI();
     String uri = getConnectionUri(connection);
-    if (uri!=null && uri.endsWith("/")) {
-        throw new TraversalException("Connection URI should not end with a slash");
+    
+    if (uri!=null && mcsField.isSelected() && !uri.endsWith("/mobile")) {
+        throw new TraversalException("MCS REST Service Connection URI should end with /mobile");
+    }
+    else if (uri!=null && uri.endsWith("/")) {
+        throw new TraversalException("REST Service Connection URI should not end with a slash");
     }
     model.setConnectionUri(uri);
-
+    model.setUseMCS(mcsField.isSelected());
+    model.setMcsBackendId(backendIdField.getText());
+    model.setMcsAnonymousAccessKey(anonymousField.getText());
     super.onExit(tc);
   }
 
@@ -75,6 +149,23 @@ public class SelectURLConnectionPanel
     // enable back -  next - finish
     callbacks = traversableContext.getWizardCallbacks();
     callbacks.wizardEnableButtons(true, true, false);
+    
+    mcsField.setSelected(model.isUseMCS());    
+    backendIdField.setText(model.getMcsBackendId());
+    anonymousField.setText(model.getMcsAnonymousAccessKey());
+    backendIdField.setEnabled(mcsField.isSelected());
+    anonymousField.setEnabled(mcsField.isSelected());
+  }
+
+
+  @Override
+  public void actionPerformed(ActionEvent e)
+  {
+    if (e.getSource()==mcsField)
+    {
+      backendIdField.setEnabled(mcsField.isSelected());
+      anonymousField.setEnabled(mcsField.isSelected());
+    }
   }
 
   /**

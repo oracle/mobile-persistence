@@ -90,7 +90,7 @@ public class BusinessObjectsFromRestWSWizard extends Wizard
         Step step = new Step("Security Warning", SecurityWarningPanel.class, null);
         builder.newState(STATE_SECURITY_WARNING, step, STATE_CONNECTION,false);
 
-       step = new Step("URL Connection", SelectURLConnectionPanel.class, null);
+       step = new Step("Connection", SelectURLConnectionPanel.class, null);
       builder.newState(STATE_CONNECTION, step, STATE_RESOURCES,false);
 
        step = new Step("Data Object Resources", RESTResourcesPanel.class, null);

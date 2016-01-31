@@ -7,5 +7,9 @@ ddl.script=META-INF/${WSM.workspaceName}.sql
 # Location of XML mapping file in classpath
 persistence.mapping.xml=META-INF/persistence-mapping.xml
 
-# Usage tracking
-tracking.enabled=${WSM.enableUsageTracking}
+#if ($WSM.useMCS)
+# MCS connection details
+mcs.connection=${WSM.connectionName}
+mcs.mobile-backend-id=${WSM.mcsBackendId}
+mcs.anonymous-key=${WSM.mcsAnonymousAccessKey}
+#end
