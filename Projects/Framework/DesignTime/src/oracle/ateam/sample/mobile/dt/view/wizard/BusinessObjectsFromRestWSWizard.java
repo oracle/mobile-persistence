@@ -23,6 +23,7 @@ import oracle.ateam.sample.mobile.dt.view.uipanel.DataObjectsPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.GeneratorSettingsPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.ParentChildAccessorsPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.RESTResourcesPanel;
+import oracle.ateam.sample.mobile.dt.view.uipanel.RuntimeOptionsPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.SecurityWarningPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.SelectURLConnectionPanel;
 
@@ -62,6 +63,7 @@ public class BusinessObjectsFromRestWSWizard extends Wizard
   static final String STATE_PERSISTENCE_MAPPING= "pmapping";
   static final String STATE_CRUD_METHOD= "crudMethods";
   static final String STATE_CRUD_METHOD_PARAMS = "crudMethodParams";
+  static final String STATE_RUNTIME_OPTIONS = "runtimeOptions";
   static final String STATE_OPTIONS = "options";
 
 //  private String wizardTitle = "Create Mobile Web Service Proxy and Persistence Provider";
@@ -109,7 +111,10 @@ public class BusinessObjectsFromRestWSWizard extends Wizard
       builder.newState(STATE_CRUD_METHOD, step, STATE_CRUD_METHOD_PARAMS,false);
 
       step = new Step("Resource Details", CRUDMethodParametersPanel.class, null);
-      builder.newState(STATE_CRUD_METHOD_PARAMS, step, STATE_OPTIONS,false);
+      builder.newState(STATE_CRUD_METHOD_PARAMS, step, STATE_RUNTIME_OPTIONS,false);
+
+      step = new Step("Runtime Options", RuntimeOptionsPanel.class, null);
+      builder.newState(STATE_RUNTIME_OPTIONS, step, STATE_OPTIONS,false);
 
       step = new Step("Generator Settings", GeneratorSettingsPanel.class, null);
       builder.newFinalState(STATE_OPTIONS, step);

@@ -128,39 +128,34 @@ public class PersistenceMappingGenerator
     CrudServiceClass service = classMappingDescriptor.getCrudServiceClass();
     if (service == null)
     {
-      service = objectFactory.createCrudServiceClass();
+      service = objectFactory.createCrudServiceClass();      
       classMappingDescriptor.setCrudServiceClass(service);
-      service.setAutoIncrementPrimaryKey(true);
-      if (dataObject.isGenerateServiceClass())
+    }  
+    service.setAutoIncrementPrimaryKey(true);
+    if (dataObject.isGenerateServiceClass())
+    {
+      service.setClassName(dataObject.getFullyQualifiedServiceClassName());
+      if (model.isWebServiceDataControl())
       {
-        service.setClassName(dataObject.getFullyQualifiedServiceClassName());
-        String remotePersistenceManager = null;
-        if (model.isWebServiceDataControl())
-        {
-          remotePersistenceManager = "DataControlPersistenceManager";
-        }
-        else if (model.getCurrentDataObject().isXmlPayload())
-        {
-          remotePersistenceManager = "RestXMLPersistenceManager";
-        }
-        else
-        {
-          remotePersistenceManager = "RestJSONPersistenceManager";
-        }
+        // deprecated SOAP WS wizard does not have runtime options panel to set persietnce managers
         service.setLocalPersistenceManager("oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager");
-        service.setRemotePersistenceManager("oracle.ateam.sample.mobile.v2.persistence.manager." +
-                                            remotePersistenceManager);
-        service.setRemoteReadInBackground(true);
-        service.setRemoteWriteInBackground(true);
-        service.setShowWebServiceInvocationErrors(true);
-        service.setAutoQuery(true);
-        service.setEnableOfflineTransactions(true);
+        service.setRemotePersistenceManager("oracle.ateam.sample.mobile.v2.persistence.manager.DataControlPersistenceManager");
       }
-      else
+      else 
       {
-        // set service class to parent service class
-        service.setClassName(dataObject.getRootDataObject().getFullyQualifiedServiceClassName());        
+        service.setLocalPersistenceManager(dataObject.getLocalPersistenceManager());
+        service.setRemotePersistenceManager(dataObject.getRemotePersistenceManager());
       }
+      service.setRemoteReadInBackground(dataObject.isRemoteReadInBackground());
+      service.setRemoteWriteInBackground(dataObject.isRemoteWriteInBackground());
+      service.setShowWebServiceInvocationErrors(dataObject.isShowWebServiceErrors());
+      service.setAutoQuery(dataObject.isAutoQuery());
+      service.setEnableOfflineTransactions(dataObject.isEnableOfflineTransactions());
+    }
+    else
+    {
+      // set service class to parent service class
+      service.setClassName(dataObject.getRootDataObject().getFullyQualifiedServiceClassName());        
     }
 
     Table table = objectFactory.createTable();

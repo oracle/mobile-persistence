@@ -25,6 +25,7 @@ import oracle.ateam.sample.mobile.dt.model.DCMethodParameter;
 import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
 import oracle.ateam.sample.mobile.dt.model.HeaderParam;
 import oracle.ateam.sample.mobile.dt.model.jaxb.ClassMappingDescriptor;
+import oracle.ateam.sample.mobile.dt.model.jaxb.CrudServiceClass;
 import oracle.ateam.sample.mobile.dt.model.jaxb.DirectMapping;
 import oracle.ateam.sample.mobile.dt.model.jaxb.ForeignKeyColumnReference;
 import oracle.ateam.sample.mobile.dt.model.jaxb.HeaderParameter;
@@ -139,12 +140,22 @@ public class PersistenceMappingLoader
     doi.setExisting(true);
     doi.setClassName(name);
     doi.setPackageName(packageName);
-    if (descriptor.getCrudServiceClass()!=null)
+    CrudServiceClass serviceClass = descriptor.getCrudServiceClass();
+    if (serviceClass!=null)
     {
-      String serviceClass = descriptor.getCrudServiceClass().getClassName();
-      lastDotPos = serviceClass.lastIndexOf(".");
-      doi.setServicePackageName(serviceClass.substring(0,lastDotPos));
-      doi.setServiceClassName(serviceClass.substring(lastDotPos+1));      
+      String serviceClassName = descriptor.getCrudServiceClass().getClassName();
+      lastDotPos = serviceClassName.lastIndexOf(".");
+      doi.setServicePackageName(serviceClassName.substring(0,lastDotPos));
+      doi.setServiceClassName(serviceClassName.substring(lastDotPos+1));     
+      
+      doi.setRemoteReadInBackground(serviceClass.isRemoteReadInBackground());
+      doi.setRemoteWriteInBackground(serviceClass.isRemoteWriteInBackground());
+      doi.setAutoQuery(serviceClass.isAutoQuery());
+      doi.setGeneratePrimaryKey(serviceClass.isAutoIncrementPrimaryKey());
+      doi.setEnableOfflineTransactions(serviceClass.isEnableOfflineTransactions());
+      doi.setShowWebServiceErrors(serviceClass.isShowWebServiceInvocationErrors());
+      doi.setRemotePersistenceManager(serviceClass.getRemotePersistenceManager());
+      doi.setLocalPersistenceManager(serviceClass.getLocalPersistenceManager());
     }
     doi.setPayloadDateFormat(descriptor.getDateFormat());
     doi.setPayloadDateTimeFormat(descriptor.getDateTimeFormat());
@@ -170,6 +181,7 @@ public class PersistenceMappingLoader
       AttributeInfo attr = doi.getAttributeDef(descriptor.getCanonicalTriggerAttribute());
       doi.setCanonicalTriggerAttribute(attr);
     }
+    
 
     // first create methods so we can lookup find-all-in-parent-method when
     // create one-to-many mappings

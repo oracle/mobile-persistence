@@ -150,15 +150,15 @@ public class CRUDMethodsRESTPanel
     gbc.gridx++;
     contentPanel.add(findAllRequestType, gbc);
 
-
-    gbc.gridy++;
-    gbc.gridx = 0;
-    gbc.weightx = 0.2;
-    contentPanel.add(deleteLocalRowsLabel, gbc);
-    gbc.gridx++;
-    gbc.weightx = 1.0f;
-    contentPanel.add(deleteLocalRowsField, gbc);
-    gbc.weightx = 0;
+// Moved to Runtime Options panel
+//    gbc.gridy++;
+//    gbc.gridx = 0;
+//    gbc.weightx = 0.2;
+//    contentPanel.add(deleteLocalRowsLabel, gbc);
+//    gbc.gridx++;
+//    gbc.weightx = 1.0f;
+//    contentPanel.add(deleteLocalRowsField, gbc);
+//    gbc.weightx = 0;
 
     gbc.gridy++;
     gbc.gridx = 0;
