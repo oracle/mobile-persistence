@@ -2,6 +2,10 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  01-feb-2016   Steven Davelaar
+  1.5           - Check for isPersisted instead of localPersistenceManager!=null in entity write methods. 
+                - Commented out call to refreshCurrentEntity in refreshEntityList, refresh of form layout now works fine
+                  in MAF 2.2.1 without iterator refresh.
   22-sep-2015   Steven Davelaar
   1.4           synrhonize method should NOT check for enableOfflineTransactions. This is done inside synchronization
                 code: if sync fails and offline transactions is enabled, we store it as pending data sync action, otherwise
@@ -277,7 +281,7 @@ public abstract class EntityCRUDService<E extends Entity>
   protected void insertEntity(Entity entity)
   {
     validateEntity(entity);
-    if (localPersistenceManager != null)
+    if (isPersisted())
     {
       localPersistenceManager.insertEntity(entity, isAutoCommit());
     }
@@ -405,7 +409,7 @@ public abstract class EntityCRUDService<E extends Entity>
   protected void updateEntity(Entity entity)
   {
     validateEntity(entity);
-    if (localPersistenceManager != null)
+    if (isPersisted())
     {
       localPersistenceManager.updateEntity(entity, isAutoCommit());
     }
@@ -461,7 +465,7 @@ public abstract class EntityCRUDService<E extends Entity>
   {
     if (!entity.getIsNewEntity())
     {
-      if (localPersistenceManager != null)
+      if (isPersisted())
       {
         localPersistenceManager.removeEntity(entity, isAutoCommit());
         EntityCache.getInstance().removeEntity(entity);
@@ -483,7 +487,8 @@ public abstract class EntityCRUDService<E extends Entity>
     getProviderChangeSupport().fireProviderRefresh(getEntityListName());
     // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
     // a list view.
-    EntityUtils.refreshCurrentEntity(getEntityListName(), getEntityList(), getProviderChangeSupport());
+    // This now seems to work fine in MAF 2.2.1, so we can comment out the call to refreshCurrentEntity
+//    EntityUtils.refreshCurrentEntity(getEntityListName(), getEntityList(), getProviderChangeSupport());
     if (AdfmfJavaUtilities.isBackgroundThread())
     {
       AdfmfJavaUtilities.flushDataChangeEvent();

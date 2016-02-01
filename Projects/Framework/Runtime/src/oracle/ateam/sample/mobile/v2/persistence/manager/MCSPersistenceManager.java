@@ -60,6 +60,9 @@ public class MCSPersistenceManager
   private static final String LOGOUT_URI = "/platform/users/logout";
   private static final String ANALYTICS_EVENTS_URI = "/platform/analytics/events";
   private static final String STORAGE_COLLECTIONS_URI = "/platform/storage/collections/";
+  private static final String CONTENT_TYPE = "Content-Type";
+  private static final String ORACLE_MOBILE_BACKEND_ID = "Oracle-Mobile-Backend-Id";
+  private static final String AUTHORIZATION = "Authorization";
   private String mobileBackendId;
   private String authHeader;
   private String connectionName;
@@ -75,22 +78,14 @@ public class MCSPersistenceManager
 
   public String login(String userName, String password)
   {
-    return login(userName, password, this.mobileBackendId);
-  }
-
-  public String login(String userName, String password, String mobileBackendId)
-  {
-    this.mobileBackendId = mobileBackendId;
-
     String userCredentials = userName + ":" + password;
     try
     {
       // oracle.adfmf.misc.Base64 nor java.util.Base64 does not encode correctly for some strange reason
       //      authHeader = "Basic " + Base64.encode(userCredentials.getBytes("UTF-8"));
       //      authHeader = "Basic " + Base64.getEncoder().encode(userCredentials.getBytes("UTF-8"));
-
-      authHeader = "Basic " + new BASE64Encoder().encode(userCredentials.getBytes("UTF-8"));
-      String result = invokeRestService(getConnectionName(), "GET", LOGIN_URI, null, getMCSHeaderParams(), 0, false);
+      setAuthHeader("Basic " + new BASE64Encoder().encode(userCredentials.getBytes("UTF-8")));
+      String result = invokeRestService(getConnectionName(), "GET", LOGIN_URI, null, null, 0, false);
       return result;
     }
     catch (UnsupportedEncodingException e)
@@ -107,15 +102,14 @@ public class MCSPersistenceManager
 
   public String logout()
   {
-    RestJSONPersistenceManager rpm = new RestJSONPersistenceManager();
-    String result = rpm.invokeRestService(getConnectionName(), "GET", LOGOUT_URI, null, getMCSHeaderParams(), 0, false);
-    authHeader = null;
+    String result = invokeRestService(getConnectionName(), "GET", LOGOUT_URI, null, null, 0, false);
+    setAuthHeader(null);
     return result;
   }
 
   public void sendAnalyticsEvents(String payload)
   {
-    invokeRestService(getConnectionName(), "POST", ANALYTICS_EVENTS_URI, payload, getMCSHeaderParams(), 0, false);
+    invokeRestService(getConnectionName(), "POST", ANALYTICS_EVENTS_URI, payload, null, 0, false);
   }
 
   /**
@@ -129,7 +123,7 @@ public class MCSPersistenceManager
   public void getStorageObjectMetadata(StorageObject storageObject)
   {
     String uri = STORAGE_COLLECTIONS_URI + storageObject.getCollectionName() + "/objects/" + storageObject.getId();
-    Map<String, String> headerParams = getMCSHeaderParams();
+    Map<String, String> headerParams = new HashMap<String, String>();
     if (storageObject.getETag() != null)
     {
       // we have retrieved the object before
@@ -167,7 +161,7 @@ public class MCSPersistenceManager
     {
       storageObject.setContentLength(new Long(cl.toString()));
     }
-    storageObject.setContentType((String) headers.get("Content-Type"));
+    storageObject.setContentType((String) headers.get(CONTENT_TYPE));
     storageObject.setCreatedBy((String) headers.get("Oracle-Mobile-Created-By"));
     storageObject.setCreatedOn((String) headers.get("Oracle-Mobile-Created-On"));
     storageObject.setModifiedBy((String) headers.get("Oracle-Mobile-Modified-By"));
@@ -188,7 +182,7 @@ public class MCSPersistenceManager
   public byte[] getStorageObjectContent(StorageObject storageObject)
   {
     String uri = STORAGE_COLLECTIONS_URI + storageObject.getCollectionName() + "/objects/" + storageObject.getId();
-    Map<String, String> headerParams = getMCSHeaderParams();
+    Map<String, String> headerParams = new HashMap<String, String>();
     // if the file content has been retrieved before, we pass in eTag header, so we don't download
     // it again while it is unchanged
     if (storageObject.getFilePath() != null)
@@ -210,19 +204,27 @@ public class MCSPersistenceManager
     return response;
   }
 
-
-  public Map<String, String> getMCSHeaderParams()
+  public Map<String, String> addMCSHeaderParamsIfNeeded(Map<String, String> headerParams)
   {
-    Map<String, String> headerParams = new HashMap<String, String>();
-    headerParams.put("Content-Type", "application/json");
-    if (getMobileBackendId() != null)
+    if (headerParams == null)
     {
-      headerParams.put("Oracle-Mobile-BACKEND-ID", getMobileBackendId());
+      headerParams = new HashMap<String, String>();
     }
-    String header = getAuthHeader();
-    if (header == null && getAnonymousHeader() != null)
+    if (!headerParams.containsKey(CONTENT_TYPE))
     {
-      headerParams.put("Authorization", getAnonymousHeader());
+      headerParams.put(CONTENT_TYPE, "application/json");
+    }
+    if (!headerParams.containsKey(ORACLE_MOBILE_BACKEND_ID) && getMobileBackendId() != null)
+    {
+      headerParams.put(ORACLE_MOBILE_BACKEND_ID, getMobileBackendId());
+    }
+    if (!headerParams.containsKey(AUTHORIZATION))
+    {
+      String header = getAuthHeader() != null? getAuthHeader(): getAnonymousHeader();
+      if (header != null)
+      {
+        headerParams.put(AUTHORIZATION, header);
+      }
     }
     return headerParams;
   }
@@ -277,23 +279,34 @@ public class MCSPersistenceManager
     return anonymousKey;
   }
 
+
+  @Override
+  /**
+   * This methods adds MCS-specific headers if not yet set.
+   */
+  public String invokeRestService(String connectionName, String requestType, String requestUri, String payload,
+                                  Map<String, String> headerParamMap, int retryLimit, boolean secured)
+  {
+    return super.invokeRestService(connectionName, requestType, requestUri, payload, addMCSHeaderParamsIfNeeded(headerParamMap), retryLimit,
+                                   secured);
+  }
+
   public void storeStorageObject(StorageObject storageObject)
   {
     try
     {
 
       RestServiceAdapter adp = Model.createRestServiceAdapter();
-      adp.setConnectionName("MCSPlatform");
-      String requestEndPoint = adp.getConnectionEndPoint("MCSPlatform");
+      adp.setConnectionName(getConnectionName());
+      String requestEndPoint = adp.getConnectionEndPoint(getConnectionName());
       // Get the URI which is defined after the end point
       String requestURI =
         STORAGE_COLLECTIONS_URI + storageObject.getCollectionName() + "/objects/" + storageObject.getName();
       String request = requestEndPoint + requestURI;
       HashMap<String, String> httpHeadersValue = new HashMap<String, String>();
-      //        httpHeadersValue.put("Oracle-Mobile-BACKEND-ID", "bcda8418-8c23-4d92-b656-9299d691e120");
-      //        httpHeadersValue.put("Authorization", "Basic c3RldmVuLmtpbmc6RGFhZjIwMDEh");
       httpHeadersValue.put("Oracle-Mobile-Name", storageObject.getName());
       httpHeadersValue.put("Content-Type", storageObject.getContentType());
+      addMCSHeaderParamsIfNeeded(httpHeadersValue);
       // Get the connection
       HttpConnection connection = adp.getHttpConnection("PUT", request, httpHeadersValue);
       Path path = Paths.get(storageObject.getFilePath());
@@ -314,10 +327,10 @@ public class MCSPersistenceManager
       //           ,"href":"/mobile/platform/storage/collections/Services/objects/51e48d9a-0d9d-4627-b3e8-c2eaaa8886ae"}
       //    ,{"rel":"self","href":"/mobile/platform/storage/collections/Services/objects/51e48d9a-0d9d-4627-b3e8-c2eaaa8886ae"}]}
       String response = getResponse(adp.getInputStream(connection), false);
-      System.err.println(response);
+//      System.err.println(response);
       JSONObject responseObject = (JSONObject) JSONBeanSerializationHelper.fromJSON(JSONObject.class, response);
       super.processPayloadElement(responseObject, StorageObject.class, null, storageObject);
-      System.err.println(response);
+//      System.err.println(response);
     }
     catch (Exception e)
     {
