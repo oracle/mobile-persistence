@@ -2,6 +2,9 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  01-feb-2016   Steven Davelaar
+  1.4           Fixed issue in mergeWithExistingDataSyncActionIfNeeded with Update action
+                followed by delete action
   04-sep-2015   Steven Davelaar
   1.3           Only load sync actions from DB when offline transactions is enabled
   14-aug-2015   Steven Davelaar
@@ -245,10 +248,10 @@ public class DataSynchManager
           else if (action.getAction().equals(DataSynchAction.UPDATE_ACTION) &&
                    synchAction.getAction().equals(DataSynchAction.REMOVE_ACTION))
           {
-            // entity updated and deleted, we remove the update data sync action and save the delete
+            // entity updated and deleted, we remove the update data sync action and return false for merged
+            // so new remove data sync acton will be saved in calling method registerDataSynchAction
             actionToRemove = action;
-            merged = true;
-            saveDataSynchAction(synchAction);
+            merged = false;
             break;
           }
         }
