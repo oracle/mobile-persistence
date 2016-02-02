@@ -47,6 +47,7 @@ public class PersistenceMappingLoader
 {
   
 //  private List<DataObjectInfo> dataObjects  = new ArrayList<DataObjectInfo>();
+  public static final String STORAGE_OBJECT_CLASS = "oracle.ateam.sample.mobile.mcs.storage.StorageObject";
   public static final String DATA_SYNC_ACTION_CLASS = "oracle.ateam.sample.mobile.v2.persistence.service.DataSynchAction";
   public static final String WEB_SERVICE_CALL_CLASS = "oracle.ateam.sample.mobile.logging.WebServiceCall";
   private Map<ClassMappingDescriptor,DataObjectInfo> dataObjects  = new HashMap<ClassMappingDescriptor,DataObjectInfo>();
@@ -107,7 +108,8 @@ public class PersistenceMappingLoader
       for (ClassMappingDescriptor descriptor : mop.getClassMappingDescriptor())
       {
         if (!DATA_SYNC_ACTION_CLASS.equals(descriptor.getClassName())
-            && !WEB_SERVICE_CALL_CLASS.equals(descriptor.getClassName()))
+          && !WEB_SERVICE_CALL_CLASS.equals(descriptor.getClassName())
+          && !STORAGE_OBJECT_CLASS.equals(descriptor.getClassName()))
         {
           DataObjectInfo doi = addDataObject(descriptor);        
           dataObjects.put(descriptor,doi);          
@@ -117,7 +119,8 @@ public class PersistenceMappingLoader
       for (ClassMappingDescriptor descriptor : mop.getClassMappingDescriptor())
       {
         if (!DATA_SYNC_ACTION_CLASS.equals(descriptor.getClassName())
-            && !WEB_SERVICE_CALL_CLASS.equals(descriptor.getClassName()))
+          && !WEB_SERVICE_CALL_CLASS.equals(descriptor.getClassName())
+          && !STORAGE_OBJECT_CLASS.equals(descriptor.getClassName()))
         {  
           addChildAccessors(descriptor, dataObjects.get(descriptor));        
           addParentAccessors(descriptor, dataObjects.get(descriptor));        

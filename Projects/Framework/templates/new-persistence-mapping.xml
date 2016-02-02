@@ -1,5 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mobileObjectPersistence xmlns="http://www.oracle.com/ateam/mobile/persistenceMapping" logWebServiceCalls="true">
+   <classMappingDescriptor className="oracle.ateam.sample.mobile.mcs.storage.StorageObject" persisted="true">
+      <crudServiceClass className="oracle.ateam.sample.mobile.mcs.storage.StorageObjectService" autoIncrementPrimaryKey="true" localPersistenceManager="oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager" remotePersistenceManager="oracle.ateam.sample.mobile.v2.persistence.manager.MCSPersistenceManager" remoteReadInBackground="false" remoteWriteInBackground="true" showWebServiceInvocationErrors="true" autoQuery="false" enableOfflineTransactions="true"/>
+      <table name="STORAGE_OBJECT">
+         <primaryKeyColumn name="ID"/>
+      </table>
+      <attributeMappings>
+         <directMapping attributeName="createdOn" payloadAttributeName="createdOn" columnName="CREATED_ON" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
+         <directMapping attributeName="eTag" payloadAttributeName="eTag" columnName="E_TAG" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
+         <directMapping attributeName="id" payloadAttributeName="id" columnName="ID" columnDataType="VARCHAR" required="true" persisted="true" javaType="java.lang.String" keyAttribute="true"/>
+         <directMapping attributeName="modifiedOn" payloadAttributeName="modifiedOn" columnName="MODIFIED_ON" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
+         <directMapping attributeName="createdBy" payloadAttributeName="createdBy" columnName="CREATED_BY" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
+         <directMapping attributeName="modifiedBy" payloadAttributeName="modifiedBy" columnName="MODIFIED_BY" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
+         <directMapping attributeName="name" payloadAttributeName="name" columnName="NAME" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
+         <directMapping attributeName="contentType" payloadAttributeName="contentType" columnName="CONTENT_TYPE" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
+         <directMapping attributeName="contentLength" payloadAttributeName="contentLength" columnName="CONTENT_LENGTH" columnDataType="NUMERIC" required="false" persisted="true" javaType="java.lang.Long" keyAttribute="false"/>
+         <directMapping attributeName="collectionName" columnName="COLLECTION_NAME" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
+         <directMapping attributeName="filePath" columnName="FILE_PATH" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
+      </attributeMappings>
+      <methods>
+         <findMethod uri="/platform/storage/collections/{collection}/objects" connectionName="" requestType="GET" secured="false" sendDataObjectAsPayload="false" payloadElementName="root">
+            <parameter name="collection" valueProvider="SearchValue"  pathParam="true"/>
+         </findMethod>
+         <customMethod name="getAllObjectsMetadata" uri="/platform/storage/collections/{collection}/objects" connectionName="" requestType="GET" secured="false" sendDataObjectAsPayload="false" payloadElementName="root">
+            <parameter name="collection" value="collectionName" valueProvider="DataObjectAttribute" dataObjectAttribute="id" pathParam="true"/>
+         </customMethod>
+      </methods>
+   </classMappingDescriptor>
   <classMappingDescriptor className="oracle.ateam.sample.mobile.v2.persistence.service.DataSynchAction"
                           dateFormat="dd-MMM-yyyy" >
     <table name="DATA_SYNCH_ACTIONS">

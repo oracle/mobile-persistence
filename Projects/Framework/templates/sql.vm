@@ -1,11 +1,31 @@
 ## add current file content first (regenerated table are removed from this content)
 ${WSM.sqlFileContent}#foreach($dataObject in ${WSM.selectedDataObjects})
+ #if (${dataObject.persisted})
 CREATE TABLE ${dataObject.tableName} 
 (
   #foreach($attr in ${dataObject.attributeDefs})
     ${attr.columnName} ${attr.columnType} #if (${attr.required}) NOT NULL#end,
   #end
   CONSTRAINT ${dataObject.tableName}_PK PRIMARY KEY(${dataObject.keyColumnNamesAsString})
+);
+ #end
+#end
+
+#if (${WSM.useMCS})
+CREATE TABLE STORAGE_OBJECT 
+(
+      CREATED_ON VARCHAR ,
+      E_TAG VARCHAR ,
+      ID VARCHAR  NOT NULL,
+      MODIFIED_ON VARCHAR ,
+      CREATED_BY VARCHAR ,
+      MODIFIED_BY VARCHAR ,
+      NAME VARCHAR ,
+      CONTENT_TYPE VARCHAR ,
+      CONTENT_LENGTH NUMERIC ,
+      COLLECTION_NAME VARCHAR ,
+      FILE_PATH VARCHAR ,
+    CONSTRAINT STORAGE_OBJECT_PK PRIMARY KEY(ID)
 );
 #end
 

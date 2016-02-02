@@ -24,8 +24,9 @@ import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 
 
 /**
- *  Service class that provides CRUD and custom operations against the storageObject data object.
- *  The behavior of this class is driven by the storageObject classMappingDescriptor in persistence-mapping.xml.
+ *  Service class that provides local and remote operations against the storageObject data object. This allows
+ *  you to work with MCS storage objecs in offline mode.
+ *  Local operations store data in STORAGE_OBJECT table, remote operations call the MCS storage API.
  *
  *  You can customize and extend this behavior by overriding methods of the EntityCRUDService superclass, and/or
  *  creating a subclass of the local and remote persistence managers as configured in persistence-mapping.xml.
@@ -36,38 +37,16 @@ public class StorageObjectService
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(StorageObjectService.class);
 
   /**
-   * Default constructor. If autoQuery is set to true in the classMappingDescriptor in persistence-mapping.xml, then
-   * the findAll method will be executed and the storageObject list will be populated when this constructor is invoked.
-   * If you created a data control for this service class, the data control will use this constructor, allowing you to
-   * immediately show data in your user interface when accessing the data control for the first time.
-   * By default, the findAll method will first query the local SQLite database for any rows and show these immediately in
-   * the UI. Then the remote findAll method as configured in persistence-mapping.xml will be executed in the background,
-   * and the UI will be automatically refreshed when the remote data have been processed and stored in the local SQLite
-   * database.
-   * If you want the user to wait until the remote data have been processed and not show local data first, you can set
-   * the remoteReadInBackground attribute in the classMappingDescriptor to false.
+   * Default constructor. 
    *
    * If you need programmatic access to the same instance of this class as used by the bean data control typically
    * created for this class, then you can use the following convenience method:
    *
    * StorageObjectService crudService = (StorageObjectService) EntityUtils.getEntityCRUDService(StorageObject.class);
    *
-   * Note that calling this method might fire a remote method call when autoQuery is set to true in the
-   * classMappingDescriptor and the data control has not been instantiated yet for the feature context in which you
-   * execute the above call. Remember: each feature has its own class loader, bean data controls are NOT shared
-   * accross features!
    */
   public StorageObjectService()
   {
-  }
-
-  /**
-   * Use this constructor with autoQuery=false in Java code when you want to execute a method in this service class
-   * without autoQuery as configured in persistence-mapping.xml taking place.
-   */
-  public StorageObjectService(boolean autoQuery)
-  {
-    super(autoQuery);
   }
 
   protected Class getEntityClass()
@@ -77,10 +56,10 @@ public class StorageObjectService
 
   protected String getEntityListName()
   {
-    return "storageObject";
+    return "storageObjects";
   }
 
-  public List<StorageObject> getStorageObject()
+  public List<StorageObject> getStorageObjects()
   {
     return getEntityList();
   }
@@ -123,38 +102,14 @@ public class StorageObjectService
     super.mergeEntity(storageObject);
   }
 
-  /**
-   * Retrieves all storageObject instances using the configured persistence managers and populates the storageObject list
-   * with the result.
-   * When this method is called for the first time, and a remote persistence manager is configured,
-   * the data is fetched remotely and the local DB is populated with the results.
-   */
-  public void findAllStorageObject()
-  {
-    super.findAll();
-  }
 
   /**
-   * Retrieves all storageObject instances using the findAll method on the remote persistence manager
-   * and populates the storageObject list
+   * Retrieves all storageObject instances in the collection specified
+   * @param collectionName
    */
-  public void findAllStorageObjectRemote()
+  public void findStorageObjectsInCollection(String collectionName)
   {
-    super.doRemoteFindAll();
-  }
-
-  /**
-   * Retrieves the storageObject instances that match the searchValue filter using the configured persistence
-   * managers and populates the storageObject list with the result.
-   * By default, the search value is applied to all string attributes using a "startsWith" operator.
-   * To customize the attributes on which the searchValue is applied, you can override method getQuickSearchAttributeNames.
-   * If a find method is configured against the remote persistence manager, then this method will also
-   * call this method.
-   * @param searchValue
-   */
-  public void findStorageObject(String searchValue)
-  {
-    super.find(searchValue);
+    super.find(collectionName);
   }
   
   /**
@@ -184,7 +139,7 @@ public class StorageObjectService
    * If you specifed the getCanonical triggering attribute in the AMPA REST wizard, then the above code is already generated
    * for you.
    *
-   * @param storageObject
+   * @param collectionName
    */
   public StorageObject getStorageObjectMetadata(String collection, String objectId)
   {
@@ -193,6 +148,12 @@ public class StorageObjectService
     return storageObject;
   }
     
+  /**
+   * 
+   * @param collection
+   * @param objectId
+   * @return
+   */
   public StorageObject findOrCreateStorageObject(String collection, String objectId)
   {
     StorageObject storageObject = null;
@@ -419,14 +380,6 @@ public class StorageObjectService
   public boolean getHasStorageObjectDataSynchActions()
   {
     return getDataSynchManager().getHasDataSynchActions();
-  }
-
-  /**
-   * Invoke custom method "getAllObjectsMetadata
-   */
-  public void getAllObjectsMetadata(StorageObject storageObject)
-  {
-    invokeCustomMethod(storageObject, "getAllObjectsMetadata");
   }
 
 

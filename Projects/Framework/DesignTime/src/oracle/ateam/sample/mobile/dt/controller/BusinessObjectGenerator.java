@@ -280,6 +280,14 @@ public class BusinessObjectGenerator
       int endPos = newContent.indexOf(");", startPos);
       newContent = newContent.substring(0, (startPos==0 ? 0 : startPos - 1)) + newContent.substring(endPos + 2);
     }
+    // also remove STORAGE_OBJECT table
+     startMatch = "CREATE TABLE STORAGE_OBJECT ";
+     startPos = newContent.indexOf(startMatch);
+    if (startPos > -1)
+    {
+      int endPos = newContent.indexOf(");", startPos);
+      newContent = newContent.substring(0, (startPos==0 ? 0 : startPos - 1)) + newContent.substring(endPos + 2);
+    }
     return newContent;
   }
 

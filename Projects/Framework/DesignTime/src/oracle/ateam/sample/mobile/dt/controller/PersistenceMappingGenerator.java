@@ -59,14 +59,39 @@ public class PersistenceMappingGenerator
   public String run()
   {
     mop = model.getExistingPersistenceMappingModel();
-    if (mop==null)
+    if (mop == null)
     {
       // create default model with dataSyncAction and wevServiceCall classmappingDescriptors using xml file in teplates dir
-      String newPersistenceMappingFile = Ide.getOracleHomeDirectory()+"/jdev/extensions/oracle.ateam.mobile.persistence/templates/new-persistence-mapping.xml";
+      String newPersistenceMappingFile =
+        Ide.getOracleHomeDirectory() +
+        "/jdev/extensions/oracle.ateam.mobile.persistence/templates/new-persistence-mapping.xml";
       final URL url = URLFactory.newFileURL(newPersistenceMappingFile);
       mop = new PersistenceMappingLoader().loadJaxbModel(url);
-    }
 
+      if (model.isUseMCS())
+      {
+        // Find the MCS STORAGE_OBJECT mapping, we need to set the connection name to MCS connection
+        ClassMappingDescriptor found = null;
+        for (ClassMappingDescriptor descriptor: mop.getClassMappingDescriptor())
+        {
+          if (descriptor.getClassName().equals(PersistenceMappingLoader.STORAGE_OBJECT_CLASS))
+          {
+            found = descriptor;
+            break;
+          }
+        }
+        //      if (!model.isUseMCS())
+        //      {
+        //        // remove the STORAGE_OBJECT
+        //        mop.getClassMappingDescriptor().remove(found);
+        //      }
+        //      else
+        //      {
+        // update connectionName on methods to name set in wizard
+        found.getMethods().getFindMethod().setConnectionName(model.getConnectionName());
+        //      }
+      }
+    }
     for (DataObjectInfo dataObject: dataObjects)
     {
       createDescriptor(dataObject);
@@ -110,17 +135,17 @@ public class PersistenceMappingGenerator
     if (classMappingDescriptor == null)
     {
       classMappingDescriptor = objectFactory.createClassMappingDescriptor();
-      // add as last but two, so we keep data synch action and webServiceCall descs at the bottom
+      // add as last but three, so we keep storage object, data synch action and webServiceCall descs at the bottom
       int descCount = mop.getClassMappingDescriptor().size();
-      int pos = descCount==0 ? 0 : (descCount==1 ? 1 : mop.getClassMappingDescriptor().size()-2);
-      mop.getClassMappingDescriptor().add(pos,classMappingDescriptor);
+      int pos = descCount == 0? 0: (descCount == 1? 1: mop.getClassMappingDescriptor().size() - 3);
+      mop.getClassMappingDescriptor().add(pos, classMappingDescriptor);
       classMappingDescriptor.setClassName(fullyQualifiedClassName);
     }
     classMappingDescriptor.setDateFormat(dataObject.getPayloadDateFormat());
     classMappingDescriptor.setDateTimeFormat(dataObject.getPayloadDateTimeFormat());
     classMappingDescriptor.setOrderBy(dataObject.getOrderBy());
     classMappingDescriptor.setPersisted(dataObject.isPersisted());
-    if (dataObject.getCanonicalTriggerAttribute()!=null)
+    if (dataObject.getCanonicalTriggerAttribute() != null)
     {
       classMappingDescriptor.setCanonicalTriggerAttribute(dataObject.getCanonicalTriggerAttribute().getAttrName());
     }
@@ -128,9 +153,9 @@ public class PersistenceMappingGenerator
     CrudServiceClass service = classMappingDescriptor.getCrudServiceClass();
     if (service == null)
     {
-      service = objectFactory.createCrudServiceClass();      
+      service = objectFactory.createCrudServiceClass();
       classMappingDescriptor.setCrudServiceClass(service);
-    }  
+    }
     service.setAutoIncrementPrimaryKey(true);
     if (dataObject.isGenerateServiceClass())
     {
@@ -141,7 +166,7 @@ public class PersistenceMappingGenerator
         service.setLocalPersistenceManager("oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager");
         service.setRemotePersistenceManager("oracle.ateam.sample.mobile.v2.persistence.manager.DataControlPersistenceManager");
       }
-      else 
+      else
       {
         service.setLocalPersistenceManager(dataObject.getLocalPersistenceManager());
         service.setRemotePersistenceManager(dataObject.getRemotePersistenceManager());
@@ -155,7 +180,7 @@ public class PersistenceMappingGenerator
     else
     {
       // set service class to parent service class
-      service.setClassName(dataObject.getRootDataObject().getFullyQualifiedServiceClassName());        
+      service.setClassName(dataObject.getRootDataObject().getFullyQualifiedServiceClassName());
     }
 
     Table table = objectFactory.createTable();
@@ -184,10 +209,10 @@ public class PersistenceMappingGenerator
     }
 
     Methods methods = classMappingDescriptor.getMethods();
-    if (methods==null)
+    if (methods == null)
     {
-       methods = objectFactory.createMethods();
-       classMappingDescriptor.setMethods(methods);
+      methods = objectFactory.createMethods();
+      classMappingDescriptor.setMethods(methods);
     }
     if (dataObject.getFindAllMethod() != null)
     {
@@ -305,10 +330,10 @@ public class PersistenceMappingGenerator
       // if it is a new method, then we must prefix with the (part of) the RAML base URI that is not
       // included at the end of the connection URI (If no RAML was used the uriPrefix is always
       // an empty string
-      String uri = wizardMethod.isExisting() ? wizardMethod.getName() : model.getUriPrefix()+wizardMethod.getName();
+      String uri = wizardMethod.isExisting()? wizardMethod.getName(): model.getUriPrefix() + wizardMethod.getName();
       jaxbMethod.setUri(uri);
       jaxbMethod.setConnectionName(wizardMethod.getConnectionName());
-//      jaxbMethod.setRequestType(RequestType.fromValue(wizardMethod.getRequestType()));
+      //      jaxbMethod.setRequestType(RequestType.fromValue(wizardMethod.getRequestType()));
       jaxbMethod.setRequestType(wizardMethod.getRequestType());
       jaxbMethod.setSendDataObjectAsPayload(wizardMethod.isSendSerializedDataObjectAsPayload());
     }
@@ -350,10 +375,10 @@ public class PersistenceMappingGenerator
     mapping.setColumnName(attr.getColumnName());
     mapping.setColumnDataType(attr.getColumnType());
     mapping.setDateFormat(attr.getDateFormat());
-    if (attr.getParentReferenceAttribute()!=null)
+    if (attr.getParentReferenceAttribute() != null)
     {
-      mapping.setParentClass(attr.getParentDataObject().getFullyQualifiedClassName());      
-      mapping.setParentAttributeName(attr.getParentReferenceAttribute().getAttrName());      
+      mapping.setParentClass(attr.getParentDataObject().getFullyQualifiedClassName());
+      mapping.setParentAttributeName(attr.getParentReferenceAttribute().getAttrName());
     }
     mapping.setPayloadAttributeName(attr.getPayloadName());
     mapping.setPersisted(attr.isPersisted());
@@ -364,9 +389,9 @@ public class PersistenceMappingGenerator
   {
     OneToManyMapping mapping = objectFactory.createOneToManyMapping();
     attributeMappings.getOneToManyMapping().add(mapping);
-    if (acc.getChildAccessorMethod()!=null)
+    if (acc.getChildAccessorMethod() != null)
     {
-      mapping.setAccessorMethod(acc.getChildAccessorMethod().getName());      
+      mapping.setAccessorMethod(acc.getChildAccessorMethod().getName());
     }
     mapping.setAttributeName(acc.getChildAccessorName());
     mapping.setPayloadAttributeName(acc.getChildAccessorPayloadName());
@@ -422,7 +447,7 @@ public class PersistenceMappingGenerator
   private Method findMethod(List<Method> methods, String name)
   {
     Method found = null;
-    if (methods==null)
+    if (methods == null)
     {
       return null;
     }
@@ -442,23 +467,22 @@ public class PersistenceMappingGenerator
     try
     {
       String instancePath = ObjectFactory.class.getPackage().getName();
-      JAXBContext jc = JAXBContext.newInstance(instancePath,ObjectFactory.class.getClassLoader());
+      JAXBContext jc = JAXBContext.newInstance(instancePath, ObjectFactory.class.getClassLoader());
       Marshaller m = jc.createMarshaller();
       m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-//  // SDA 07-nov-2012: use encoding of the node, need utf-8 to keep diacritic characters
-//  // by using node encoding, developers can still change the encoding if desired
-//  //      String encoding = IdeUtil.getIdeIanaEncoding();
-//      String encoding = node.getLoadEncoding()!=null ? node.getLoadEncoding() : "UTF-8";
-//      m.setProperty(Marshaller.JAXB_ENCODING, encoding);
+      //  // SDA 07-nov-2012: use encoding of the node, need utf-8 to keep diacritic characters
+      //  // by using node encoding, developers can still change the encoding if desired
+      //  //      String encoding = IdeUtil.getIdeIanaEncoding();
+      //      String encoding = node.getLoadEncoding()!=null ? node.getLoadEncoding() : "UTF-8";
+      //      m.setProperty(Marshaller.JAXB_ENCODING, encoding);
 
       String output = null;
-        StringWriter sw = new StringWriter();
-        m.marshal(mop,
-                  sw); // new FileOutputStream("c:/temp/appstruct-test.xml"));
-        output = sw.toString();
-        return output;
+      StringWriter sw = new StringWriter();
+      m.marshal(mop, sw); // new FileOutputStream("c:/temp/appstruct-test.xml"));
+      output = sw.toString();
+      return output;
     }
-    catch(Exception e)
+    catch (Exception e)
     {
       e.printStackTrace();
     }
