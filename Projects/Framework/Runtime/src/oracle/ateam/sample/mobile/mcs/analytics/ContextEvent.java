@@ -25,13 +25,13 @@ import oracle.ateam.sample.mobile.util.DateUtils;
  * Class used to create MCS analytics context event in MCSPersistenceManager
  */
 
-public class MCSContextEvent extends MCSAnalyticsEvent
+public class ContextEvent extends AnalyticsEvent
 {
-  private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(MCSContextEvent.class);
+  private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(ContextEvent.class);
   // define transient to prevent inclusion in MCS payload when serializing to JSON
   protected transient String sessionID;
 
-  public MCSContextEvent()
+  public ContextEvent()
   {
     super(true,"context",null);
     setContextProperties();

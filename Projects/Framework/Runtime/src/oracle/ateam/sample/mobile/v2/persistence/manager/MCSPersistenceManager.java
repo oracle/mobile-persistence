@@ -7,10 +7,6 @@
 ******************************************************************************/
 package oracle.ateam.sample.mobile.v2.persistence.manager;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -23,25 +19,20 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
 
-import java.net.URL;
-import java.net.URLConnection;
-
-import java.nio.file.Files;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import javax.microedition.io.HttpConnection;
 
 import oracle.adfmf.dc.ws.rest.RestServiceAdapter;
+import oracle.adfmf.framework.api.AdfmfContainerUtilities;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.api.JSONBeanSerializationHelper;
 import oracle.adfmf.framework.api.Model;
 import oracle.adfmf.framework.exception.AdfException;
 
+import oracle.adfmf.framework.internal.AdfmfJavaUtilitiesInternal;
 import oracle.adfmf.json.JSONObject;
 
 import oracle.ateam.sample.mobile.mcs.storage.StorageObject;
@@ -51,11 +42,18 @@ import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 
 import sun.misc.BASE64Encoder;
 
-
+/**
+ * This class provides easy access to most of the platform REST API's available in Oracle Mobile Cloud Service. For custom API calls, it uses
+ * the REST endpoints as defined in persistence-mapping.xml.
+ * It injects the oracle-mobile-backend-id and (anonymous) Authorization header based on configuration in
+ * mobile-persistence-config.properties. However, this injection will be overridden when MAF MCS login is configured, which
+ * is the recommended approach.
+ */
 public class MCSPersistenceManager
   extends RestJSONPersistenceManager
 {
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(MCSPersistenceManager.class);
+
   private static final String LOGIN_URI = "/platform/users/login";
   private static final String LOGOUT_URI = "/platform/users/logout";
   private static final String ANALYTICS_EVENTS_URI = "/platform/analytics/events";
@@ -63,6 +61,7 @@ public class MCSPersistenceManager
   private static final String CONTENT_TYPE = "Content-Type";
   private static final String ORACLE_MOBILE_BACKEND_ID = "Oracle-Mobile-Backend-Id";
   private static final String AUTHORIZATION = "Authorization";
+  private static final String AUTH_HEADER_EXPRESSION = "#{applicationScope.mcs_auth_header}";
   private String mobileBackendId;
   private String authHeader;
   private String connectionName;
@@ -76,6 +75,19 @@ public class MCSPersistenceManager
     mobileBackendId = PersistenceConfig.getPropertyValue("mcs.mobile-backend-id");
   }
 
+  /**
+   * This method allows you to basic authenticatication against MCS using the username and password that you pass in.
+   * The oracle mobile backend id used to authenticate against is by taken from mobile-persistence-config.properties
+   * The authorization header constructed out of the username and password is stored on applicationScope, and is injected
+   * in any further MCS REST call through method addMCSHeaderParamsIfNeeded.
+   * Note that it is preferred to use the standard MAF login functionality, rather than this custom login method. When using
+   * the MAF login functionality, MAF itself will inject the Oracle mobile backend id and Authorization header on every
+   * MCS REST call. The standard MAF login functionality also allows you to use OAuth insteaf of basic authentication, amd allows 
+   * you to remember username and/or password, saving them encrypted in the keychain.
+   * @param userName
+   * @param password
+   * @return
+   */
   public String login(String userName, String password)
   {
     String userCredentials = userName + ":" + password;
@@ -100,8 +112,13 @@ public class MCSPersistenceManager
     return null;
   }
 
+  /**
+   * Calls MCS logout URL. This method does NOT logout from MAF application. You can do this yourself by calling
+   * AdfmfJavaUtilities.logout();
+   * @return
+   */
   public String logout()
-  {
+  {    
     String result = invokeRestService(getConnectionName(), "GET", LOGOUT_URI, null, null, 0, false);
     setAuthHeader(null);
     return result;
@@ -204,6 +221,20 @@ public class MCSPersistenceManager
     return response;
   }
 
+  /**
+   * This method will add the following headers if they have not been included yet in header parameter map:
+   * <ul>
+   * <li>Content-Type: application/json</li>
+   * <li>oracle-mobile-backend-id: value taken from mobile-persistence-config.properties</li>
+   * <li>Authorization: value taken from method getAuthHeader, if this method returns null, value taken from getAnonymousHeader</li>
+   * </ul>
+   * Note that if you use standard MAF login against MCS, then MAF will override the oracle-mobile-backend-id and Authorization
+   * header parameters with its own values based on the login configuration. This is convenient, because this means that as long as you are
+   * not logged in, this class will inject the anonymous auth header from mobile-persistence-config.properies, and once you are logged
+   * in, the MAF login header injection will win.
+   * @param headerParams
+   * @return
+   */
   public Map<String, String> addMCSHeaderParamsIfNeeded(Map<String, String> headerParams)
   {
     if (headerParams == null)
@@ -240,16 +271,35 @@ public class MCSPersistenceManager
     return mobileBackendId;
   }
 
+  /**
+   * Store the authorization header parameter value that is created by calling the login method 
+   * in applicationScope under key mcs_auth_header.
+   * 
+   * @param authHeader
+   */
   public void setAuthHeader(String authHeader)
   {
-    this.authHeader = authHeader;
+    AdfmfJavaUtilities.setELValue(AUTH_HEADER_EXPRESSION, authHeader);
   }
 
+  /**
+   * Return the authorization header parameter value that is stored 
+   * in applicationScope under key mcs_auth_header.
+   * 
+   * @param authHeader
+   */
   public String getAuthHeader()
   {
-    return authHeader;
+    return (String) AdfmfJavaUtilities.getELValue(AUTH_HEADER_EXPRESSION);
   }
 
+  /**
+   * Return the anonymous authorization header parameter value. By default, this value is constructed
+   * from the anonymous access key defined in mobile-persistence-config.properties, prefixed
+   * with "Basic ". Note that the anonymous access key can be changed by calling setAnonymousKey.
+   * If the anonymous access key is not set, this method returns null.
+   * @return
+   */
   public String getAnonymousHeader()
   {
     if (getAnonymousKey() != null)
@@ -259,21 +309,39 @@ public class MCSPersistenceManager
     return null;
   }
 
+  /**
+   * Change the default connection name as specified in mobile-persistence-config.properties
+   * @param connectionName
+   */
   public void setConnectionName(String connectionName)
   {
     this.connectionName = connectionName;
   }
 
+  /**
+   * Returns by default the MCS connection name defined in mobile-persistence-config.properties, unless
+   * this value have been overridden by calling setConnectionName on the same instance of MCSPersistenceManager.
+   * @return
+   */
   public String getConnectionName()
   {
     return connectionName;
   }
 
+  /**
+   * Change the default anonymous accesss key as specified in mobile-persistence-config.properties
+   * @param connectionName
+   */
   public void setAnonymousKey(String anonymousKey)
   {
     this.anonymousKey = anonymousKey;
   }
 
+  /**
+   * Returns by default the MCS anonymous access key defined in mobile-persistence-config.properties, unless
+   * this value have been overridden by calling setAnonymousKey on the same instance of MCSPersistenceManager.
+   * @return
+   */
   public String getAnonymousKey()
   {
     return anonymousKey;

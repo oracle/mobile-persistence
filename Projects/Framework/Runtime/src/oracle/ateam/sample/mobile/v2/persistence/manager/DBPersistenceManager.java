@@ -894,6 +894,56 @@ public class DBPersistenceManager
   }
 
   /**
+   * Executes a SELECT statement on the table mapped to the entity class, returning all columns.
+   * The WHERE clause is build based on the searchValues map passed in. The map should contain an attribute name
+   * as the key, and a value to search on. The = operator is used on this value. When multiple
+   * attributes  are passed in the WHERE clause conditions are chained using the AND operator.
+   * For each row in the result set an entity instance of the specified type
+   * is created, and the list returned is a list of these instances.
+   * @param entityClass
+   * @return
+   */
+  public <E extends Entity> List<E> find(Class entityClass, Map<String,String> searchValues)
+  {
+    ObjectPersistenceMapping persMapping = ObjectPersistenceMapping.getInstance();
+    ClassMappingDescriptor descriptor = persMapping.findClassMappingDescriptor(entityClass.getName());
+    StringBuffer sql = getSqlSelectFromPart(descriptor);
+
+    List<BindParamInfo> bindParamInfos = new ArrayList<BindParamInfo>();
+
+    Iterator<String> iter = searchValues.keySet().iterator();
+    while (iter.hasNext())
+    {
+      String attrName = iter.next();
+      String searchValue = searchValues.get(attrName);
+      BigDecimal numericSearchValue = getBigDecimalValue(searchValue);
+      boolean isNumeric = numericSearchValue!=null;
+      
+      AttributeMapping mapping = descriptor.findAttributeMappingByName(attrName);
+      BindParamInfo bindParamInfo = constructBindParamInfo(entityClass, mapping);
+      // check the SQL type to determine whether we can search on it
+      int sqlType = bindParamInfo.getSqlType();
+      if (sqlType==Types.CHAR || sqlType==Types.CLOB || sqlType==Types.VARCHAR)
+      {
+        bindParamInfo.setValue(searchValue);
+        bindParamInfos.add(bindParamInfo);            
+      }
+      else if (isNumeric
+              && (sqlType==Types.BIGINT ||sqlType==Types.DECIMAL || sqlType==Types.DOUBLE || sqlType==Types.FLOAT
+                  || sqlType==Types.INTEGER || sqlType==Types.NUMERIC || sqlType==Types.SMALLINT) )
+      {
+        bindParamInfo.setValue(numericSearchValue);
+        // no need to set operator, default operator is already "="
+        bindParamInfos.add(bindParamInfo);              
+      }
+    }    
+    sql = constructWhereClause(sql, bindParamInfos, SQL_AND_OPERATOR);
+    sql = constructOrderByClause(sql, descriptor);
+    ResultSet set = executeSqlSelect(sql.toString(), bindParamInfos);
+    return createEntitiesFromResultSet(set, descriptor.getAttributeMappings());
+  }
+
+  /**
    * Add SQL WHERE clause to SQL statement passed in. For the BindParamInfo passed in
    * a column is added with the value specified as bind parameter ("=?")
    * @param sql

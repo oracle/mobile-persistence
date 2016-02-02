@@ -30,11 +30,7 @@ import oracle.ateam.sample.mobile.util.OfflineUtils;
 import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 
-import oracle.ateam.sample.mobile.mcs.analytics.MCSAnalyticsEvent;
 
-import oracle.ateam.sample.mobile.mcs.analytics.MCSContextEvent;
-
-import oracle.ateam.sample.mobile.mcs.analytics.MCSSystemEvent;
 import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.manager.MCSPersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.service.DataSynchAction;
@@ -44,24 +40,24 @@ import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 import sun.misc.BASE64Encoder;
 
 
-public class MCSAnalyticsService
+public class AnalyticsService
 {
-  private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(MCSAnalyticsService.class);
+  private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(AnalyticsService.class);
   private String sessionId;
-  private List<MCSAnalyticsEvent> analyticsEvents = new ArrayList<MCSAnalyticsEvent>();
-  private transient static MCSAnalyticsService instance;
+  private List<AnalyticsEvent> analyticsEvents = new ArrayList<AnalyticsEvent>();
+  private transient static AnalyticsService instance;
   private boolean addingContextEvent = false;
 
-  private MCSAnalyticsService()
+  private AnalyticsService()
   {
     super();
   }
 
-  public static MCSAnalyticsService getInstance()
+  public static AnalyticsService getInstance()
   {
     if (instance == null)
     {
-      instance = new MCSAnalyticsService();
+      instance = new AnalyticsService();
     }
     return instance;
   }
@@ -69,7 +65,7 @@ public class MCSAnalyticsService
   public void startSession()
   {
     sessionId = UUID.randomUUID().toString();
-    MCSAnalyticsEvent ss = new MCSSystemEvent("sessionStart", sessionId);
+    AnalyticsEvent ss = new SystemEvent("sessionStart", sessionId);
     addEvent(ss);
   }
 
@@ -77,7 +73,7 @@ public class MCSAnalyticsService
   {
     if (sessionId != null)
     {
-      MCSAnalyticsEvent se = new MCSSystemEvent("sessionEnd", sessionId);
+      AnalyticsEvent se = new SystemEvent("sessionEnd", sessionId);
       addEvent(se);
       sendAnalyticsEvents();
     }
@@ -116,7 +112,7 @@ public class MCSAnalyticsService
         analyticsEvents.clear();
 
         DBPersistenceManager pm = new DBPersistenceManager();
-        String className = MCSAnalyticsEvent.class.toString();                              
+        String className = AnalyticsEvent.class.toString();                              
         if (OfflineUtils.isOffline())
         {
            sLog.info("We are offline, save MCS analytics events to local DB");
@@ -170,11 +166,11 @@ public class MCSAnalyticsService
 
   public void addCustomEvent(String name, Map<String,Object> properties)
   {
-      MCSAnalyticsEvent event = new MCSAnalyticsEvent(name,sessionId,properties);
+      AnalyticsEvent event = new AnalyticsEvent(name,sessionId,properties);
       addEvent(event);
   }
 
-  public void addEvent(MCSAnalyticsEvent event)
+  public void addEvent(AnalyticsEvent event)
   {
     // execute in background because when adding contxt event, the current location needs to be fetched
     // which can take a while. To prevent subsequent calls to addEvent to succeed before the context
@@ -186,7 +182,7 @@ public class MCSAnalyticsService
       {
         // first add the context event
         addingContextEvent = true;
-        analyticsEvents.add(new MCSContextEvent());
+        analyticsEvents.add(new ContextEvent());
         addingContextEvent = false;
       }
       analyticsEvents.add(event);

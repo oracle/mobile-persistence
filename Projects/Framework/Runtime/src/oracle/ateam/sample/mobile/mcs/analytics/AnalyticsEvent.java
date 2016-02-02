@@ -17,7 +17,7 @@ import oracle.ateam.sample.mobile.util.DateUtils;
  * You can create an instance of this class and call MCSPersistenceManager.addEvent passing the instance
  * as a parameter, or use the convenience method addCustomEvent on MCSPersistenceManager directly
  */
-public class MCSAnalyticsEvent
+public class AnalyticsEvent
 {
   
   private String name;
@@ -35,7 +35,7 @@ public class MCSAnalyticsEvent
    * @param name
    * @param sessionId
    */
-  protected MCSAnalyticsEvent(boolean systemEvent,String name, String sessionId)
+  protected AnalyticsEvent(boolean systemEvent,String name, String sessionId)
   {
     super();
     setType(systemEvent ? "system" : "custom");
@@ -49,7 +49,7 @@ public class MCSAnalyticsEvent
    * @param name
    * @param properties
    */
-  public MCSAnalyticsEvent(String name, String sessionId, Map<String,Object> properties)
+  public AnalyticsEvent(String name, String sessionId, Map<String,Object> properties)
   {
     super();
     setName(name);
