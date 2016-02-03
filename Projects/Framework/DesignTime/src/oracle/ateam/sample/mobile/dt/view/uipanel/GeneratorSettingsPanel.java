@@ -111,6 +111,9 @@ public class GeneratorSettingsPanel extends DefaultTraversablePanel {
     BusinessObjectGeneratorModel model =
             (BusinessObjectGeneratorModel) tc.get(BusinessObjectsFromWSDataControlWizard.MODEL_KEY);
 
+      String name = model.getGeneratorProject().getShortLabel();
+      name =   name.substring(0,name.length()-4);
+      projectList.setSelectedItem(name);
       packageField.setText(model.getPackageName());
       servicePackageField.setText(model.getServicePackageName());
       overwriteDataObjectsField.setSelected(model.isOverwriteDataObjectClasses());
@@ -128,5 +131,14 @@ public class GeneratorSettingsPanel extends DefaultTraversablePanel {
       model.setOverwriteServiceObjectClasses(overwriteServiceObjectsField.isSelected());
       model.setEnableUsageTracking(usageTrackingField.isSelected());
       model.setGeneratorProject(projects.get(projectList.getSelectedItem()));
+ 
+      // also store these settings in project properties, so we can show them again next
+      // time wizard is run
+      Project appProject = ProjectUtils.getApplicationControllerProject();
+      appProject.setProperty(BusinessObjectGeneratorModel.GENERATOR_PROJECT, (String) projectList.getSelectedItem());
+      appProject.setProperty(BusinessObjectGeneratorModel.DATA_OBJECT_PACKAGE, model.getPackageName());
+      appProject.setProperty(BusinessObjectGeneratorModel.SERVICE_PACKAGE, model.getServicePackageName());
+      appProject.setProperty(BusinessObjectGeneratorModel.OVERWRITE_DATA_OBJECTS, model.isOverwriteDataObjectClasses()+"");
+      appProject.setProperty(BusinessObjectGeneratorModel.OVERWRITE_SERVICES, model.isOverwriteServiceObjectClasses()+"");      
     }
 }

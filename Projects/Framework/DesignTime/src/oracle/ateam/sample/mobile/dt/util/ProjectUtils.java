@@ -1,9 +1,23 @@
+/*******************************************************************************
+ Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
+ 
+ $revision_history$
+ 06-feb-2013   Steven Davelaar
+ 1.0           initial creation
+******************************************************************************/
 package oracle.ateam.sample.mobile.dt.util;
+
+import java.io.IOException;
+import java.io.InputStream;
+
+import java.net.URL;
 
 import java.util.HashMap;
 import java.util.Iterator;
 
 import java.util.Map;
+
+import java.util.Properties;
 
 import oracle.adfmf.common.util.McAppUtils;
 

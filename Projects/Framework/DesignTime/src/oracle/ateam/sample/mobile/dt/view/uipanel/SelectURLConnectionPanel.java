@@ -17,6 +17,13 @@ import java.awt.event.ActionEvent;
 
 import java.awt.event.ActionListener;
 
+import java.io.IOException;
+import java.io.InputStream;
+
+import java.net.URL;
+
+import java.util.Properties;
+
 import javax.naming.Context;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
@@ -36,6 +43,9 @@ import oracle.adfdtinternal.model.adapter.webservice.wizard.rest.RestConnectionP
 
 import oracle.ateam.sample.mobile.dt.model.BusinessObjectGeneratorModel;
 import oracle.ateam.sample.mobile.dt.model.UIDataObjectInfo;
+import oracle.ateam.sample.mobile.dt.util.FileUtils;
+import oracle.ateam.sample.mobile.dt.util.PersistenceConfigUtils;
+import oracle.ateam.sample.mobile.dt.util.ProjectUtils;
 import oracle.ateam.sample.mobile.dt.view.wizard.BusinessObjectsFromWSDataControlWizard;
 
 import oracle.ide.panels.DefaultTraversablePanel;
@@ -57,7 +67,7 @@ public class SelectURLConnectionPanel
   private JTextField backendIdField = new JTextField();
   private JLabel anonymousLabel = new JLabel("MCS Anonymous Access Key");
   private JTextField anonymousField = new JTextField();
-
+  
   public SelectURLConnectionPanel()
   {
     super();
@@ -145,7 +155,8 @@ public class SelectURLConnectionPanel
     super.onEntry(traversableContext);
     BusinessObjectGeneratorModel model =
       (BusinessObjectGeneratorModel) traversableContext.get(BusinessObjectsFromWSDataControlWizard.MODEL_KEY);
-    connUI.updateSrcConnection(model.getConnectionName());
+
+    connUI.updateSrcConnection(model.getConnectionName());      
     // enable back -  next - finish
     callbacks = traversableContext.getWizardCallbacks();
     callbacks.wizardEnableButtons(true, true, false);
@@ -156,7 +167,6 @@ public class SelectURLConnectionPanel
     backendIdField.setEnabled(mcsField.isSelected());
     anonymousField.setEnabled(mcsField.isSelected());
   }
-
 
   @Override
   public void actionPerformed(ActionEvent e)
@@ -222,6 +232,5 @@ public class SelectURLConnectionPanel
     }
     return null;
   }
-
 
 }

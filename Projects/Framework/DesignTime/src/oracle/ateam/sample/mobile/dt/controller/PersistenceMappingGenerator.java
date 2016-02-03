@@ -71,15 +71,15 @@ public class PersistenceMappingGenerator
       if (model.isUseMCS())
       {
         // Find the MCS STORAGE_OBJECT mapping, we need to set the connection name to MCS connection
-        ClassMappingDescriptor found = null;
-        for (ClassMappingDescriptor descriptor: mop.getClassMappingDescriptor())
-        {
-          if (descriptor.getClassName().equals(PersistenceMappingLoader.STORAGE_OBJECT_CLASS))
-          {
-            found = descriptor;
-            break;
-          }
-        }
+//        ClassMappingDescriptor found = null;
+//        for (ClassMappingDescriptor descriptor: mop.getClassMappingDescriptor())
+//        {
+//          if (descriptor.getClassName().equals(PersistenceMappingLoader.STORAGE_OBJECT_CLASS))
+//          {
+//            found = descriptor;
+//            break;
+//          }
+//        }
         //      if (!model.isUseMCS())
         //      {
         //        // remove the STORAGE_OBJECT
@@ -87,8 +87,6 @@ public class PersistenceMappingGenerator
         //      }
         //      else
         //      {
-        // update connectionName on methods to name set in wizard
-        found.getMethods().getFindMethod().setConnectionName(model.getConnectionName());
         //      }
       }
     }
@@ -332,7 +330,12 @@ public class PersistenceMappingGenerator
       // an empty string
       String uri = wizardMethod.isExisting()? wizardMethod.getName(): model.getUriPrefix() + wizardMethod.getName();
       jaxbMethod.setUri(uri);
-      jaxbMethod.setConnectionName(wizardMethod.getConnectionName());
+      // do not set connectionName when using MCS, because it is taken from persitenc config props
+      // if it is explicitly in persistence-mapping.xml, then the value will be already there
+      if (!model.isUseMCS())
+      {
+        jaxbMethod.setConnectionName(wizardMethod.getConnectionName());        
+      }
       //      jaxbMethod.setRequestType(RequestType.fromValue(wizardMethod.getRequestType()));
       jaxbMethod.setRequestType(wizardMethod.getRequestType());
       jaxbMethod.setSendDataObjectAsPayload(wizardMethod.isSendSerializedDataObjectAsPayload());
@@ -342,7 +345,8 @@ public class PersistenceMappingGenerator
       jaxbMethod.setName(wizardMethod.getName());
       jaxbMethod.setDataControlName(wizardMethod.getDataControlName());
     }
-    jaxbMethod.setSecured(wizardMethod.isIsSecured());
+    // don't set secured anymore, it is no longer used, so better to not make it visible in persistence-mapping.xml
+//    jaxbMethod.setSecured(wizardMethod.isIsSecured());
     jaxbMethod.setPayloadElementName(wizardMethod.getPayloadElementName());
     jaxbMethod.setPayloadRowElementName(wizardMethod.getPayloadRowElementName());
     // set params again, all values that can be entered in XML fiel can also be set in wizard,so no issues

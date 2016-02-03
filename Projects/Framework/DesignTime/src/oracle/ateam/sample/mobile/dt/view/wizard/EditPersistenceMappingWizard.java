@@ -24,6 +24,7 @@ import oracle.ateam.sample.mobile.dt.model.BusinessObjectGeneratorModel;
 import oracle.ateam.sample.mobile.dt.model.DCMethod;
 import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
 import oracle.ateam.sample.mobile.dt.model.jaxb.MobileObjectPersistence;
+import oracle.ateam.sample.mobile.dt.util.PersistenceConfigUtils;
 import oracle.ateam.sample.mobile.dt.util.ProjectUtils;
 import oracle.ateam.sample.mobile.dt.view.uipanel.AttributesPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.CRUDMethodParametersPanel;
@@ -60,7 +61,6 @@ import oracle.javatools.dialogs.DialogUtil;
 public class EditPersistenceMappingWizard extends Wizard
 {
 
-  private static final String DEFAULT_PACKAGE_PROPERTY = "defaultPackage";
 
   public static final String MODEL_KEY = "model";
   static final String STATE_DATA_OBJECTS = "dataObjects";
@@ -111,9 +111,9 @@ public class EditPersistenceMappingWizard extends Wizard
     {
       FSM stateMachine = builder.getFSM();
       Namespace ns = new Namespace();
-      String defaultPackage = ProjectUtils.getViewControllerProject().getProperty(DEFAULT_PACKAGE_PROPERTY);
-      BusinessObjectGeneratorModel model = new BusinessObjectGeneratorModel(defaultPackage);
+      BusinessObjectGeneratorModel model = new BusinessObjectGeneratorModel();
       model.setLogTitle(wizardTitle);
+      model.setEditMode(true);
 
       PersistenceMappingLoader loader = new PersistenceMappingLoader();
       MobileObjectPersistence jaxbModel = loader.loadJaxbModel();
@@ -124,24 +124,28 @@ public class EditPersistenceMappingWizard extends Wizard
         model.setDataObjectInfos(new ArrayList<DataObjectInfo>(existingDataObjects));      
       }
       model.setRestfulWebService(true);
-      // set connectionName based on first one found
-      String connectionName = null;
-      for (DataObjectInfo doi : model.getDataObjectInfos())
-       {
-        for (DCMethod method : doi.getAllMethods())
-        {
-          if (method.getConnectionName()!=null)
+      
+      // if connectionName not yet set based on MCS settings, then set connectionName based on first one found
+      if (model.getConnectionName()!=null)
+      {
+        String connectionName = null;
+        for (DataObjectInfo doi : model.getDataObjectInfos())
+         {
+          for (DCMethod method : doi.getAllMethods())
           {
-            connectionName = method.getConnectionName();
+            if (method.getConnectionName()!=null)
+            {
+              connectionName = method.getConnectionName();
+              break;
+            }
+          }
+          if (connectionName!=null)
+          {
             break;
           }
-        }
-        if (connectionName!=null)
-        {
-          break;
-        }
-       }
-       model.setConnectionName(connectionName);
+         }
+         model.setConnectionName(connectionName);        
+      }
       ns.put(MODEL_KEY, model);
 
       FSMWizard wizard = new FSMWizard(stateMachine, ns);

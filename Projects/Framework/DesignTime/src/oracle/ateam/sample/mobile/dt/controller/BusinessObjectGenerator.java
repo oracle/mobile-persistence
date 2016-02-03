@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.util.Properties;
+
 import oracle.adfdt.model.ide.managers.ApplicationManager;
 import oracle.adfdt.model.objects.Application;
 
@@ -148,7 +150,7 @@ public class BusinessObjectGenerator
     String verb = content!=null ? " updated " : " created ";
     log.info("SQLite DDL script "+fileName+verb+" in src/META-INF folder in "+appControllerProject.getShortLabel());
 
-    // generate persistence mapping file
+    // generate OLD MAF 2.0 persistence mapping file
      fileName = "persistenceMapping.xml";
      sourceURL = FileUtils.getSourceURL(appControllerProject, "META-INF", fileName);
      content = FileUtils.getStringFromInputStream(FileUtils.getInputStream(sourceURL));
@@ -193,14 +195,21 @@ public class BusinessObjectGenerator
     // generate config properties file
     fileName = "mobile-persistence-config.properties";
     sourceURL = FileUtils.getSourceURL(appControllerProject, "META-INF", fileName);
-    if (!URLFileSystem.exists(sourceURL))
+    // 2-2-2016: Always regenerate properties file to get/update MCS entries when MCS connection is used after initialy usage of wizard
+    InputStream is =FileUtils.getInputStream(sourceURL);
+//    if (!URLFileSystem.exists(sourceURL))
+//    {
+    // don't regenerate when running edit persistence mapping wizard
+    if (!model.isEditMode()) 
     {
       output = processor.processTemplate(model, "persistenceConfig.vm");
       FileUtils.addFileToProject(sourceURL, output, null);      
-      log.info("Persistence configuration file "+fileName+" created in src/META-INF folder in "+appControllerProject.getShortLabel());
+      verb = is!=null ? " updated " : " created ";
+      log.info("Persistence configuration file "+fileName+verb+"  in src/META-INF folder in "+appControllerProject.getShortLabel());      
+
+      setApplicationListenerClass(log);      
     }
 
-    setApplicationListenerClass(log);      
 
     if (model.getDataControl()!=null)
     {
@@ -219,10 +228,19 @@ public class BusinessObjectGenerator
     XmlComponentModel appXmlModel = XmlComponentModel.createXmlComponentModel(FrameworkXmlKeys.XMLKEY_ROOT_ATTR_LISTENER_CLASS,
                                               FrameworkXmlKeys.PANEL_ROOT_XMLKEY,
                                               appPanelGui); 
-    appXmlModel.updateModelValue("oracle.ateam.sample.mobile.lifecycle.InitDBLifeCycleListener");
-    log.info("Application Lifecycle Event Listener class in adfmf-application.xml set to oracle.ateam.sample.mobile.lifecycle.InitDBLifeCycleListener");
+    String listener = appXmlModel.getModelValue();
+    if (listener==null || listener.endsWith(".LifeCycleListenerImpl"))
+    {
+      appXmlModel.updateModelValue("oracle.ateam.sample.mobile.lifecycle.InitDBLifeCycleListener");
+      log.info("Application Lifecycle Event Listener class in adfmf-application.xml set to oracle.ateam.sample.mobile.lifecycle.InitDBLifeCycleListener");      
+    }
   }
 
+  /**
+   * This method is only used for generating old MAF 2.0 style persistenceMapping XML.
+   * @param text
+   * @return
+   */
   private Map<String,String> getExistingMappings(String text)
   {
     String startElem = "<class-mapping-descriptor>";

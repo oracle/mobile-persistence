@@ -19,7 +19,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
@@ -241,15 +244,22 @@ public class MCSPersistenceManager
     {
       headerParams = new HashMap<String, String>();
     }
-    if (!headerParams.containsKey(CONTENT_TYPE))
+    // param names are not case sensitive, so we must check for existence in case insensitive way
+    List<String> paramNamesUpper = new ArrayList<String>();
+    Iterator<String> paramNames = headerParams.keySet().iterator();
+    while (paramNames.hasNext())
+    {
+      paramNamesUpper.add(paramNames.next().toUpperCase());
+    }
+    if (!paramNamesUpper.contains(CONTENT_TYPE.toUpperCase()))
     {
       headerParams.put(CONTENT_TYPE, "application/json");
     }
-    if (!headerParams.containsKey(ORACLE_MOBILE_BACKEND_ID) && getMobileBackendId() != null)
+    if (!paramNamesUpper.contains(ORACLE_MOBILE_BACKEND_ID.toUpperCase()) && getMobileBackendId() != null)
     {
       headerParams.put(ORACLE_MOBILE_BACKEND_ID, getMobileBackendId());
     }
-    if (!headerParams.containsKey(AUTHORIZATION))
+    if (!paramNamesUpper.contains(AUTHORIZATION.toUpperCase()))
     {
       String header = getAuthHeader() != null? getAuthHeader(): getAnonymousHeader();
       if (header != null)
@@ -351,11 +361,14 @@ public class MCSPersistenceManager
   @Override
   /**
    * This methods adds MCS-specific headers if not yet set.
+   * If the connectionName is null because it is not specified in persistence-mapping.xml, we will use the MCS connection
+   * name as specified in mobile-persistence-config.properties
    */
   public String invokeRestService(String connectionName, String requestType, String requestUri, String payload,
                                   Map<String, String> headerParamMap, int retryLimit, boolean secured)
   {
-    return super.invokeRestService(connectionName, requestType, requestUri, payload, addMCSHeaderParamsIfNeeded(headerParamMap), retryLimit,
+    String connName = connectionName!=null ?  connectionName : getConnectionName();
+    return super.invokeRestService(connName, requestType, requestUri, payload, addMCSHeaderParamsIfNeeded(headerParamMap), retryLimit,
                                    secured);
   }
 

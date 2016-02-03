@@ -50,8 +50,6 @@ import oracle.javatools.dialogs.DialogUtil;
 public class BusinessObjectsFromWSDataControlWizard extends Wizard
 {
 
-  private static final String DEFAULT_PACKAGE_PROPERTY = "defaultPackage";
-
   public static final String MODEL_KEY = "model";
   static final String STATE_WELCOME = "welcome";
   static final String STATE_SECURITY_WARNING = "secWarning";
@@ -117,8 +115,7 @@ public class BusinessObjectsFromWSDataControlWizard extends Wizard
     {
       FSM stateMachine = builder.getFSM();
       Namespace ns = new Namespace();
-      String defaultPackage = ProjectUtils.getViewControllerProject().getProperty(DEFAULT_PACKAGE_PROPERTY);
-      BusinessObjectGeneratorModel model = new BusinessObjectGeneratorModel(defaultPackage);
+      BusinessObjectGeneratorModel model = new BusinessObjectGeneratorModel();
       model.setLogTitle(wizardTitle);
       ns.put(MODEL_KEY, model);
 
