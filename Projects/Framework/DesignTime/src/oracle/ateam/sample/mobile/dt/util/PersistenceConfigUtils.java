@@ -23,6 +23,10 @@ public class PersistenceConfigUtils
   {
     URL sourceURL = FileUtils.getSourceURL(ProjectUtils.getApplicationControllerProject(), "META-INF", "mobile-persistence-config.properties");
     InputStream is =FileUtils.getInputStream(sourceURL);
+    if (is==null)
+    {
+      return null;
+    }
     Properties prop = new Properties();
     try
     {
