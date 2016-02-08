@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
+import oracle.adfmf.framework.api.MafExecutorService;
 import oracle.adfmf.framework.exception.AdfException;
 
 import oracle.ateam.sample.mobile.v2.persistence.service.IndirectList;
@@ -26,6 +27,7 @@ import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingOneToO
 import oracle.ateam.sample.mobile.v2.persistence.service.ValueHolder;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.util.TaskExecutor;
 
 
 /**
@@ -203,15 +205,22 @@ public abstract class Entity<E> extends ChangeEventSupportable
    */
   public void refreshChildEntityList(List oldList, List newList, String childAttribute)
   {
-    getPropertyChangeSupport().firePropertyChange(childAttribute, oldList, newList);
-    getProviderChangeSupport().fireProviderRefresh(childAttribute);
-    // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
-    // a list view. So, we als refresh the current entity. 
-    EntityUtils.refreshCurrentEntity(childAttribute,newList,getProviderChangeSupport());
-    if (AdfmfJavaUtilities.isBackgroundThread())
+    MafExecutorService.execute(() -> 
     {
-      AdfmfJavaUtilities.flushDataChangeEvent();
-    }
+      getPropertyChangeSupport().firePropertyChange(childAttribute, oldList, newList);
+      getProviderChangeSupport().fireProviderRefresh(childAttribute);
+      // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
+      // a list view. So, we als refresh the current entity. 
+      // Seems to work fine now in MAF 2.2.1                        
+//      EntityUtils.refreshCurrentEntity(childAttribute,newList,getProviderChangeSupport());
+      AdfmfJavaUtilities.flushDataChangeEvent();                        
+    });
+//    getPropertyChangeSupport().firePropertyChange(childAttribute, oldList, newList);
+//    getProviderChangeSupport().fireProviderRefresh(childAttribute);
+//    // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
+//    // a list view. So, we als refresh the current entity. 
+//    EntityUtils.refreshCurrentEntity(childAttribute,newList,getProviderChangeSupport());
+//    TaskExecutor.flushDataChangeEvent();
   }
 
 }

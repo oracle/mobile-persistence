@@ -19,13 +19,15 @@ import java.util.concurrent.TimeUnit;
 
 import oracle.adfmf.framework.api.AdfmfContainerUtilities;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
+import oracle.adfmf.framework.api.MafExecutorService;
 
 /**
  * This class is used to execute tasks (runnables), either in foreground or in background.
- * The added value comes when running tasks in the background, this class ensures that all background tasks
- * are executed in sequence of submission on a single thread. When making multiple remote REST calls, the sequence might
- * be important as result of the first call might ne needed by the next call. Furthermore, the local SQLite database is a
- * single user database. If you have multiple simulatneous REST calls running in the background, and they all want to store
+ * The added value comes when running tasks in the background, this class can be used to
+ * ensures that all background task are executed in sequence of submission on a single thread.
+ * When making multiple remote REST calls, the sequence migh be important as result of the first call might ne needed by the next call.
+ * Furthermore, the local SQLite database is a single user database.
+ * If you have multiple simultaneous REST calls running in the background, and they all want to store
  * the data returned in the local database, you will most likely get errors about nested transactions not being allowed.
  * Finally, this class sets an application scope boolean flag to indicate whether there are background tasks running.
  * This flag can be used to show some sort of spinning wheel icon in the UI, or simply some text message like "Loading data".
@@ -35,7 +37,6 @@ public class TaskExecutor
 {
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(TaskExecutor.class);
 
-  //  private static TaskExecutor instance;
   private ThreadPoolExecutor executor = null;
 
   private boolean running = false;
@@ -63,6 +64,23 @@ public class TaskExecutor
       sLog.fine("Creating new instance of TaskExecutor for feature " + featureId);
       instance = new TaskExecutor();
       instanceMap.put(featureId, instance);
+    }
+    return instance;
+  }
+
+  /**
+   * Returns the instance used to execute Rest Call Log DB statements. 
+   * @return
+   */
+  public static synchronized TaskExecutor getLogInstance()
+  {
+    String instanceId = "RestCallLog";
+    TaskExecutor instance = instanceMap.get(instanceId);
+    if (instance == null)
+    {
+      sLog.fine("Creating new instance of TaskExecutor for " + instanceId);
+      instance = new TaskExecutor();
+      instanceMap.put(instanceId, instance);
     }
     return instance;
   }
@@ -133,11 +151,35 @@ public class TaskExecutor
    */
   public void execute(boolean inBackground, Runnable task)
   {
+    execute(inBackground, task, true);
+  }
+
+  /**
+   * Execute a task. If the task is to be executed in the background and sequential = true, a single thread
+   * will be used for all submitted tasks, ensuring they are executed in the sequence of submission.
+   * To check whether there are any background tasks running in this single thread pool, you can use 
+   * the boolean expression #{applicationScope.ampa_bgtask_running}.
+   * If you pass in true for inBackground and false for sequential, the task will be executed in its own
+   * background thread, and expression #{applicationScope.ampa_bgtask_running} cannot be used to track progress.
+   * @param inBackground
+   * @param task
+   * @param sequential: should the tasks be executed sequentially in same thread,
+   */
+  public void execute(boolean inBackground, Runnable task, boolean sequential)
+  {
     if (inBackground)
     {
-      initIfNeeded();
-      lasttFuture = executor.submit(task);
-      updateStatus();
+      if (sequential)
+      {
+        initIfNeeded();
+        lasttFuture = executor.submit(task);
+        updateStatus();        
+      }
+      else 
+      {
+        Thread t = new Thread(task);
+        t.run();
+      }
     }
     else
     {
@@ -151,7 +193,7 @@ public class TaskExecutor
   }
 
   /**
-   *  Shuts down the thread pool gracefully for all features, first executing any pending tasks
+   *  Shuts down the thread pool gracefully for all task executor instances.
    */
   public static void shutDown()
   {
@@ -163,5 +205,16 @@ public class TaskExecutor
         instance.executor = null;
       }
     }
+  }
+  
+  public static void flushDataChangeEvent()
+  {
+    if (AdfmfJavaUtilities.isBackgroundThread())
+    {
+      MafExecutorService.execute(() -> 
+      {
+        AdfmfJavaUtilities.flushDataChangeEvent();                        
+      });
+    }    
   }
 }

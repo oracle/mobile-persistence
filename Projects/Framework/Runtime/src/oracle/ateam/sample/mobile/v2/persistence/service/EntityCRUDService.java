@@ -36,6 +36,7 @@ import java.util.List;
 import oracle.adf.model.datacontrols.device.DeviceManagerFactory;
 
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
+import oracle.adfmf.framework.api.MafExecutorService;
 import oracle.adfmf.framework.exception.AdfException;
 import oracle.adfmf.util.Utility;
 
@@ -356,10 +357,6 @@ public abstract class EntityCRUDService<E extends Entity>
                                    List<DataSynchAction> failedDataSynchActions)
   {
     refreshEntityList(getEntityList());
-    if (isDoRemoteWriteInBackground())
-    {
-      AdfmfJavaUtilities.flushDataChangeEvent();
-    }
     //    int ok = succeededDataSynchActions.size();
     //    int fails = failedDataSynchActions.size();
     //    int total = ok + fails;
@@ -483,16 +480,16 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void refreshEntityList(List<E> oldEntityList)
   {
-    getPropertyChangeSupport().firePropertyChange(getEntityListName(), oldEntityList, getEntityList());
-    getProviderChangeSupport().fireProviderRefresh(getEntityListName());
-    // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
-    // a list view.
-    // This now seems to work fine in MAF 2.2.1, so we can comment out the call to refreshCurrentEntity
-//    EntityUtils.refreshCurrentEntity(getEntityListName(), getEntityList(), getProviderChangeSupport());
-    if (AdfmfJavaUtilities.isBackgroundThread())
-    {
-      AdfmfJavaUtilities.flushDataChangeEvent();
-    }
+    MafExecutorService.execute(() -> {
+       getPropertyChangeSupport().firePropertyChange(getEntityListName(), oldEntityList, getEntityList());
+       getProviderChangeSupport().fireProviderRefresh(getEntityListName());
+       // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
+       // a list view.
+       // This now seems to work fine in MAF 2.2.1, so we can comment out the call to refreshCurrentEntity
+       //    EntityUtils.refreshCurrentEntity(getEntityListName(), getEntityList(), getProviderChangeSupport());
+       AdfmfJavaUtilities.flushDataChangeEvent();
+     }
+    );
   }
 
 
@@ -779,6 +776,7 @@ public abstract class EntityCRUDService<E extends Entity>
    * You can call entity.getIsNewEntity() to determine whether the entity will ne inserted or updated.
    * When using a validationGroup and validationBehavior in the amx page, all empty fields are set to
    * an empty string, this method first changes these attrbute values to null as it should.
+   * If the primary key is auto-generated, then primary key attributes are not checked for a value
    * @param entity
    */
   protected void validateEntity(Entity entity)
@@ -789,13 +787,17 @@ public abstract class EntityCRUDService<E extends Entity>
     for (int i = 0; i < mappings.size(); i++)
     {
       AttributeMappingDirect mapping = (AttributeMappingDirect) mappings.get(i);
+      if (mapping.isPrimaryKeyMapping() && descriptor.isAutoIncrementPrimaryKey())
+      {
+        continue;
+      }
       Object attributeValue = entity.getAttributeValue(mapping.getAttributeName());
       if ("".equals(attributeValue))
       {
         attributeValue = null;
         entity.setAttributeValue(mapping.getAttributeName(), null);
       }
-      if (mapping.isRequired() && attributeValue == null)
+      if (mapping.isRequired() && attributeValue == null) 
       {
         attrNames.add(mapping.getAttributeName());
       }
@@ -914,10 +916,6 @@ public abstract class EntityCRUDService<E extends Entity>
       TaskExecutor.getInstance().execute(executeInBackground, () ->
         {
           executeGetCanonical(entity);
-          if (executeInBackground)
-          {
-            AdfmfJavaUtilities.flushDataChangeEvent();
-          }
         });
     }
   }

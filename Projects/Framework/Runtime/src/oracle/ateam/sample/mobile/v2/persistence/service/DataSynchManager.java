@@ -25,6 +25,8 @@ import java.util.Map;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.api.JSONBeanSerializationHelper;
 
+import oracle.adfmf.framework.api.MafExecutorService;
+
 import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.model.ChangeEventSupportable;
 import oracle.ateam.sample.mobile.util.MessageUtils;
@@ -292,17 +294,27 @@ public class DataSynchManager
   {
     List<DataSynchAction> newList = getDataSynchActions();
     boolean oldHasDataSynchActions = oldList.size() > 0;
-    if (getHasDataSynchActions() != oldHasDataSynchActions)
+
+    MafExecutorService.execute(() -> 
     {
-      getPropertyChangeSupport().firePropertyChange("hasDataSynchActions", oldHasDataSynchActions,
-                                                    getHasDataSynchActions());
-    }
-    getPropertyChangeSupport().firePropertyChange("dataSynchActions", oldList, newList);
-    getProviderChangeSupport().fireProviderRefresh("dataSynchActions");
-    if (AdfmfJavaUtilities.isBackgroundThread())
-    {
-      AdfmfJavaUtilities.flushDataChangeEvent();
-    }
+      if (getHasDataSynchActions() != oldHasDataSynchActions)
+      {
+        getPropertyChangeSupport().firePropertyChange("hasDataSynchActions", oldHasDataSynchActions,
+                                                      getHasDataSynchActions());
+      }
+      getPropertyChangeSupport().firePropertyChange("dataSynchActions", oldList, newList);
+      getProviderChangeSupport().fireProviderRefresh("dataSynchActions");
+      AdfmfJavaUtilities.flushDataChangeEvent();                        
+    });
+
+//    if (getHasDataSynchActions() != oldHasDataSynchActions)
+//    {
+//      getPropertyChangeSupport().firePropertyChange("hasDataSynchActions", oldHasDataSynchActions,
+//                                                    getHasDataSynchActions());
+//    }
+//    getPropertyChangeSupport().firePropertyChange("dataSynchActions", oldList, newList);
+//    getProviderChangeSupport().fireProviderRefresh("dataSynchActions");
+//    TaskExecutor.flushDataChangeEvent();
   }
 
   /**
@@ -319,14 +331,14 @@ public class DataSynchManager
   {
     String name = getCrudService().getEntityListName() + "_dataSyncActionsCount";
     AdfmfJavaUtilities.setELValue("#{applicationScope." + name + "}", new Integer(getDataSynchActions().size()));
-    if (getHasDataSynchActions() != oldValue)
+    MafExecutorService.execute(() -> 
     {
-      getPropertyChangeSupport().firePropertyChange("hasDataSynchActions", oldValue, getHasDataSynchActions());
-    }
-    if (AdfmfJavaUtilities.isBackgroundThread())
-    {
+      if (getHasDataSynchActions() != oldValue)
+      {
+        getPropertyChangeSupport().firePropertyChange("hasDataSynchActions", oldValue, getHasDataSynchActions());
+      }
       AdfmfJavaUtilities.flushDataChangeEvent();
-    }
+    });
   }
 
 

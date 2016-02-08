@@ -1,3 +1,10 @@
+/*******************************************************************************
+ Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+
+ $revision_history$
+ 29-dec-2015   Steven Davelaar
+ 1.0           initial creation
+******************************************************************************/
 package oracle.ateam.sample.mobile.mcs.storage;
 
 import java.io.File;
@@ -6,7 +13,13 @@ import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 
-
+/**
+ * Representation of MCS storage object. Ths object holds the metadata of the storage obhject, as well as a reference to
+ * file locatoon on the mobile device. If the object is just retrieved from MCS, the getContent() method returns the
+ * file as a byte array.
+ * By default storage objects retrieved from MCS are stored on the device: the file itself on the file system, and the 
+ * metadata in the STORAGE_OBJECT table. To prevent local storage you can call setStoreOnDevice(false)
+ */
 public class StorageObject
   extends Entity
 {
@@ -27,7 +40,8 @@ public class StorageObject
   private String filePath;
   private boolean localVersionIsCurrent = false;
   private String directoryPath; 
-  private File content;
+  private boolean storeOnDevice = true;
+  private transient byte[] content;
 
   public String getCreatedOn()
   {
@@ -39,14 +53,28 @@ public class StorageObject
     this.createdOn = createdOn;
   }
 
-  public String getETag()
-  {
-    return this.eTag;
-  }
 
   public void setETag(String eTag)
   {
     this.eTag = eTag;
+  }
+
+  public String getETag()
+  {
+    return eTag;
+  }
+
+
+  public void setFilePath(String filePath)
+  {
+    String oldFilePath = this.filePath;
+    this.filePath = filePath;
+//    propertyChangeSupport.firePropertyChange("filePath", oldFilePath, filePath);
+  }
+
+  public String getFilePath()
+  {
+    return filePath;
   }
 
   public String getId()
@@ -129,15 +157,6 @@ public class StorageObject
     return collectionName;
   }
 
-  public void setFilePath(String filePath)
-  {
-    this.filePath = filePath;
-  }
-
-  public String getFilePath()
-  {
-    return filePath;
-  }
 
   public void setDirectoryPath(String directoryPath)
   {
@@ -158,21 +177,6 @@ public class StorageObject
     return directoryPath;
   }
 
-
-  public void setContent(File content)
-  {
-    this.content = content;
-  }
-
-  public File getContent()
-  {
-    if (content==null && filePath!=null)
-    {
-      content = new File(filePath);
-    }
-    return content;
-  }
-
   public void setLocalVersionIsCurrent(boolean localFileIsCurrent)
   {
     this.localVersionIsCurrent = localFileIsCurrent;
@@ -182,4 +186,31 @@ public class StorageObject
   {
     return localVersionIsCurrent;
   }
+
+
+  public void setStoreOnDevice(boolean storeOnDevice)
+  {
+    this.storeOnDevice = storeOnDevice;
+  }
+
+  public boolean isStoreOnDevice()
+  {
+    return storeOnDevice;
+  }
+
+  public boolean getStoreOnDevice()
+  {
+    return storeOnDevice;
+  }
+
+  public void setContent(byte[] content)
+  {
+    this.content = content;
+  }
+
+  public byte[] getContent()
+  {
+    return content;
+  }
+
 }

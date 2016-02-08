@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.util.logging.Logger;
+
 import oracle.adfdt.controller.adfc.source.managedbean.ManagedBean;
 import oracle.adfdt.controller.adfc.source.managedbean.ManagedBeanName;
 import oracle.adfdt.controller.adfc.source.managedbean.ManagedBeanScope;
@@ -32,6 +34,7 @@ import oracle.adfdt.model.objects.DataControl;
 import oracle.adfdtinternal.controller.mobile.navigator.AdfcConfigNodeUtils;
 
 import oracle.adfmf.common.ADFMobileConstants;
+import oracle.adfmf.common.MobileException;
 import oracle.adfmf.common.util.DeviceAccessUtils;
 import oracle.adfmf.common.util.McAppUtils;
 import oracle.adfmf.framework.dt.editor.FrameworkXmlEditorConstants;
@@ -40,7 +43,10 @@ import oracle.adfmf.framework.dt.editor.FrameworkXmlSourceNode;
 import oracle.adfmf.framework.dt.editor.feature.FeatureXmlConstants;
 import oracle.adfmf.framework.dt.editor.feature.FeatureXmlKeys;
 import oracle.adfmf.framework.dt.editor.feature.FeatureXmlSourceNode;
+import oracle.adfmf.framework.dt.editor.plugins.custom.PluginUrlPropertyEditor;
 import oracle.adfmf.framework.dt.ide.FeatureBuilderModel;
+
+import oracle.adfmf.framework.dt.plugins.PluginManager;
 
 import oracle.ateam.sample.mobile.dt.model.TaskFlowModel;
 import oracle.ateam.sample.mobile.dt.model.UIDataObjectInfo;
@@ -70,6 +76,8 @@ import oracle.ide.model.Project;
 import oracle.ide.net.URLFactory;
 import oracle.ide.net.URLFileSystem;
 import oracle.ide.net.URLPath;
+
+import oracle.ide.panels.TraversalException;
 
 import oracle.jdeveloper.library.ApplicationLibraryList;
 import oracle.jdeveloper.library.JLibrary;
@@ -149,8 +157,11 @@ public class UIGenerator
         addWSCallsFeatureReference();
         addWSCallsJarIfNeeded();        
     }
-// doesnt work yet
-//    addNetworkStatusAccessPermission();
+    
+    // for some strange reason, when we generate the TF, the old invalid network plugin gets added
+    // so we remove it at the end
+    removeOldNetworkPlugin();    
+    
     log.info("MAF User Interface Generator finished succesfully");
   }
 
@@ -253,9 +264,25 @@ public class UIGenerator
     }
   }
 
+  private void removeOldNetworkPlugin()
+  {
+    try
+    {
+      PluginManager mgr = PluginManager.getInstance(Ide.getActiveWorkspace(), Logger.getAnonymousLogger());
+      mgr.saveMafPluginsNode();
+      mgr.removeCorePlugin("org.apache.cordova.network-information");
+      mgr.saveMafPluginsNode();
+    }
+    catch (MobileException e)
+    {
+//      throw new RuntimeException("Error removing plugin: "+e.getLocalizedMessage());
+      // do nothing, plug in already removed
+    }    
+  }
+
     private void addNetworkStatusAccessPermission()
     {
-////        <adfmf:deviceFeatureAccess>
+    ////        <adfmf:deviceFeatureAccess>
 ////          <adfmf:deviceNetwork allowAccess="true" id="dn1"/>
 ////        </adfmf:deviceFeatureAccess>        
 //        FrameworkXmlSourceNode applicationXml = McAppUtils.findOrCreateApplicationXml(project.getWorkspace());

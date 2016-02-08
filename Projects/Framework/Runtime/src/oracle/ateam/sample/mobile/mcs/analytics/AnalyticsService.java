@@ -117,7 +117,6 @@ public class AnalyticsService
         {
            sLog.info("We are offline, save MCS analytics events to local DB");
            DataSynchAction action = new DataSynchAction(DataSynchAction.INSERT_ACTION,className,payload,MCSPersistenceManager.class.toString());
-           EntityUtils.generatePrimaryKeyValue(action, 1);
            pm.insertEntity(action, true);
         }
         else

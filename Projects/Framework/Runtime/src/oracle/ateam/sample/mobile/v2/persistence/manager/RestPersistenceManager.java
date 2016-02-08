@@ -36,6 +36,7 @@ import oracle.adfmf.framework.exception.AdfException;
 import oracle.adfmf.util.Utility;
 import oracle.adfmf.util.XmlAnyDefinition;
 
+import oracle.ateam.sample.mobile.exception.RestCallException;
 import oracle.ateam.sample.mobile.logging.WebServiceCall;
 import oracle.ateam.sample.mobile.logging.WebServiceCallService;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;
@@ -51,6 +52,7 @@ import oracle.ateam.sample.mobile.v2.security.OAuthTokenManager;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.MessageUtils;
 import oracle.ateam.sample.mobile.util.StringUtils;
+import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.v2.persistence.db.BindParamInfo;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
@@ -296,7 +298,12 @@ public abstract class RestPersistenceManager
       else
       {
         logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,null,startTime,e);
-        return handleInvokeRestServiceError(requestType,uri,e);        
+        RestCallException re = new RestCallException(e);
+        re.setRequestMethod(requestType);
+        re.setRequestUri(uri);
+        re.setResponseHeaders(restService.getResponseHeaders());
+        re.setResponseStatus(restService.getResponseStatus());
+        return handleInvokeRestServiceError(requestType,uri,re);        
       }
     }
   }
@@ -363,19 +370,13 @@ public abstract class RestPersistenceManager
     {
       setLastResponseHeaders(restService.getResponseHeaders());
       setLastResponseStatus(restService.getResponseStatus());
-      // check whether response is in 200 range, MAF incorrevty throws an error when response status is 201 or 202
-      if (restService.getResponseStatus() < 300)
-      {
-        // return detail message as response if available
-        String causeMessage = e.getCause() != null? e.getCause().getLocalizedMessage() : null;
-        logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,causeMessage,startTime,e);
-        throw new AdfException(causeMessage,AdfException.ERROR);
-      }
-      else
-      {
-        logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,null,startTime,e);
-        throw new AdfException(e,AdfException.ERROR);
-      }
+      logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,null,startTime,e);
+      RestCallException re = new RestCallException(e);
+      re.setRequestMethod(requestType);
+      re.setRequestUri(uri);
+      re.setResponseHeaders(restService.getResponseHeaders());
+      re.setResponseStatus(restService.getResponseStatus());
+      throw re;       
     }
   }
 
@@ -403,7 +404,6 @@ public abstract class RestPersistenceManager
     {
       WebServiceCall wscall = new WebServiceCall();
       wscall.setIsNewEntity(true);
-      EntityUtils.generatePrimaryKeyValue(wscall, 1);
       wscall.setConnection(connection);
       wscall.setDuration(duration);
       wscall.setMethod(method);
@@ -420,7 +420,10 @@ public abstract class RestPersistenceManager
         String error = (causeError==null || "".equals(causeError)) ? rootError : causeError;
         wscall.setErrorMessage(error);        
       }
-      new WebServiceCallService(false).saveWebServiceCall(wscall);
+      TaskExecutor.getLogInstance().execute(true, () ->
+      {
+        new WebServiceCallService(false).saveWebServiceCall(wscall);        
+      });
     }  
   }
   

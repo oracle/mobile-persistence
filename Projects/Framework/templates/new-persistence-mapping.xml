@@ -4,6 +4,7 @@
       <crudServiceClass className="oracle.ateam.sample.mobile.mcs.storage.StorageObjectService" autoIncrementPrimaryKey="true" localPersistenceManager="oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager" remotePersistenceManager="oracle.ateam.sample.mobile.v2.persistence.manager.MCSPersistenceManager" remoteReadInBackground="false" remoteWriteInBackground="true" showWebServiceInvocationErrors="true" autoQuery="false" enableOfflineTransactions="true"/>
       <table name="STORAGE_OBJECT">
          <primaryKeyColumn name="ID"/>
+         <primaryKeyColumn name="COLLECTION_NAME"/>
       </table>
       <attributeMappings>
          <directMapping attributeName="createdOn" payloadAttributeName="createdOn" columnName="CREATED_ON" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
@@ -15,12 +16,13 @@
          <directMapping attributeName="name" payloadAttributeName="name" columnName="NAME" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
          <directMapping attributeName="contentType" payloadAttributeName="contentType" columnName="CONTENT_TYPE" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
          <directMapping attributeName="contentLength" payloadAttributeName="contentLength" columnName="CONTENT_LENGTH" columnDataType="NUMERIC" required="false" persisted="true" javaType="java.lang.Long" keyAttribute="false"/>
-         <directMapping attributeName="collectionName" columnName="COLLECTION_NAME" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
+         <directMapping attributeName="collectionName" columnName="COLLECTION_NAME" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="true"/>
          <directMapping attributeName="filePath" columnName="FILE_PATH" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
+         <directMapping attributeName="storeOnDevice" columnName="STORE_ON_DEVICE" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.Boolean" keyAttribute="false"/>
       </attributeMappings>
       <methods>
          <findMethod uri="/platform/storage/collections/{collection}/objects" connectionName="" requestType="GET" secured="false" sendDataObjectAsPayload="false" payloadElementName="root">
-            <parameter name="collection" valueProvider="SearchValue"  pathParam="true"/>
+            <parameter name="collection" valueProvider="SearchValue" pathParam="true"/>
          </findMethod>
          <customMethod name="getAllObjectsMetadata" uri="/platform/storage/collections/{collection}/objects" connectionName="" requestType="GET" secured="false" sendDataObjectAsPayload="false" payloadElementName="root">
             <parameter name="collection" value="collectionName" valueProvider="DataObjectAttribute" dataObjectAttribute="id" pathParam="true"/>

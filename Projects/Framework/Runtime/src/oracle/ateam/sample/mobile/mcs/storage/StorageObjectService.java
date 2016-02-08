@@ -1,3 +1,10 @@
+/*******************************************************************************
+ Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+
+ $revision_history$
+ 29-dec-2015   Steven Davelaar
+ 1.0           initial creation
+******************************************************************************/
 package oracle.ateam.sample.mobile.mcs.storage;
 
 
@@ -15,17 +22,18 @@ import java.util.zip.ZipInputStream;
 
 import oracle.adfmf.framework.exception.AdfException;
 
+import oracle.ateam.sample.mobile.exception.RestCallException;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.v2.persistence.cache.EntityCache;
 import oracle.ateam.sample.mobile.v2.persistence.manager.MCSPersistenceManager;
+import oracle.ateam.sample.mobile.v2.persistence.service.DataSynchAction;
 import oracle.ateam.sample.mobile.v2.persistence.service.EntityCRUDService;
-import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 
 
 /**
  *  Service class that provides local and remote operations against the storageObject data object. This allows
- *  you to work with MCS storage objecs in offline mode.
+ *  you to work with MCS storage objecs in both online and offline mode.
  *  Local operations store data in STORAGE_OBJECT table, remote operations call the MCS storage API.
  *
  *  You can customize and extend this behavior by overriding methods of the EntityCRUDService superclass, and/or
@@ -93,13 +101,49 @@ public class StorageObjectService
   }
 
   /**
-   * Inserts or updates a storageObject using the configured persistence managers.
-   * The insert or update is determined by calling isNewEntity on the storageObject instance.
+   * Stores the object in MCS, and optionally on the device.
+   * If the storeOnDevice flag of the storage object is true, the metadata are stored
+   * in SQLite DB, and the content is written to the file system.
+   * If remoteWriteInBackrgound flag is set to true, the storage in MCS happens
+   * in background.
+   * 
    * @param storageObject
    */
   public void saveStorageObject(StorageObject storageObject)
   {
-    super.mergeEntity(storageObject);
+    if (storageObject.isStoreOnDevice())
+    {
+      saveStorageObjectOnDevice(storageObject);
+    }
+    TaskExecutor.getInstance().execute(isDoRemoteWriteInBackground(), () ->
+    {
+      getMCSPersistenceManager().storeStorageObject(storageObject);
+    });
+  }
+
+  /**
+   * Stores the object on the device: the metadata are stored
+   * in SQLite DB, and the content is written to the file system.
+   * 
+   * @param storageObject
+   */
+  public void saveStorageObjectOnDevice(StorageObject storageObject)
+  {
+    
+    // storeOnDevic flag need to be added to PM and sql ddl
+      getLocalPersistenceManager().mergeEntity(storageObject, isAutoCommit());
+      storageObject.setIsNewEntity(false);
+      saveStorageObjectToFileSystem(storageObject);
+  }
+
+  /**
+   * Stores the object in MCS. If we are offline, the store action will be registered
+   * as a pending sync action and executed once the device is online again.
+   * @param storageObject
+   */
+  public void saveStorageObjectInMCS(StorageObject storageObject)
+  {
+    writeEntityRemote(new DataSynchAction(DataSynchAction.UPDATE_ACTION, storageObject, this.getClass().getName()));
   }
 
 
@@ -113,7 +157,7 @@ public class StorageObjectService
   }
   
   /**
-   * Convenience method that casst remote persistence manage to MCSPersistenceManager
+   * Convenience method that casts remote persistence manager to MCSPersistenceManager
    * @return MCSPersistenceManager instance
    */
   public MCSPersistenceManager getMCSPersistenceManager()
@@ -159,13 +203,14 @@ public class StorageObjectService
     StorageObject storageObject = null;
     if (isPersisted())
     {
-      storageObject = (StorageObject)getLocalPersistenceManager().findByKey(getEntityClass(), new Object[]{objectId});
+      storageObject = (StorageObject)getLocalPersistenceManager().findByKey(getEntityClass(), new Object[]{objectId,collection});
     }
     if (storageObject==null)
     {
       storageObject = new StorageObject();
       storageObject.setId(objectId);    
       storageObject.setCollectionName(collection);
+      EntityCache.getInstance().addEntity(storageObject);
     }
     return storageObject;
   }
@@ -183,51 +228,44 @@ public class StorageObjectService
         // we want to proces pending actions before we do remote read
         synchronize(false);
         getMCSPersistenceManager().getStorageObjectMetadata(storageObject);
+        if (storageObject.isStoreOnDevice())
+        {
+          getLocalPersistenceManager().mergeEntity(storageObject, true);
+        }
       });    
   }
 
   /**
-   * Populate the storageObject with the content from MCS.
+   * Get a storageObject with the metadata and content from MCS.
    * @param collection
    * @param objectId
    * @see getStorageObjectContentRemote
    */
-  public StorageObject getStorageObjectContent(String collection, String objectId)
+  public StorageObject getStorageObjectFromMCS(String collection, String objectId, boolean throwNotFoundException)
   {
     StorageObject storageObject = findOrCreateStorageObject(collection, objectId);
-    getStorageObjectContent(storageObject);
+    getStorageObjectFromMCS(storageObject,throwNotFoundException);
     return storageObject;
   }
   
   /**
-   * Populate the storageObject with the content from MCS.
-   * Use this method if you have called getStorageObjectMetadata before and pass in
-   * the object returned by getStorageObjectMetadata.
-   * @param storageObject
-   * @see getStorageObjectContentRemote
-   */
-  public void getStorageObjectContent(StorageObject storageObject)
-  {
-    // Do nothing if local file available and eTag was same when retrieving metadata
-    /// in this case isLocalVersionIsCurrent is set to true when retrieving 
-    // the object metadata in MCSPersistenceManager
-    if (!storageObject.isLocalVersionIsCurrent()) 
-    {
-      getStorageObjectContentRemote(storageObject);
-    }
-  }
-
-  /**
    * Retrieve the file content from MCS and save it to a file on the system and store the filePath in
    * the storageObject (see method storeObjectContent).
+   * If the device is offline, or the isLocalVersionIsCurrent flag on the storage object is true, then
+   * this method will do nothing.
    * @param storageObject
    * @see storeObjectContent
    */
-  public void getStorageObjectContentRemote(StorageObject storageObject)
+  public void getStorageObjectFromMCS(StorageObject storageObject, boolean throwNotFoundException)
   {
     if (isOffline())
     {
-      sLog.fine("Cannot execute getStorageObjectContentRemote, no network connection");
+      sLog.fine("Cannot execute getStorageObjectFromMCS, device is offline");
+      return;
+    }
+    if (storageObject.isLocalVersionIsCurrent()) 
+    {
+      sLog.fine("Local version of storage object "+storageObject.getId()+" is already current");
       return;
     }
     TaskExecutor.getInstance().execute(isDoRemoteReadInBackground(), () ->
@@ -235,25 +273,40 @@ public class StorageObjectService
         // auto synch any pending storage actions first, pass false for inBackground because
         // we want to proces pending actions before we do remote read
         synchronize(false);
-        byte[] response = getMCSPersistenceManager().getStorageObjectContent(storageObject);
-        // response is null when local file (based on value of eTag) is current version
-        if (response!=null)
+        try
         {
-          storeObjectContent(storageObject, response);          
+          byte[] response = getMCSPersistenceManager().getStorageObject(storageObject);
+          // response is null when local file (based on value of eTag) is current version
+          if (response!=null)
+          {
+            storageObject.setContent(response);
+            if (storageObject.isStoreOnDevice())
+            {
+              saveStorageObjectOnDevice(storageObject);            
+            }  
+          }
+        }
+        catch (RestCallException e)
+        {
+           if (e.getResponseStatus()==404 && throwNotFoundException)
+           {
+             throw e;         
+           }
         }
       });    
   }
 
   /**
-   * Save byte response to a file on file system. The default directory for download is the value
+   * Save byte content of storage object to a file on file system. The default directory for download is the value
    * of AdfmfJavaUtilities.ApplicationDirectory concatenated with /MCS/ and the name of the collection.
    * If the content type is application/zip, we unzip the file in the same directory after downloading to the file system.
    * 
    * @param storageObject
    * @param response
    */
-  protected void storeObjectContent(StorageObject storageObject, byte[] response)  
+  public void saveStorageObjectToFileSystem(StorageObject storageObject)  
   {
+    byte[] content = storageObject.getContent();
     String dir = storageObject.getDirectoryPath();
     File fileDir = new File(dir);
     if (!fileDir.exists())
@@ -266,7 +319,7 @@ public class StorageObjectService
     try
     {
       fos = new FileOutputStream(file);
-      fos.write(response);
+      fos.write(content);
       fos.flush();
       storageObject.setFilePath(filePath);
     }

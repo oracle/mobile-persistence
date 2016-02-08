@@ -234,12 +234,17 @@ public class DBPersistenceManager
   }
 
   /**
-   * Persists the entity using SQL INSERT Statement
+   * Persists the entity using SQL INSERT Statement.
+   * if the entity primary key is nul,, and the descriptor in persistenc-mapping.xml
+   * has property autoIncrementPrimry Key to true, this method generates a unique PK value
+   * before inserting the entity.
+   * 
    * @param entity
    * @param doCommit
    */
   public void insertEntity(Entity entity, boolean doCommit)
   {
+    EntityUtils.generatePrimaryKeyValue(entity, 1);
     if (isEntityExixtsInDB(entity))
     {
       MessageUtils.handleError(entity.getClass().getName()+ " with this key already exists");

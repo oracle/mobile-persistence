@@ -38,10 +38,13 @@ import oracle.adfmf.framework.exception.AdfException;
 import oracle.adfmf.framework.internal.AdfmfJavaUtilitiesInternal;
 import oracle.adfmf.json.JSONObject;
 
+import oracle.ateam.sample.mobile.exception.RestCallException;
 import oracle.ateam.sample.mobile.mcs.storage.StorageObject;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
+
+import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 
 import sun.misc.BASE64Encoder;
 
@@ -170,7 +173,7 @@ public class MCSPersistenceManager
 
   /**
    * Populate storage object metadata with header parameters returned by HEAD call to storage object.
-   * If persist flag is set to true in persistence-mapping.xml, we also save the object in local DB
+   * The storage object is not saved to local DB here. 
    * @param storageObject
    * @param headers
    */
@@ -196,16 +199,20 @@ public class MCSPersistenceManager
 
   /**
    * Call MCS Storage API /platform/storage/collections/{collection}/objects/{object} with GET
-   * method to get object content and return the byte array response
+   * method. The object metadata return in header params is saved into the storage object passed into
+   * this method, the actual content of the storage object is returned as byte array.
+   * The localVersionIsCurrent property of the storage object is set to true, so by default we do not retrieve
+   * the same object twice within one application session.
+   * 
    * @param storageObject
    */
-  public byte[] getStorageObjectContent(StorageObject storageObject)
+  public byte[] getStorageObject(StorageObject storageObject)
   {
     String uri = STORAGE_COLLECTIONS_URI + storageObject.getCollectionName() + "/objects/" + storageObject.getId();
     Map<String, String> headerParams = new HashMap<String, String>();
     // if the file content has been retrieved before, we pass in eTag header, so we don't download
     // it again while it is unchanged
-    if (storageObject.getFilePath() != null)
+    if (storageObject.getETag() != null)
     {
       // Set If-None-Match header param so we know whether the object has changed
       headerParams.put("If-None-Match", storageObject.getETag());
@@ -214,14 +221,28 @@ public class MCSPersistenceManager
     if (getLastResponseStatus() == 304)
     {
       // 304 is Not Modified, this means local eTag is same as remote
-      storageObject.setLocalVersionIsCurrent(true);
     }
     else
     {
       // populate the object metadata attrs with the response headers
       populateStorageObjectMetadata(storageObject, getLastResponseHeaders());
     }
+    storageObject.setLocalVersionIsCurrent(true);
     return response;
+  }
+
+  @Override
+  /**
+   * This methods adds MCS-specific headers if not yet set.
+   * If the connectionName is null because it is not specified in persistence-mapping.xml, we will use the MCS connection
+   * name as specified in mobile-persistence-config.properties
+   */
+  public byte[] invokeByteArrayRestService(String connectionName, String requestType, String requestUri, String payload,
+                                           Map<String, String> headerParamMap, int retryLimit)
+  {
+    String connName = connectionName!=null ?  connectionName : getConnectionName();
+    return super.invokeByteArrayRestService(connName, requestType, requestUri, payload, addMCSHeaderParamsIfNeeded(headerParamMap),
+                                            retryLimit);
   }
 
   /**
@@ -372,6 +393,13 @@ public class MCSPersistenceManager
                                    secured);
   }
 
+  /**
+   * Creates or updates a storage object in an MCS collection. The ID of the storage object is used
+   * as the object identifier, so, when an objet with the same ID already exists in this collection, it will be updated
+   * and the ETag value of the object will be incremented with 1, the new ETag value returned by MCS is stored in the
+   * SQLIte DB together with the other metadata returned by MCS
+   * @param storageObject
+   */
   public void storeStorageObject(StorageObject storageObject)
   {
     try
@@ -382,10 +410,10 @@ public class MCSPersistenceManager
       String requestEndPoint = adp.getConnectionEndPoint(getConnectionName());
       // Get the URI which is defined after the end point
       String requestURI =
-        STORAGE_COLLECTIONS_URI + storageObject.getCollectionName() + "/objects/" + storageObject.getName();
+        STORAGE_COLLECTIONS_URI + storageObject.getCollectionName() + "/objects/" + storageObject.getId();
       String request = requestEndPoint + requestURI;
       HashMap<String, String> httpHeadersValue = new HashMap<String, String>();
-      httpHeadersValue.put("Oracle-Mobile-Name", storageObject.getName());
+      httpHeadersValue.put("Oracle-Mobile-Name", storageObject.getId());
       httpHeadersValue.put("Content-Type", storageObject.getContentType());
       addMCSHeaderParamsIfNeeded(httpHeadersValue);
       // Get the connection
@@ -407,7 +435,9 @@ public class MCSPersistenceManager
       //           ,"modifiedOn":"2015-05-18T21:11:54Z","links":[{"rel":"canonical"
       //           ,"href":"/mobile/platform/storage/collections/Services/objects/51e48d9a-0d9d-4627-b3e8-c2eaaa8886ae"}
       //    ,{"rel":"self","href":"/mobile/platform/storage/collections/Services/objects/51e48d9a-0d9d-4627-b3e8-c2eaaa8886ae"}]}
-      String response = getResponse(adp.getInputStream(connection), false);
+      InputStream is = adp.getInputStream(connection);
+      boolean gzip = adp.getResponseHeaders().get("Content-Encoding").equals("gzip");
+      String response = getResponse(is, gzip);
 //      System.err.println(response);
       JSONObject responseObject = (JSONObject) JSONBeanSerializationHelper.fromJSON(JSONObject.class, response);
       super.processPayloadElement(responseObject, StorageObject.class, null, storageObject);
@@ -420,6 +450,39 @@ public class MCSPersistenceManager
     finally
     {
     }
+  }
+
+  @Override
+  /**
+   * This method calls storeStorageObject
+   */
+  public void insertEntity(Entity entity, boolean doCommit)
+  {
+    storeStorageObject((StorageObject)entity);
+  }
+
+  @Override
+  public void removeEntity(Entity entity, boolean doCommit)
+  {
+    super.removeEntity(entity, doCommit);
+  }
+
+  @Override
+  /**
+   * This method calls storeStorageObject
+   */
+  public void updateEntity(Entity entity, boolean doCommit)
+  {
+    storeStorageObject((StorageObject)entity);
+  }
+
+  @Override
+  /**
+   * This method calls storeStorageObject
+   */
+  public void mergeEntity(Entity entity, boolean doCommit)
+  {
+    storeStorageObject((StorageObject)entity);
   }
 
   /**
@@ -456,7 +519,7 @@ public class MCSPersistenceManager
     }
     catch (IOException e)
     {
-
+      sLog.severe("Error getting MCS stream response: " + e.getLocalizedMessage());
     }
     finally
     {

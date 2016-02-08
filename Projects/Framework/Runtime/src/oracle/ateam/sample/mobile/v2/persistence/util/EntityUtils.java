@@ -30,6 +30,7 @@ import oracle.adfmf.bindings.DataControl;
 import oracle.adfmf.bindings.dbf.AmxBindingContext;
 import oracle.adfmf.bindings.dbf.AmxIteratorBinding;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
+import oracle.adfmf.framework.api.MafExecutorService;
 import oracle.adfmf.framework.exception.AdfException;
 import oracle.adfmf.java.beans.ProviderChangeSupport;
 import oracle.adfmf.util.Utility;
@@ -150,11 +151,10 @@ public class EntityUtils
     {
       // return attr date format instead of descriptor dateTime. If attr dateFormat is not set in
       // persistence-mapping.xml, it will return the descritor dateTime format anyway
-//      return DateUtils.convertToDate(attrType, (String) columnValue, descriptor.getDateFormat(),
-//                                     descriptor.getDateTimeFormat());
+      //      return DateUtils.convertToDate(attrType, (String) columnValue, descriptor.getDateFormat(),
+      //                                     descriptor.getDateTimeFormat());
       AttributeMapping am = descriptor.findAttributeMappingByName(attrName);
-      return DateUtils.convertToDate(attrType, (String) columnValue, descriptor.getDateFormat(),
-                                     am.getDateFormat());
+      return DateUtils.convertToDate(attrType, (String) columnValue, descriptor.getDateFormat(), am.getDateFormat());
     }
     boolean conversionNeeded = true;
     boolean valueHolder = columnValue instanceof ValueHolderInterface;
@@ -285,6 +285,12 @@ public class EntityUtils
     return attrs;
   }
 
+  /**
+   * Create new instance for given entityClass
+   * @param <E>
+   * @param entityClass
+   * @return
+   */
   public static <E extends Entity> E getNewEntityInstance(Class entityClass)
   {
     try
@@ -331,6 +337,13 @@ public class EntityUtils
     return same;
   }
 
+  /**
+   * Generate unique primary key for the entity, provided that the eneity is persistable, the autoIncrementPrimaryKey
+   * property is set to true, and the primary key attribute is still null.
+   * @param pm
+   * @param entity
+   * @param increment
+   */
   public static void generatePrimaryKeyValue(Entity entity, int increment)
   {
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entity.getClass());
@@ -338,6 +351,11 @@ public class EntityUtils
     generatePrimaryKeyValue(pm, entity, increment);
   }
 
+  /**
+   * Returns true when all promary key attributes are null, returns false otherwise
+   * @param entity
+   * @return
+   */
   public static boolean primaryKeyIsNull(Entity entity)
   {
     boolean pknull = true;
@@ -354,10 +372,17 @@ public class EntityUtils
     return pknull;
   }
 
+  /**
+   * Generate unique primary key for the entity, provided that the eneity is persistable, the autoIncrementPrimaryKey
+   * property is set to true, and the primary key attribute is still null.
+   * @param pm
+   * @param entity
+   * @param increment
+   */
   public static void generatePrimaryKeyValue(PersistenceManager pm, Entity entity, int increment)
   {
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entity.getClass());
-    if (!descriptor.isPersisted() || !descriptor.isAutoIncrementPrimaryKey())
+    if (!descriptor.isPersisted() || !descriptor.isAutoIncrementPrimaryKey() || !primaryKeyIsNull(entity))
     {
       return;
     }
@@ -443,7 +468,11 @@ public class EntityUtils
     String dcName = serviceClassName.substring(lastDot + 1);
     // getDataControlById throws exception when DC does not exist
     //    DataControl dc = (DataControl) bc.getDataControlById(dcName);
-    DataControl dc = (DataControl) bc.get(dcName);
+    DataControl dc = null;
+    if (bc != null)
+    {
+      dc = (DataControl) bc.get(dcName);
+    }
     EntityCRUDService service = null;
     // first try to lookup the crud service through its data control, if it doesn't exist, just
     // instantiate the class
@@ -520,7 +549,6 @@ public class EntityUtils
   }
 
 
-
   /**
    * Calls the add[EntityName] method using reflection in the EntityCRUDService subclass for
    * the specified entity. The method takes two arguments, the index and the entity instance.
@@ -532,9 +560,15 @@ public class EntityUtils
     Class beanClass = entity.getClass();
     String typeName = entity.getClass().getName();
     String addMethodName = "add" + typeName.substring(typeName.lastIndexOf(".") + 1);
-    Class[] paramTypes = new Class[] { int.class, beanClass };
-    Object[] params = new Object[] { new Integer(index), entity};
-    Utility.invokeIfPossible(crudService, addMethodName, paramTypes, params);        
+    Class[] paramTypes = new Class[]
+    {
+      int.class, beanClass
+    };
+    Object[] params = new Object[]
+    {
+      new Integer(index), entity
+    };
+    Utility.invokeIfPossible(crudService, addMethodName, paramTypes, params);
   }
 
 
@@ -549,9 +583,15 @@ public class EntityUtils
     Class beanClass = entity.getClass();
     String typeName = entity.getClass().getName();
     String removeMethodName = "remove" + typeName.substring(typeName.lastIndexOf(".") + 1);
-    Class[] paramTypes = new Class[] { beanClass };
-    Object[] params = new Object[] { entity};
-    Utility.invokeIfPossible(crudService, removeMethodName, paramTypes, params);        
+    Class[] paramTypes = new Class[]
+    {
+      beanClass
+    };
+    Object[] params = new Object[]
+    {
+      entity
+    };
+    Utility.invokeIfPossible(crudService, removeMethodName, paramTypes, params);
   }
 
   /**
@@ -561,48 +601,50 @@ public class EntityUtils
    * As we do not now the current row key (or index) nor current entity in the model layer, we need to access the iterator binding
    * to find out this information.
    * Not elegant to access ViewController objects but it works, as long as the iterator binding exists.
-   * That's why we have to catch any exception because the actual iterator name might be different than what we assume, 
+   * That's why we have to catch any exception because the actual iterator name might be different than what we assume,
    * in which case the developer has to override this method and use the correct iterator name.
    *
-   * @param entityListName name of the collection attribute that needs to be refreshed. We assume the iterator binding is 
+   * @param entityListName name of the collection attribute that needs to be refreshed. We assume the iterator binding is
    * named after the entityListName suffixed with "Iterator".
    * @param entities list f entities that holds the current enity that needs to be refreshed
    * @param providerChangeSupport instance used to invoke the fireProviderChange method
    */
-  public static <E extends Entity> void refreshCurrentEntity(String entityListName, List<E> entities, ProviderChangeSupport providerChangeSupport)
+  public static <E extends Entity> void refreshCurrentEntity(String entityListName, List<E> entities,
+                                                             ProviderChangeSupport providerChangeSupport)
   {
-    String iteratorBindingName = entityListName+"Iterator";
-    try
-    {
-      AmxIteratorBinding ib =
-          (AmxIteratorBinding) AdfmfJavaUtilities.evaluateELExpression("#{bindings."+iteratorBindingName+"}");
-      // when initializing iterator which results in calling findAll and this refresh the iterator is not yet
-      // available
-      if (ib!=null && ib.getIterator()!=null)
-      {
-        // we do not want to use ib.refresh because this resets the current row to the first row, potentially
-        // firing some unwanted REST calls, instead we acll fireProviderChange passing in the current entity and row key
-        // We can only use ib.refresh when the current row is the first row, which we do, because
-        // only ib.refresh also refreshes DVT's correctly in the UI. (And when the iterator is used by a graph, the
-        // current row will typically be the first row anyway)
-         int index = ib.getIterator().getCurrentIndex();
-         if (index==0)
-         {
-           ib.refresh();
-         }
-         else if (index > -1 && index < entities.size())
-         {
-           Object rowKey = ib.getIterator().getCurrentRowKey();
-           providerChangeSupport.fireProviderChange(entityListName, rowKey, entities.get(index));             
-         }
-      }
-    }
-    catch (Exception e)
-    {
-      // assumed iterator binding expression is wrong, just do nothing
-      sLog.info("Cannot find "+iteratorBindingName+" binding, UI might not refresh correctly when form layout is used.");      
-    }
+        String iteratorBindingName = entityListName + "Iterator";
+        try
+        {
+          AmxIteratorBinding ib =
+            (AmxIteratorBinding) AdfmfJavaUtilities.evaluateELExpression("#{bindings." + iteratorBindingName + "}");
+          // when initializing iterator which results in calling findAll and this refresh the iterator is not yet
+          // available
+          if (ib != null && ib.getIterator() != null)
+          {
+            // we do not want to use ib.refresh because this resets the current row to the first row, potentially
+            // firing some unwanted REST calls, instead we acll fireProviderChange passing in the current entity and row key
+            // We can only use ib.refresh when the current row is the first row, which we do, because
+            // only ib.refresh also refreshes DVT's correctly in the UI. (And when the iterator is used by a graph, the
+            // current row will typically be the first row anyway)
+            int index = ib.getIterator().getCurrentIndex();
+            if (index == 0)
+            {
+              ib.refresh();
+            }
+            else if (index > -1 && index < entities.size())
+            {
+              Object rowKey = ib.getIterator().getCurrentRowKey();
+              providerChangeSupport.fireProviderChange(entityListName, rowKey, entities.get(index));
+            }
+          }
+        }
+        catch (Exception e)
+        {
+          // assumed iterator binding expression is wrong, just do nothing
+          sLog.info("Cannot find " + iteratorBindingName +
+                    " binding, UI might not refresh correctly when form layout is used.");
+        }
   }
-  
+
 
 }
