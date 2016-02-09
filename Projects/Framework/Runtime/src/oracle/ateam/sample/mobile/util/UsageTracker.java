@@ -22,6 +22,7 @@ import oracle.adfmf.framework.api.AdfmfContainerUtilities;
 import oracle.adfmf.framework.api.JSONBeanSerializationHelper;
 
 import oracle.ateam.sample.mobile.Version;
+import oracle.ateam.sample.mobile.controller.bean.ConnectivityBean;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 
 /**
@@ -48,7 +49,7 @@ public class UsageTracker
 
   protected boolean isOffline()
   {
-    return OfflineUtils.isOffline();
+    return new ConnectivityBean().isOffline();
   }
 
   protected String getCurrentDateTime()

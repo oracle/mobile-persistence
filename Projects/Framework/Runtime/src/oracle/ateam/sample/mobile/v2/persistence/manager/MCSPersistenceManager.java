@@ -452,39 +452,6 @@ public class MCSPersistenceManager
     }
   }
 
-  @Override
-  /**
-   * This method calls storeStorageObject
-   */
-  public void insertEntity(Entity entity, boolean doCommit)
-  {
-    storeStorageObject((StorageObject)entity);
-  }
-
-  @Override
-  public void removeEntity(Entity entity, boolean doCommit)
-  {
-    super.removeEntity(entity, doCommit);
-  }
-
-  @Override
-  /**
-   * This method calls storeStorageObject
-   */
-  public void updateEntity(Entity entity, boolean doCommit)
-  {
-    storeStorageObject((StorageObject)entity);
-  }
-
-  @Override
-  /**
-   * This method calls storeStorageObject
-   */
-  public void mergeEntity(Entity entity, boolean doCommit)
-  {
-    storeStorageObject((StorageObject)entity);
-  }
-
   /**
    * Read the response message from HttpConnection inputStream when request was streamed
    * @param is

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mobileObjectPersistence xmlns="http://www.oracle.com/ateam/mobile/persistenceMapping" logWebServiceCalls="true">
    <classMappingDescriptor className="oracle.ateam.sample.mobile.mcs.storage.StorageObject" persisted="true">
-      <crudServiceClass className="oracle.ateam.sample.mobile.mcs.storage.StorageObjectService" autoIncrementPrimaryKey="true" localPersistenceManager="oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager" remotePersistenceManager="oracle.ateam.sample.mobile.v2.persistence.manager.MCSPersistenceManager" remoteReadInBackground="false" remoteWriteInBackground="true" showWebServiceInvocationErrors="true" autoQuery="false" enableOfflineTransactions="true"/>
+      <crudServiceClass className="oracle.ateam.sample.mobile.mcs.storage.StorageObjectService" autoIncrementPrimaryKey="true" localPersistenceManager="oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager" remotePersistenceManager="oracle.ateam.sample.mobile.v2.persistence.manager.MCSStoragePersistenceManager" remoteReadInBackground="false" remoteWriteInBackground="true" showWebServiceInvocationErrors="true" autoQuery="false" enableOfflineTransactions="true"/>
       <table name="STORAGE_OBJECT">
          <primaryKeyColumn name="ID"/>
          <primaryKeyColumn name="COLLECTION_NAME"/>

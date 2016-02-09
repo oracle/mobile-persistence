@@ -42,7 +42,7 @@ import oracle.adfmf.util.Utility;
 
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.MessageUtils;
-import oracle.ateam.sample.mobile.util.OfflineUtils;
+import oracle.ateam.sample.mobile.controller.bean.ConnectivityBean;
 import oracle.ateam.sample.mobile.util.StringUtils;
 import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.v2.persistence.cache.EntityCache;
@@ -739,12 +739,12 @@ public abstract class EntityCRUDService<E extends Entity>
 
   protected boolean isOffline()
   {
-    return OfflineUtils.isOffline();
+    return new ConnectivityBean().isOffline();
   }
 
   protected boolean isOnline()
   {
-    return OfflineUtils.isOnline();
+    return new ConnectivityBean().isOnline();
   }
 
   /**

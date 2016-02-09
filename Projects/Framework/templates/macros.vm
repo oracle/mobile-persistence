@@ -4,7 +4,7 @@
 
 
 #macro (SYNCHRONIZE_LINK $dataObject)
-      <amx:commandLink id="menSync" disabled="#{!bindings.has${dataObject.rootDataObject.name}DataSynchActions.inputValue or deviceScope.hardware.networkStatus=='NotReachable' or deviceScope.hardware.networkStatus=='unknown'}" 
+      <amx:commandLink id="menSync" disabled="#{!bindings.has${dataObject.rootDataObject.name}DataSynchActions.inputValue or deviceScope.hardware.networkStatus=='NotReachable' or deviceScope.hardware.networkStatus=='unknown' or Connectivity.offline}" 
        actionListener="#{bindings.${pageDef.createSynchronizeBinding()}.execute}" text="Synchronize">
         <amx:closePopupBehavior id="mencSync" popupId="p1" type="action"/>                                                 
       </amx:commandLink>
@@ -16,6 +16,14 @@
         <amx:setPropertyListener id="menspaspl" from="${dataObject.rootDataObject.fullyQualifiedClassName}"
                                  to="#{applicationScope.dataSynchEntity}"/>
         <amx:closePopupBehavior id="mencPsa" popupId="p1" type="action"/>                         
+      </amx:commandLink>
+#end
+
+#macro (FORCE_OFFLINE_LINK $dataObject)
+      <amx:commandLink id="menFo" text="#{Connectivity.forceOffline ? 'Unforce offline' : 'Force offline'}">
+        <amx:setPropertyListener id="menfospl" from="#{!Connectivity.forceOffline}"
+                                 to="#{Connectivity.forceOffline}"/>
+        <amx:closePopupBehavior id="mencFo" popupId="p1" type="action"/>                         
       </amx:commandLink>
 #end
 

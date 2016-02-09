@@ -26,7 +26,7 @@ import oracle.adfmf.json.JSONArray;
 import oracle.adfmf.json.JSONObject;
 
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
-import oracle.ateam.sample.mobile.util.OfflineUtils;
+import oracle.ateam.sample.mobile.controller.bean.ConnectivityBean;
 import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 
@@ -113,7 +113,7 @@ public class AnalyticsService
 
         DBPersistenceManager pm = new DBPersistenceManager();
         String className = AnalyticsEvent.class.toString();                              
-        if (OfflineUtils.isOffline())
+        if (new ConnectivityBean().isOffline())
         {
            sLog.info("We are offline, save MCS analytics events to local DB");
            DataSynchAction action = new DataSynchAction(DataSynchAction.INSERT_ACTION,className,payload,MCSPersistenceManager.class.toString());

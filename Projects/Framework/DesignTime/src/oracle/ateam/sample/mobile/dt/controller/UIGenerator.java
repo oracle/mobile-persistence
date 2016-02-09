@@ -140,7 +140,9 @@ public class UIGenerator
       addUserContextBean();
 //    }  
     // set iter bean
+    addConnectivityBean();
 
+    
 // No longer needed, is now a native feature in 12.1.3
 //    DataControl dc = model.getDataControl().getRealDataControl();
 //    String ateamBean = "oracle.ateam.sample.mobile.model.bean.StatefulIteratorBeanDcDefinition";
@@ -557,6 +559,38 @@ public class UIGenerator
           beanScope.setValue("application");
           bean.setManagedBeanScope(beanScope);
           log.info("Added UserContext managed bean to adfc-mobile-config.xml");
+        }
+      }
+    }.run(model);
+
+    //    AbstractModel model = node.getModel();
+  }
+
+  private void addConnectivityBean()
+  {
+    AdfcConfigNode node = AdfcConfigNodeUtils.findDefaultAdfcConfigNode(project);
+    Context context = new Context(null, null, project, node);
+    AbstractModel model = node.getXmlContext(context).getModel();
+    new FixedNameTransactionTask("addConnectivityBean")
+    {
+      protected void performTask(AbstractModel model)
+        throws XmlCommitException
+      {
+        TaskFlow flow = AdfcSingleViewUtils.getSingleTaskFlow(model);
+        if (flow.getManagedBean("Connectivity") == null)
+        {
+          ManagedBean bean = flow.createManagedBean();
+          flow.addManagedBean(bean);
+          ManagedBeanName beanName = bean.createName();
+          beanName.setValue("Connectivity");
+          bean.setName(beanName);
+          ValueEntity beanClass = bean.createManagedBeanClass();
+          beanClass.setValue("oracle.ateam.sample.mobile.controller.bean.ConnectivityBean");
+          bean.setManagedBeanClass(beanClass);
+          ManagedBeanScope beanScope = bean.createManagedBeanScope();
+          beanScope.setValue("application");
+          bean.setManagedBeanScope(beanScope);
+          log.info("Added Connectivity managed bean to adfc-mobile-config.xml");
         }
       }
     }.run(model);
