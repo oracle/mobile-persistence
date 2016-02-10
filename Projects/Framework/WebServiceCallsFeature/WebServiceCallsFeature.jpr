@@ -127,76 +127,6 @@
    </hash>
    <hash n="oracle.jdeveloper.deploy.dt.DeploymentProfiles">
       <hash n="profileDefinitions">
-         <hash n="ViewController_MobileFeatureArchive1">
-            <hash n="archiveOptions">
-               <value n="hasManifest" v="true"/>
-            </hash>
-            <hash n="fileGroups">
-               <list n="groups">
-                  <hash>
-                     <list n="contributors">
-                        <hash>
-                           <value n="type" v="2"/>
-                        </hash>
-                        <hash>
-                           <value n="type" v="7"/>
-                        </hash>
-                     </list>
-                     <value n="displayName" v="Project Output"/>
-                     <hash n="filters">
-                        <list n="rules">
-                           <hash>
-                              <value n="pattern" v="WEB-INF/classes/**"/>
-                              <value n="type" v="1"/>
-                           </hash>
-                           <hash>
-                              <value n="pattern" v="**"/>
-                              <value n="type" v="0"/>
-                           </hash>
-                        </list>
-                     </hash>
-                     <value n="internalName" v="project-output"/>
-                     <value n="type" v="1"/>
-                  </hash>
-                  <hash>
-                     <list n="contributors">
-                        <hash>
-                           <value n="type" v="5"/>
-                        </hash>
-                     </list>
-                     <value n="displayName" v="Features"/>
-                     <hash n="filters">
-                        <list n="rules">
-                           <hash>
-                              <value n="pattern" v="**"/>
-                              <value n="type" v="0"/>
-                           </hash>
-                        </list>
-                     </hash>
-                     <value n="internalName" v="Features"/>
-                     <value n="targetWithinJar" v="public_html"/>
-                     <value n="type" v="1"/>
-                  </hash>
-                  <hash>
-                     <value n="displayName" v="Libraries"/>
-                     <hash n="filters">
-                        <list n="rules">
-                           <hash>
-                              <value n="pattern" v="**"/>
-                              <value n="type" v="0"/>
-                           </hash>
-                        </list>
-                     </hash>
-                     <value n="internalName" v="Libraries"/>
-                     <value n="targetWithinJar" v="lib"/>
-                     <value n="type" v="3"/>
-                  </hash>
-               </list>
-            </hash>
-            <url n="jarURL" path="deploy/ViewController_MobileFeatureArchive1.jar"/>
-            <value n="profileClass" v="oracle.adfmf.framework.dt.deploy.features.FeatureArchiveProfile"/>
-            <value n="profileName" v="ViewController_MobileFeatureArchive1"/>
-         </hash>
          <hash n="WebServiceCallsFeatureArchiv1">
             <list n="adflib-excludedConnections">
                <string v="|"/>
@@ -270,7 +200,6 @@
          </hash>
       </hash>
       <list n="profileList">
-         <string v="ViewController_MobileFeatureArchive1"/>
          <string v="WebServiceCallsFeatureArchiv1"/>
       </list>
    </hash>
@@ -288,10 +217,6 @@
             <value n="id" v="A-Team Mobile Persistence Runtime"/>
             <value n="isJDK" v="false"/>
          </hash>
-         <hash>
-            <value n="id" v="Apache Ant"/>
-            <value n="isJDK" v="false"/>
-         </hash>
       </list>
       <hash n="jdkReference">
          <value n="id" v="MAF JDK 1.8 Compact 2 Profile"/>
@@ -305,10 +230,6 @@
          </hash>
          <hash>
             <value n="id" v="A-Team Mobile Persistence Runtime"/>
-            <value n="isJDK" v="false"/>
-         </hash>
-         <hash>
-            <value n="id" v="Apache Ant"/>
             <value n="isJDK" v="false"/>
          </hash>
       </list>

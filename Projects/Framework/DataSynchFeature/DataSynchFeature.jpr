@@ -130,6 +130,9 @@
    <hash n="oracle.jdeveloper.deploy.dt.DeploymentProfiles">
       <hash n="profileDefinitions">
          <hash n="DataSynchFeature">
+            <list n="adflib-excludedConnections">
+               <string v="|"/>
+            </list>
             <hash n="archiveOptions">
                <value n="hasManifest" v="true"/>
             </hash>

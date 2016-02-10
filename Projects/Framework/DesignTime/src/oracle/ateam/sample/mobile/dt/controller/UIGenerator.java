@@ -160,10 +160,6 @@ public class UIGenerator
         addWSCallsJarIfNeeded();        
     }
     
-    // for some strange reason, when we generate the TF, the old invalid network plugin gets added
-    // so we remove it at the end
-    removeOldNetworkPlugin();    
-    
     log.info("MAF User Interface Generator finished succesfully");
   }
 
@@ -266,21 +262,6 @@ public class UIGenerator
     }
   }
 
-  private void removeOldNetworkPlugin()
-  {
-    try
-    {
-      PluginManager mgr = PluginManager.getInstance(Ide.getActiveWorkspace(), Logger.getAnonymousLogger());
-      mgr.saveMafPluginsNode();
-      mgr.removeCorePlugin("org.apache.cordova.network-information");
-      mgr.saveMafPluginsNode();
-    }
-    catch (MobileException e)
-    {
-//      throw new RuntimeException("Error removing plugin: "+e.getLocalizedMessage());
-      // do nothing, plug in already removed
-    }    
-  }
 
     private void addNetworkStatusAccessPermission()
     {
