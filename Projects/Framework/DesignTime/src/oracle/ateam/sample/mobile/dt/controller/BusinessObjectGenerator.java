@@ -25,6 +25,7 @@ import java.util.Properties;
 import oracle.adfdt.model.ide.managers.ApplicationManager;
 import oracle.adfdt.model.objects.Application;
 
+
 import oracle.adfmf.common.util.McAppUtils;
 import oracle.adfmf.framework.dt.editor.FrameworkXmlEditorConstants;
 import oracle.adfmf.framework.dt.editor.FrameworkXmlKeys;
@@ -45,6 +46,10 @@ import oracle.bali.xml.gui.jdev.xmlComponent.XmlPanelGui;
 import oracle.bali.xml.model.XmlView;
 
 import oracle.ide.Context;
+import oracle.ide.Ide;
+import oracle.ide.model.Dependable;
+import oracle.ide.model.DependableFactory;
+import oracle.ide.model.DependencyConfiguration;
 import oracle.ide.model.NodeFactory;
 import oracle.ide.model.Project;
 import oracle.ide.model.TextNode;
@@ -215,7 +220,32 @@ public class BusinessObjectGenerator
     {
       addWebServiceDataControlUsage(log);      
     }
+
+//    addAppControllerDependency();
+      
     log.info(model.getLogTitle()+" finished succesfully");
+  }
+
+  private void addAppControllerDependency()
+  {
+    // add dependency from VC project to APP prj so it can see Java classes
+    Project appPrj = ProjectUtils.getApplicationControllerProject(); 
+    Project viewPrj = ProjectUtils.getViewControllerProject(); 
+    if (appPrj!=null && viewPrj!=null)
+    {
+      // Code below causes following error:
+//      java.lang.IllegalArgumentException: Missing parameter. Parent element for object being depended on, must be specified
+//              at oracle.ide.model.DependableFactory.ensureParent(DependableFactory.java:252)
+//              at oracle.ide.model.DependableFactory.createDependable(DependableFactory.java:93)
+//              at oracle.ateam.sample.mobile.dt.controller.BusinessObjectGenerator.addAppControllerDependency(BusinessObjectGenerator.java:242)      
+      
+//      Dependable dep = DependableFactory.getInstance().createDependable(new Context(Ide.getActiveWorkspace(), appPrj));
+      Context ctx = Context.newIdeContext(appPrj);
+      ctx.setWorkspace(Ide.getActiveWorkspace());
+      ctx.setProject(appPrj);
+      Dependable dep = DependableFactory.getInstance().createDependable(ctx);
+      DependencyConfiguration.getInstance(viewPrj).addDependency(dep);      
+    }
   }
 
   private void setApplicationListenerClass(GeneratorLogPage log)

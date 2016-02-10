@@ -16,6 +16,7 @@ import java.awt.event.ActionListener;
 
 import java.io.File;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -393,8 +394,28 @@ public class RESTResourcesPanel
     List<DCMethod> resources = model.getRestResources();
     String connectionUri = model.getConnectionUri();
     String connectionName = model.getConnectionName();
-    List<HeaderParam> headerParams = model.getHeaderParams();
-
+    // copy the header params over, because in case of MCS connection, we do not want the MCS headers to be aded to the model.
+    
+//    List<HeaderParam> headerParams = model.getHeaderParams();
+    List<HeaderParam> headerParams = new ArrayList<HeaderParam>();
+    headerParams.addAll(model.getHeaderParams());
+    if (model.isUseMCS())
+    {
+      if (model.getMcsBackendId()!=null)
+      {
+        HeaderParam mbe = new HeaderParam();
+        mbe.setName("oracle-mobile-backend-id");
+        mbe.setValue(model.getMcsBackendId());
+        headerParams.add(mbe);
+      }
+      if (model.getMcsAnonymousAccessKey()!=null)
+      {
+        HeaderParam auth  = new HeaderParam();
+        auth.setName("Authorization");
+        auth.setValue("Basic "+model.getMcsAnonymousAccessKey());
+        headerParams.add(auth);
+      }
+    }
     try
     {
      if (resourceTypeSample.isSelected())
