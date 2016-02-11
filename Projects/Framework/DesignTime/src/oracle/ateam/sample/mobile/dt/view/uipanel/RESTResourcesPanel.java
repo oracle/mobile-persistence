@@ -394,34 +394,35 @@ public class RESTResourcesPanel
     List<DCMethod> resources = model.getRestResources();
     String connectionUri = model.getConnectionUri();
     String connectionName = model.getConnectionName();
-    // copy the header params over, because in case of MCS connection, we do not want the MCS headers to be aded to the model.
-    
-//    List<HeaderParam> headerParams = model.getHeaderParams();
-    List<HeaderParam> headerParams = new ArrayList<HeaderParam>();
-    headerParams.addAll(model.getHeaderParams());
-    if (model.isUseMCS())
-    {
-      if (model.getMcsBackendId()!=null)
-      {
-        HeaderParam mbe = new HeaderParam();
-        mbe.setName("oracle-mobile-backend-id");
-        mbe.setValue(model.getMcsBackendId());
-        headerParams.add(mbe);
-      }
-      if (model.getMcsAnonymousAccessKey()!=null)
-      {
-        HeaderParam auth  = new HeaderParam();
-        auth.setName("Authorization");
-        auth.setValue("Basic "+model.getMcsAnonymousAccessKey());
-        headerParams.add(auth);
-      }
-    }
+    List<HeaderParam> headerParams = model.getHeaderParams();
     try
     {
      if (resourceTypeSample.isSelected())
      {
+       // add MCS headers so we invoke sample MCS resources
+       // we add them in separate map, because they should not be added to individual data object methods,
+       // because the MCSPersistenceManager will inject them already.
+       List<HeaderParam> mcsHeaderParams = new ArrayList<HeaderParam>();
+       headerParams.addAll(model.getHeaderParams());
+       if (model.isUseMCS())
+       {
+         if (model.getMcsBackendId()!=null)
+         {
+           HeaderParam mbe = new HeaderParam();
+           mbe.setName("oracle-mobile-backend-id");
+           mbe.setValue(model.getMcsBackendId());
+           headerParams.add(mbe);
+         }
+         if (model.getMcsAnonymousAccessKey()!=null)
+         {
+           HeaderParam auth  = new HeaderParam();
+           auth.setName("Authorization");
+           auth.setValue("Basic "+model.getMcsAnonymousAccessKey());
+           headerParams.add(auth);
+         }
+       }
        RESTResourcesProcessor dataObjectParser =
-         new RESTResourcesProcessor(resources, connectionName, connectionUri, headerParams, pathParams,flattenNestedObjects.isSelected());
+         new RESTResourcesProcessor(resources, connectionName, connectionUri, headerParams, mcsHeaderParams, pathParams,flattenNestedObjects.isSelected());
         model.setDataObjectInfos(dataObjectParser.run());      
      }
      else

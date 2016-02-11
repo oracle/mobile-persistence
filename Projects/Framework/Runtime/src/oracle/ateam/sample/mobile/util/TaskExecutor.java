@@ -133,7 +133,7 @@ public class TaskExecutor
             size = executor.getQueue().size();
           }
           setRunning(false);
-          AdfmfJavaUtilities.flushDataChangeEvent();
+//          AdfmfJavaUtilities.flushDataChangeEvent();
           sLog.fine("No more background tasks running in TaskExecutor: " + size);
         };
       Thread t = new Thread(r2);
