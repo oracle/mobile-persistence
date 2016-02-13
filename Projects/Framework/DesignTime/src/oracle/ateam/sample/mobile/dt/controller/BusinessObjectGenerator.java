@@ -73,6 +73,7 @@ public class BusinessObjectGenerator
 {
   private BusinessObjectGeneratorModel model;
   private Project project;
+  private GeneratorLogPage log;
 
   public BusinessObjectGenerator(BusinessObjectGeneratorModel model)
   {
@@ -86,7 +87,7 @@ public class BusinessObjectGenerator
   {
     Project appControllerProject = ProjectUtils.getApplicationControllerProject();
 
-    GeneratorLogPage log = GeneratorLogPage.getPage(model.getLogTitle());
+    log = GeneratorLogPage.getPage(model.getLogTitle());
     log.initialize();
     log.info(model.getLogTitle()+" started");
 
@@ -221,7 +222,7 @@ public class BusinessObjectGenerator
       addWebServiceDataControlUsage(log);      
     }
 
-//    addAppControllerDependency();
+    addAppControllerDependency();
       
     log.info(model.getLogTitle()+" finished succesfully");
   }
@@ -243,8 +244,12 @@ public class BusinessObjectGenerator
       Context ctx = Context.newIdeContext(appPrj);
       ctx.setWorkspace(Ide.getActiveWorkspace());
       ctx.setProject(appPrj);
+      DependableFactory.Params params = new DependableFactory.Params(ctx);
+      params.setElement(project);
+      params.setParent(Ide.getActiveWorkspace());      
       Dependable dep = DependableFactory.getInstance().createDependable(ctx);
       DependencyConfiguration.getInstance(viewPrj).addDependency(dep);      
+      log.info(" Added dependency in ViewController project on ApplicationController project");
     }
   }
 

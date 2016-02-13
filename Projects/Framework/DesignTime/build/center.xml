@@ -1,7 +1,7 @@
 <updates version="1.0" xmlns="http://xmlns.oracle.com/jdeveloper/updatecenter">
    <update id="oracle.ateam.mobile.persistence" xmlns="http://xmlns.oracle.com/jdeveloper/update">
       <name>A-Team Mobile Persistence Accelerator</name>
-      <version>12.1.3.2.48</version>
+      <version>12.1.3.2.49</version>
       <author>Oracle Fusion Middleware A-Team (Steven Davelaar)</author>
       <author-url>http://www.ateam-oracle.com/?cat=1023</author-url>
       <description>
@@ -12,7 +12,7 @@ After you installed this extension, a readme file will be displayed that explain
       <requirements>
          <requires-extension id="oracle.j2ee" minVersion="12.1.3.0.0" maxVersion="12.9.9.99.99"/>
       </requirements>
-      <bundle-url>ateam-mobile-persistence.12.1.3.2.48-install.zip</bundle-url>
+      <bundle-url>ateam-mobile-persistence.12.1.3.2.49-install.zip</bundle-url>
       <post-startup-hook>oracle.ateam.sample.mobile.dt.MobileController</post-startup-hook>
    </update>
 </updates>
