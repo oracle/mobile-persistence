@@ -2,6 +2,10 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  14-feb-2016   Steven Davelaar
+  1.5           Disallowed multiple threads to use same DB connection when WAL is enabled. For this
+                to work, each thread must obtain its won DB cnnection instance, which means this
+                class needs to support connection pooling. This is a feature we might add later.
   10-dec-2015   Steven Davelaar
   1.4           Password encryption type prefix now added in PersistenceConfig.getDatabasePassword method
   25-nov-2015   Steven Davelaar
@@ -93,11 +97,15 @@ public class DBConnectionFactory
      // if we are  using Write Ahead Logging, then SQLite will take care of serailizing write calls, concurrent read calls are
      // supported with WAL, see https://www.sqlite.org/wal.html, otherwise, we allow only one thread to use the cnnection and only hand it out once
     // it has been released again
-    if (!PersistenceConfig.useWAL())
+    // Update: Concurrent reads must use their own DB connection, which means we need to rewrite this class to use connection pool.
+    // so, for now we always check whether connection is in use 
+//    if (!PersistenceConfig.useWAL())
+    if (true)
     {
         long startTime = System.currentTimeMillis();
         while (connectionInUse)
         {
+          sLog.severe("WAITING to acquire DB connection... Ms: "+(System.currentTimeMillis()-startTime));
           // another thread is still using the connection, wait until released
           // with a maximum of 30 seconds
           if (System.currentTimeMillis()-startTime > 30000)

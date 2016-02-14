@@ -420,7 +420,8 @@ public abstract class RestPersistenceManager
         String error = (causeError==null || "".equals(causeError)) ? rootError : causeError;
         wscall.setErrorMessage(error);        
       }
-      TaskExecutor.getLogInstance().execute(true, () ->
+      // Execute on separate thread and sequentially so we don;t run into issues with PK value already exist
+      TaskExecutor.getDBInstance().execute(true, () ->
       {
         new WebServiceCallService(false).saveWebServiceCall(wscall);        
       });

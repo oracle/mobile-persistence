@@ -13,3 +13,6 @@ mcs.connection=${WSM.connectionName}
 mcs.mobile-backend-id=${WSM.mcsBackendId}
 mcs.anonymous-key=${WSM.mcsAnonymousAccessKey}
 #end
+
+# background rest calls
+enable.parallel.rest.calls=true

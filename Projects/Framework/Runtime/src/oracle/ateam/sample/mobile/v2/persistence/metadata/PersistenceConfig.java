@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  14-feb-2016   Steven Davelaar
+  1.3           added property enable parallel rest calls.
   10-dec-2015   Steven Davelaar
   1.2           - Added support for storing passwiord in credential store using GeneratedPassword class
                 To use this, add db.generate.password=true to persistence-config.properties
@@ -60,6 +62,21 @@ public class PersistenceConfig
       return true;
     }
 //    return true;
+  }
+
+  public static boolean enableParallelRestCalls()
+  {
+    // allow unencrypted mode for developm,ent debugging purposes
+    try
+    {
+      String enable = config.getString("enable.parallel.rest.calls");
+      return "true".equals(enable);    
+    }
+    catch (MissingResourceException e)
+    {
+      // property not found, default to false for backwards compatibility
+      return false;
+    }
   }
 
   public static boolean useWAL()
