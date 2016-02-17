@@ -38,9 +38,9 @@ public class StorageObject
   private Long contentLength;
   private String collectionName;
   private String filePath;
-  private boolean localVersionIsCurrent = false;
+  private Boolean localVersionIsCurrent = false;
   private String directoryPath; 
-  private boolean storeOnDevice = true;
+  private Boolean storeOnDevice = true;
   private transient byte[] content;
 
   public String getCreatedOn()
@@ -69,7 +69,7 @@ public class StorageObject
   {
     String oldFilePath = this.filePath;
     this.filePath = filePath;
-//    propertyChangeSupport.firePropertyChange("filePath", oldFilePath, filePath);
+    propertyChangeSupport.firePropertyChange("filePath", oldFilePath, filePath);
   }
 
   public String getFilePath()
@@ -177,28 +177,28 @@ public class StorageObject
     return directoryPath;
   }
 
-  public void setLocalVersionIsCurrent(boolean localFileIsCurrent)
+  public void setLocalVersionIsCurrent(Boolean localFileIsCurrent)
   {
     this.localVersionIsCurrent = localFileIsCurrent;
   }
 
-  public boolean isLocalVersionIsCurrent()
+  public Boolean isLocalVersionIsCurrent()
   {
     return localVersionIsCurrent;
   }
 
 
-  public void setStoreOnDevice(boolean storeOnDevice)
+  public void setStoreOnDevice(Boolean storeOnDevice)
   {
     this.storeOnDevice = storeOnDevice;
   }
 
-  public boolean isStoreOnDevice()
+  public Boolean isStoreOnDevice()
   {
     return storeOnDevice;
   }
 
-  public boolean getStoreOnDevice()
+  public Boolean getStoreOnDevice()
   {
     return storeOnDevice;
   }

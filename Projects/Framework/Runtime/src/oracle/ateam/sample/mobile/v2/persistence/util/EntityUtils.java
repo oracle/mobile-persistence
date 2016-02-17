@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  16-feb-2016   Steven Davelaar
+  1.4           Added getRemotePersistenceManager, getClassInstance, added support for Boolean attrs
   21-aug-2015   Steven Davelaar
   1.3           Added check ib.getIterator is not null in refreshCurrentEntity
   19-mar-2015   Steven Davelaar
@@ -30,7 +32,6 @@ import oracle.adfmf.bindings.DataControl;
 import oracle.adfmf.bindings.dbf.AmxBindingContext;
 import oracle.adfmf.bindings.dbf.AmxIteratorBinding;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
-import oracle.adfmf.framework.api.MafExecutorService;
 import oracle.adfmf.framework.exception.AdfException;
 import oracle.adfmf.java.beans.ProviderChangeSupport;
 import oracle.adfmf.util.Utility;
@@ -39,6 +40,7 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.DateUtils;
 import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.manager.PersistenceManager;
+import oracle.ateam.sample.mobile.v2.persistence.manager.RemotePersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
@@ -145,6 +147,10 @@ public class EntityUtils
     else if (attrType == String.class)
     {
       return rawValue.toString();
+    }
+    else if (attrType == Boolean.class)
+    {
+      return "true".equalsIgnoreCase(rawValue.toString());
     }
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
     if (columnValue instanceof String && attrType.isAssignableFrom(Date.class))
@@ -508,46 +514,59 @@ public class EntityUtils
     return service;
   }
 
+  /**
+   *  Get an instance of the local persistence manager class as configured in persistence-mapping.xml
+   *  for the ClassMappingDescriptor of the entity class passed in.
+   * @param entityClass
+   * @return
+   */
   public static DBPersistenceManager getLocalPersistenceManager(ClassMappingDescriptor descriptor)
   {
-    // do not obtain persistence manager through new service instance, ight
-    // trgger unwanted (remote) findAll
-    //    EntityCRUDService service = getEntityCRUDService(descriptor);
-    //    if (service!=null)
-    //    {
-    //      return service.getLocalPersistenceManager();
-    //    }
     DBPersistenceManager pm = null;
     String className = descriptor.getLocalPersistenceManagerClassName();
-    if (className == null)
+    if (className == null || "".equals(className))
     {
       // might not be set for child entity
       className = DBPersistenceManager.class.getName();
     }
-    try
+    Object instance = getClassInstance(className);
+    if (instance instanceof DBPersistenceManager)
     {
-      Class pmClass = Utility.loadClass(className);
-      //        Class pmClass = Class.forName(className, false, Thread.currentThread().getContextClassLoader());
-      pm = (DBPersistenceManager) pmClass.newInstance();
+      pm =  (DBPersistenceManager)instance;
     }
-    catch (InstantiationException e)
+    else if (instance != null)
     {
-      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
-                             AdfException.ERROR);
-    }
-    catch (IllegalAccessException e)
-    {
-      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
-                             AdfException.ERROR);
-    }
-    catch (ClassNotFoundException e)
-    {
-      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
+      throw new AdfException("Local persistence manager class " + className + ": should extend DBPersistenceManager",
                              AdfException.ERROR);
     }
     return pm;
   }
 
+  /**
+   *  Get an instance of the remote persistence manager class as configured in persistence-mapping.xml
+   *  for the ClassMappingDescriptor of the entity class passed in.
+   * @param entityClass
+   * @return
+   */
+  public static RemotePersistenceManager getRemotePersistenceManager(ClassMappingDescriptor descriptor)
+  {
+    RemotePersistenceManager pm = null;
+    String className = descriptor.getRemotePersistenceManagerClassName();
+    if (className != null && !"".equals(className))
+    {
+      Object instance = getClassInstance(className);
+      if (instance instanceof RemotePersistenceManager)
+      {
+        pm =  (RemotePersistenceManager)instance;
+      }
+      else if (instance != null)
+      {
+        throw new AdfException("Remote persistence manager class " + className + ": should implement RemotePersistenceManager interface",
+                               AdfException.ERROR);
+      }
+    }
+    return pm;
+  }
 
   /**
    * Calls the add[EntityName] method using reflection in the EntityCRUDService subclass for
@@ -646,5 +665,36 @@ public class EntityUtils
         }
   }
 
+
+  public static Object getClassInstance(String className)
+  {
+    Object instance = null;
+    if (className == null || "".equals(className))
+    {
+      return null;
+    }
+    try
+    {
+      Class clazz = Utility.loadClass(className);
+      //      Class clazz = Class.forName(className, false, Thread.currentThread().getContextClassLoader());
+      instance = clazz.newInstance();
+    }
+    catch (InstantiationException e)
+    {
+      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
+                             AdfException.ERROR);
+    }
+    catch (IllegalAccessException e)
+    {
+      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
+                             AdfException.ERROR);
+    }
+    catch (ClassNotFoundException e)
+    {
+      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
+                             AdfException.ERROR);
+    }
+    return instance;
+  }
 
 }

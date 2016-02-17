@@ -5,14 +5,14 @@
                       ImplDef="oracle.adf.model.adapter.bean.BeanDCDefinition" SupportsTransactions="false"
                       SupportsSortCollection="true" SupportsResetState="false" SupportsRangesize="false"
                       SupportsFindMode="false" SupportsUpdates="true"
-                      Definition="oracle.ateam.sample.mobile.datasynch.model.DataSynchService"
-                      BeanClass="oracle.ateam.sample.mobile.datasynch.model.DataSynchService"
+                      Definition="oracle.ateam.sample.mobile.v2.persistence.service.DataSynchService"
+                      BeanClass="oracle.ateam.sample.mobile.v2.persistence.service.DataSynchService"
                       xmlns="http://xmlns.oracle.com/adfm/datacontrol">
     <CreatableTypes>
-      <TypeInfo FullName="oracle.ateam.sample.mobile.datasynch.model.DataSynchService"/>
+      <TypeInfo FullName="oracle.ateam.sample.mobile.v2.persistence.service.DataSynchService"/>
     </CreatableTypes>
     <Source>
-      <bean-definition BeanClass="oracle.ateam.sample.mobile.datasynch.model.DataSynchService"
+      <bean-definition BeanClass="oracle.ateam.sample.mobile.v2.persistence.service.DataSynchService"
                        xmlns="http://xmlns.oracle.com/adfm/adapter/bean"/>
     </Source>
   </AdapterDataControl>

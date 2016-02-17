@@ -88,13 +88,13 @@ public class PageDefGenerator
     log.info("Page definition " + pageDefName + " created");
   }
 
-  public void createDataSynchBindings()
-    throws java.beans.PropertyVetoException
-  {
-//    createDataSynchIterator(dataObject);
-    String attrName = "has"+dataObject.getRootDataObject().getName()+"DataSynchActions";
-    createValueBinding(attrName, dataControlName + "Iterator", attrName);
-  }
+//  public void createDataSynchBindings()
+//    throws java.beans.PropertyVetoException
+//  {
+////    createDataSynchIterator(dataObject);
+//    String attrName = "has"+dataObject.getRootDataObject().getName()+"DataSynchActions";
+//    createValueBinding(attrName, dataControlName + "Iterator", attrName);
+//  }
 
   public String createDeleteBinding(UIDataObjectInfo dataObject)
     throws java.beans.PropertyVetoException
@@ -357,7 +357,8 @@ public class PageDefGenerator
   {
     // if we set type to "boolean", it is still generated as java.lang.Boolean, so we changed the typ
     // on the synchronize method to java.lang.Boolean
-    String methodName = "synchronize"+dataObject.getRootDataObject().getName();
+//    String methodName = "synchronize"+dataObject.getRootDataObject().getName();
+    String methodName = "synchronize";
     createMethodBinding(methodName, methodName, true,
                         createNamedDataList("inBackground", "java.lang.Boolean", "true"));
     return methodName;

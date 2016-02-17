@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
-import oracle.adfmf.framework.api.MafExecutorService;
 import oracle.adfmf.framework.exception.AdfException;
 
 import oracle.ateam.sample.mobile.v2.persistence.service.IndirectList;
@@ -205,7 +204,7 @@ public abstract class Entity<E> extends ChangeEventSupportable
    */
   public void refreshChildEntityList(List oldList, List newList, String childAttribute)
   {
-    MafExecutorService.execute(() -> 
+    TaskExecutor.getInstance().executeUIRefreshTask(() -> 
     {
       getPropertyChangeSupport().firePropertyChange(childAttribute, oldList, newList);
       getProviderChangeSupport().fireProviderRefresh(childAttribute);

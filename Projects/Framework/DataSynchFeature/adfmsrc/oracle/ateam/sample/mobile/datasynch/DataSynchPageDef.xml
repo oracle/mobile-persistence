@@ -5,10 +5,10 @@
   <executables>
     <variableIterator id="variables"/>
     <iterator Binds="root" RangeSize="25" DataControl="DataSynchService" id="DataSynchServiceIterator"/>
-    <accessorIterator MasterBinding="DataSynchServiceIterator" Binds="currentDataSynchManager" RangeSize="25"
+    <accessorIterator MasterBinding="DataSynchServiceIterator" Binds="dataSynchManager" RangeSize="25"
                       DataControl="DataSynchService" BeanClass="oracle.ateam.sample.mobile.persistence.service.DataSynchManager"
-                      id="currentDataSynchManagerIterator"/>
-    <accessorIterator MasterBinding="currentDataSynchManagerIterator" Binds="dataSynchActions" RangeSize="25"
+                      id="dataSynchManagerIterator"/>
+    <accessorIterator MasterBinding="dataSynchManagerIterator" Binds="dataSynchActions" RangeSize="25"
                       DataControl="DataSynchService" BeanClass="oracle.ateam.sample.mobile.persistence.service.DataSynchAction"
                       id="dataSynchActionsIterator"/>
   </executables>
@@ -55,10 +55,10 @@
       </AttrNames>
     </attributeValues>
     <action IterBinding="dataSynchActionsIterator" id="Delete" RequiresUpdateModel="false" Action="removeCurrentRow"/>
-    <methodAction IterBinding="currentDataSynchManagerIterator" id="synchronize" RequiresUpdateModel="true"
+    <methodAction IterBinding="dataSynchManagerIterator" id="synchronize" RequiresUpdateModel="true"
                   Action="invokeMethod" MethodName="synchronize" IsViewObjectMethod="false"
                   DataControl="DataSynchService"
-                  InstanceName="bindings.currentDataSynchManagerIterator.currentRow.dataProvider"
+                  InstanceName="bindings.dataSynchManagerIterator.currentRow.dataProvider"
                   IsLocalObjectReference="true">
       <NamedData NDName="inBackground" NDValue="#{true}"
                  NDType="boolean"/>

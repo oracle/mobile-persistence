@@ -9,7 +9,6 @@
 #set ($iteratorName = "${dataObject.accessorName}Iterator")
 $pageDef.createListPageDef($taskFlow.name)
 $pageDef.createIteratorBindings($dataObject)
-$pageDef.createDataSynchBindings()
   <amx:panelPage id="firstPage">
     <amx:facet name="header">
       <amx:outputText value="${dataObject.displayTitlePlural}" id="ot1"/>

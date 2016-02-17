@@ -2,6 +2,9 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  14-feb-2016   Steven Davelaar
+  1.5           - Changed implementation to handle all sync actions for all entities
+                - added method dataSynchFinished
   01-feb-2016   Steven Davelaar
   1.4           Fixed issue in mergeWithExistingDataSyncActionIfNeeded with Update action
                 followed by delete action
@@ -25,20 +28,20 @@ import java.util.Map;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.api.JSONBeanSerializationHelper;
 
-import oracle.adfmf.framework.api.MafExecutorService;
 
 import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.model.ChangeEventSupportable;
 import oracle.ateam.sample.mobile.util.MessageUtils;
 import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
+import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 
 
 /**
- * Class that manages remote data synchronization actions for a specific EntityCRUDService.
- * If a remote persistence manager is configured in the EntityCRUDService instance, and the create, update or remove
+ * Class that manages remote data synchronization actions 
+ * If a remote persistence manager is configured in persistence-mapping.xml for the given entity, and the create, update or remove
  * operation on the remote persistence manager fails, for example because the device is offline or the remote server is not reachable,
  * or the specific REST service is not running or the REST service call returns an error, then this failed remote transaction is registered
  * as a pending data synchronization action in this manager.
@@ -46,82 +49,86 @@ import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
  * When the application is closed or abandoned, the pending data synch actions are persisted to a table in
  * the SQLite database.
  * This persistence is implemented in method saveSynchActionsToDB(). When a new instance of the DataSynchManager is created,
- * typically when the entity CRUD service class is instantiated, the persisted data synch actions will be loaded again.
+ * the persisted data synch actions will be loaded again.
  *
  */
 public class DataSynchManager
   extends ChangeEventSupportable
 {
-  private transient EntityCRUDService crudService;
   private transient List dataSynchActions = new ArrayList();
   private transient boolean dataSynchRunning = false;
 
-  // dummy attrs to prevent JSON serialization
-  private transient List<DataSynchManager> registeredDataSynchManagers;
-
-  public DataSynchManager(EntityCRUDService crudService)
+  private transient static DataSynchManager sInstance;
+  
+  private EntityCRUDService callbackCrudService;
+    
+  /**
+   * Create singleton instance of DataSynchManager.
+   * If you want to use your own subclass of DataSynchManager to extend/override the default behavior, then
+   * you can specify the fully qualified class name in mobile-persistence-config.properties using property
+   * datasync.manager.class
+   * @return
+   */
+  public static synchronized DataSynchManager getInstance()
   {
-    super();
-    this.crudService = crudService;
-    //    loadSynchActionsFromFile();
-    if (ClassMappingDescriptor.getInstance(crudService.getEntityClass()).isEnableOfflineTransactions())
+    if (sInstance==null)
     {
-      loadSynchActionsFromDB();      
-    }
-    // register after loading actions from DB, loading might fail, and then we registered invalid
-    // manager
-    registerDataSynchManager();
-  }
-
-  public static List<DataSynchManager> getRegisteredDataSynchManagers()
-  {
-    List<DataSynchManager> syncManagers =
-      (List<DataSynchManager>) AdfmfJavaUtilities.evaluateELExpression("#{applicationScope.dataSynchManagers}");
-    return syncManagers;
-  }
-
-  public static DataSynchManager geDataSynchManager(String entityClass)
-  {
-    DataSynchManager curManager = null;
-    List<DataSynchManager> managers = getRegisteredDataSynchManagers();
-    for (DataSynchManager manager: managers)
-    {
-      if (entityClass.equals(manager.getCrudService().getEntityClass().getName()))
+      String className = PersistenceConfig.getDataSynchManagerClass();
+      if (className!=null)
       {
-        curManager = manager;
-        break;
+        sInstance = (DataSynchManager) EntityUtils.getClassInstance(className);     
+      }
+      else
+      {
+        sInstance = new DataSynchManager();        
       }
     }
-    return curManager;
+    return sInstance;
   }
 
-  protected void registerDataSynchManager()
+  private DataSynchManager()
   {
-    List<DataSynchManager> syncManagers =
-      (List<DataSynchManager>) AdfmfJavaUtilities.evaluateELExpression("#{applicationScope.dataSynchManagers}");
-    if (syncManagers == null)
-    {
-      syncManagers = new ArrayList<DataSynchManager>();
-      Map appscope = (Map) AdfmfJavaUtilities.evaluateELExpression("#{applicationScope}");
-      appscope.put("dataSynchManagers", syncManagers);
-    }
-    syncManagers.add(this);
+    super();
+    loadSynchActionsFromDB();      
   }
 
+  /**
+   * Get instance of DataSynchronizer.
+   */
+  protected DataSynchronizer getDataSynchronizer(DataSynchPayload payload)
+  {
+    return new DataSynchronizer(this, payload);
+  }
+
+  /**
+   * Perform data synchronization using the DataSynchronizer class
+   * @param inBackground
+   */
   public void synchronize(boolean inBackground)
+  {
+    synchronize(inBackground,null);
+  }
+
+  /**
+   * Perform data synchronization using the DataSynchronizer class
+   * @param inBackground
+   * @param callbackCrudService the service to which the dataSynchFinished method call is propagated
+   */
+  public void synchronize(boolean inBackground, EntityCRUDService callbackCrudService)
   {
     if (isDataSynchRunning() || getDataSynchActions().size() == 0)
     {
       return;
     }
+    this.callbackCrudService = callbackCrudService;
     DataSynchPayload payload = new DataSynchPayload();
     payload.setDataSynchActions(getDataSynchActions());
-    DataSynchronizer syncher = new DataSynchronizer(this, payload);
+    DataSynchronizer syncher = getDataSynchronizer(payload);
     //   we now clear a synch action after succesfull processing in DataSynchronizer class
     //    clearDataSynchActions();
     TaskExecutor.getInstance().execute(inBackground, syncher);
   }
-
+  
   protected String toJSON(DataSynchPayload payload)
   {
     String json = "";
@@ -146,16 +153,6 @@ public class DataSynchManager
     {
     }
     return null;
-  }
-
-  protected void setCrudService(EntityCRUDService crudService)
-  {
-    this.crudService = crudService;
-  }
-
-  protected EntityCRUDService getCrudService()
-  {
-    return crudService;
   }
 
   //  protected void clearDataSynchActions()
@@ -198,7 +195,8 @@ public class DataSynchManager
     //    refreshDataSynchActionsList(oldArray);
     refreshHasDataSynchActions(oldList.size() > 0);
     // we save to DB when last synch error is not null.
-    if (synchAction.getLastSynchError() != null && crudService.isOfflineTransactionsEnabled())
+    boolean offlineTransactionsEnabled = ClassMappingDescriptor.getInstance(synchAction.getEntityClass()).isEnableOfflineTransactions();
+    if (synchAction.getLastSynchError() != null && offlineTransactionsEnabled)
     {
       saveDataSynchAction(synchAction);
     }
@@ -208,8 +206,9 @@ public class DataSynchManager
    * If a sync action for the same entity instance already exists, we merge the new sync action with
    * the existing one. This saves a server roundtrip and is needed when the existing sync action is a
    * create action where the server derives a new primary key. Then the second (update sync action)
-   * will fail because the primary key has changed. If the existing sync action is a create action
-   * and the new sync action is a remove, we remove both sync actions.
+   * would fail because the primary key has changed, By merging the create and update sync actions into one action,
+   * we solve the problem of server-derived primary key change.
+   * If the existing sync action is a create action and the new sync action is a remove, we remove both sync actions.
    * @param synchAction
    * @return returns true when the new sync has been merged and does not need its own registration
    */
@@ -279,29 +278,27 @@ public class DataSynchManager
     synchAction.setIsNewEntity(false);
   }
 
+  /**
+   * Return instance of DBPersistenceManager that is used to read and write data sync actions to SQLite DB.
+   * @return
+   */
   protected DBPersistenceManager getDBPersistenceManager()
   {
-    DBPersistenceManager pm = getCrudService().getLocalPersistenceManager();
-    if (pm == null)
-    {
-      // use default pm
-      pm = new DBPersistenceManager();
-    }
-    return pm;
+    return new DBPersistenceManager();
   }
 
+  /**
+   * Send data change events so UI can refresh based on current number of pending data sync action
+   * @param oldList
+   */
   protected void refreshDataSynchActionsList(List<DataSynchAction> oldList)
   {
     List<DataSynchAction> newList = getDataSynchActions();
     boolean oldHasDataSynchActions = oldList.size() > 0;
+    refreshHasDataSynchActions(oldHasDataSynchActions);
 
-    MafExecutorService.execute(() -> 
+    TaskExecutor.getInstance().executeUIRefreshTask(() -> 
     {
-      if (getHasDataSynchActions() != oldHasDataSynchActions)
-      {
-        getPropertyChangeSupport().firePropertyChange("hasDataSynchActions", oldHasDataSynchActions,
-                                                      getHasDataSynchActions());
-      }
       getPropertyChangeSupport().firePropertyChange("dataSynchActions", oldList, newList);
       getProviderChangeSupport().fireProviderRefresh("dataSynchActions");
       AdfmfJavaUtilities.flushDataChangeEvent();                        
@@ -320,19 +317,18 @@ public class DataSynchManager
   /**
    * This method fires property change events when value of property hasDataSynchActions has changed.
    * It also sets the current number of data sync actions in an applicationScope variable named
-   * [entityListName]_DataSyncActionsCount. For example: employees_DataSyncActionsCount.
-   * The entityListName is the value retirned by method getEntityListName() in the concrete subclass
-   * of EntityCrudService.
-   * This applicationScope variable can be used by the UI to
-   * show a badge on a UI widget to show the current number of pending data sync actions.
+   * ampa_DataSyncActionsCount, and it sets the boolean applicationScope variable named ampa_hasDataSyncActions
+   * This applicationScope variable can be used by the UI to show a badge on a UI widget to show the 
+   * current number of pending data sync actions.
    * @param oldValue
    */
   protected void refreshHasDataSynchActions(boolean oldValue)
   {
-    String name = getCrudService().getEntityListName() + "_dataSyncActionsCount";
-    AdfmfJavaUtilities.setELValue("#{applicationScope." + name + "}", new Integer(getDataSynchActions().size()));
-    MafExecutorService.execute(() -> 
+//    String name = getCrudService().getEntityListName() + "_dataSyncActionsCount";
+    TaskExecutor.getInstance().executeUIRefreshTask(() -> 
     {
+      AdfmfJavaUtilities.setELValue("#{applicationScope.ampa_dataSyncActionsCount}", new Integer(getDataSynchActions().size()));
+      AdfmfJavaUtilities.setELValue("#{applicationScope.ampa_hasDataSyncActions}", getHasDataSynchActions());
       if (getHasDataSynchActions() != oldValue)
       {
         getPropertyChangeSupport().firePropertyChange("hasDataSynchActions", oldValue, getHasDataSynchActions());
@@ -377,39 +373,9 @@ public class DataSynchManager
     refreshHasDataSynchActions(true);
   }
 
-  //  protected String getFilePath()
-  //  {
-  //    String dir = AdfmfJavaUtilities.getDirectoryPathRoot(AdfmfJavaUtilities.ApplicationDirectory);
-  //    String path = dir + "/" + crudService.getEntityClass() + "DataSynchActions.json";
-  //    return path;
-  //  }
-
-  //  public void saveSynchActionsToFile()
-  //  {
-  //    if (getDataSynchActionList().size()==0)
-  //    {
-  //      return;
-  //    }
-  //    DataSynchPayload payload = new DataSynchPayload();
-  //    payload.setDataSynchActions(getDataSynchActions());
-  //    String json = toJSON(payload);
-  //    PrintStream out = null;
-  //    try
-  //    {
-  //      out = new PrintStream(new FileOutputStream(getFilePath()));
-  //      out.print(json);
-  //    }
-  //    catch (FileNotFoundException e)
-  //    {
-  //      throw new AdfException("Cannot save synch actions to file: "+e.getLocalizedMessage(),AdfException.ERROR);
-  //    }
-  //    finally
-  //    {
-  //      if (out != null)
-  //        out.close();
-  //    }
-  //  }
-
+  /**
+   * Write all sync actions to SYNCH_ACTION DB table
+   */
   public void saveSynchActionsToDB()
   {
     if (getDataSynchActions().size() == 0)
@@ -423,12 +389,13 @@ public class DataSynchManager
     }
   }
 
+  /**
+   * Read all sync actions from SYNCH_ACTION DB table
+   */
   public void loadSynchActionsFromDB()
   {
-    DBPersistenceManager pm = getCrudService().getLocalPersistenceManager();
-    List<String> attrNamesToSearch = new ArrayList<String>();
-    attrNamesToSearch.add("serviceClass");
-    this.dataSynchActions = pm.find(DataSynchAction.class, getCrudService().getClass().getName(), attrNamesToSearch);
+    DBPersistenceManager pm = getDBPersistenceManager();
+    this.dataSynchActions = pm.findAll(DataSynchAction.class);
     for (int i = 0; i < dataSynchActions.size(); i++)
     {
       // create entity instance in synch action from json string
@@ -443,11 +410,47 @@ public class DataSynchManager
   }
 
   /**
-   *  Returns true when there are pending data synch actions for this data synch manager.
+   *  Returns true when there are pending data synch actions 
    */
   public boolean getHasDataSynchActions()
   {
     return getDataSynchActions().size() > 0;
   }
 
+  /**
+   * Callback method called by DataSynchronizer when dataSychronization action is done. It contains a list of succeeded
+   * and failed data sync actions. You can override this method to add custom logic after data synchronization has taken place.
+   * For example, you could warn the end user that one or more transactions have failed and will be re-tried later, or you can
+   * inform them that all pending data sync actions have been processed successfully.
+   * @param succeededDataSynchActions
+   * @param failedDataSynchActions
+   */
+  protected void dataSynchFinished(List<DataSynchAction> succeededDataSynchActions,
+                                   List<DataSynchAction> failedDataSynchActions)
+  {
+    if (callbackCrudService!=null)
+    {
+      callbackCrudService.dataSynchFinished(succeededDataSynchActions, failedDataSynchActions);
+    }
+    //    int ok = succeededDataSynchActions.size();
+    //    int fails = failedDataSynchActions.size();
+    //    int total = ok + fails;
+    //    MessageUtils.handleMessage(AdfException.INFO,
+    //                               total + " data synch actions completed. Successful: " + ok + ", Failed: " + fails);
+  }
+  
+  /**
+   * This method is called by the framework under following conditions
+   * - user performs an action that triggers a transaction against a remote persistence manager
+   * - offline transactions are disabled (enableOfflineTransactions=false in persistence-mapping.xml)
+   * - the device is offline or the remote service call fails.
+   * This method will take the error message recorded against the data sync action and present it to the
+   * end user.
+   * @param dataSynchAction
+   */
+  protected void reportFailedTransaction(DataSynchAction dataSynchAction)
+  {
+    MessageUtils.handleError(dataSynchAction.getLastSynchError());
+  }
+  
 }

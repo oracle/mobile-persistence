@@ -24,9 +24,6 @@
          <findMethod uri="/platform/storage/collections/{collection}/objects" connectionName="" requestType="GET" secured="false" sendDataObjectAsPayload="false" payloadElementName="root">
             <parameter name="collection" valueProvider="SearchValue" pathParam="true"/>
          </findMethod>
-         <customMethod name="getAllObjectsMetadata" uri="/platform/storage/collections/{collection}/objects" connectionName="" requestType="GET" secured="false" sendDataObjectAsPayload="false" payloadElementName="root">
-            <parameter name="collection" value="collectionName" valueProvider="DataObjectAttribute" dataObjectAttribute="id" pathParam="true"/>
-         </customMethod>
       </methods>
    </classMappingDescriptor>
   <classMappingDescriptor className="oracle.ateam.sample.mobile.v2.persistence.service.DataSynchAction"

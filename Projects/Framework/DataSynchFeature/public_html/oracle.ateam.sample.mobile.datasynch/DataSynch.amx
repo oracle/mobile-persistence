@@ -37,7 +37,7 @@
           </amx:tableLayout>
           <amx:setPropertyListener from="#{row.rowKey}" type="action"
                                    to="#{bindings.dataSynchActionsIterator.iterator.currentIndexWithKey}" id="spl2"/>
-          <amx:showPopupBehavior id="spb1" popupId="p1" type="action" alignId="pp1" align="overlapBottom"/>
+          <amx:showPopupBehavior id="spb1" popupId="p1" type="action" alignId="pp1" align="overlapMiddleCenter"/>
         </amx:listItem>
       </amx:listView>
       <!--<amx:panelGroupLayout id="pgl3" layout="horizontal" halign="center">

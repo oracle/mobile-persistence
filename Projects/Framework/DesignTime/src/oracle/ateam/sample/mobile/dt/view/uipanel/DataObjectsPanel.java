@@ -7,8 +7,6 @@
 ******************************************************************************/
 package oracle.ateam.sample.mobile.dt.view.uipanel;
 
-import com.sun.org.apache.xpath.internal.operations.String;
-
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -162,6 +160,16 @@ public class DataObjectsPanel
         {
           // clear find-all method that might be set for child data objects UNLESS it is an "existing" method
           doi.setFindAllMethod(null);            
+        }
+        // set up default persistence managers
+        if (doi.getRemotePersistenceManager()==null)
+        {
+          // new Data object, need to default persistence managers
+          String remotePersistenceManager =  doi.isXmlPayload() ? "RestXMLPersistenceManager" : 
+            ( model.isUseMCS() ? "MCSPersistenceManager" : "RestJSONPersistenceManager");
+          doi.setLocalPersistenceManager("oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager");
+          doi.setRemotePersistenceManager("oracle.ateam.sample.mobile.v2.persistence.manager." +
+                                              remotePersistenceManager);
         }
       }
     }

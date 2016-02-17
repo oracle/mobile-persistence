@@ -26,7 +26,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
+import javax.el.ValueExpression;
+
 import javax.microedition.io.HttpConnection;
+
+import oracle.adf.model.datacontrols.device.DeviceManagerFactory;
 
 import oracle.adfmf.dc.ws.rest.RestServiceAdapter;
 import oracle.adfmf.framework.api.AdfmfContainerUtilities;
@@ -63,6 +67,8 @@ public class MCSPersistenceManager
   private static final String LOGIN_URI = "/platform/users/login";
   private static final String LOGOUT_URI = "/platform/users/logout";
   private static final String ANALYTICS_EVENTS_URI = "/platform/analytics/events";
+  private static final String REGISTER_DEVICE_URI = "/platform/devices/register";
+  private static final String DEREGISTER_DEVICE_URI = "/platform/devices/deregister";
   private static final String STORAGE_COLLECTIONS_URI = "/platform/storage/collections/";
   private static final String CONTENT_TYPE = "Content-Type";
   private static final String ORACLE_MOBILE_BACKEND_ID = "Oracle-Mobile-Backend-Id";
@@ -88,7 +94,9 @@ public class MCSPersistenceManager
    * in any further MCS REST call through method addMCSHeaderParamsIfNeeded.
    * Note that it is preferred to use the standard MAF login functionality, rather than this custom login method. When using
    * the MAF login functionality, MAF itself will inject the Oracle mobile backend id and Authorization header on every
-   * MCS REST call. The standard MAF login functionality also allows you to use OAuth insteaf of basic authentication, amd allows 
+   * MCS REST call. This will override the mobile backend-id and anonymous access key defined in 
+   * mobile-persistence-config.properties.
+   * The standard MAF login functionality also allows you to use OAuth insteaf of basic authentication, amd allows 
    * you to remember username and/or password, saving them encrypted in the keychain.
    * @param userName
    * @param password
@@ -194,6 +202,7 @@ public class MCSPersistenceManager
     if (ClassMappingDescriptor.getInstance(storageObject.getClass()).isPersisted())
     {
       getLocalPersistenceManager().mergeEntity(storageObject, true);
+      storageObject.setIsNewEntity(false);
     }
   }
 
@@ -502,6 +511,47 @@ public class MCSPersistenceManager
     }
 
     return writer.toString();
+  }
+
+  /**
+   * Method to register mobile device with MCS so it can receive push notifications.
+   * The token is the value you get passed in through the EventListener.onOpen method that
+   * you need to implement to enable push notifiations. See MAF Develoepr's guide for more info.
+   * @param token
+   * @param appId
+   * 
+   * @return MCS response payload
+   */
+  public String registerDevice(String token, String appId, String appVersion)
+  {
+    String os = DeviceManagerFactory.getDeviceManager().getOs().equalsIgnoreCase("IOS") ? "IOS" : "ANDROID";
+    String payload =
+        "{\"notificationToken\": \""+token+"\",\"mobileClient\": {\"id\": \"" + appId +
+        "\",\"version\": \""+appVersion+"\",\"platform\": \""+os+"\"}}";    
+    sLog.fine("Request payload for registerDevice: "+payload);
+    String result = invokeRestService(getConnectionName(), "POST", REGISTER_DEVICE_URI, payload, null,0, false);
+    sLog.fine("Response payload for registerDevice: "+result);
+    return result;
+  }
+
+  /**
+   * Method to deregister mobile device with MCS so it will no longer receive push notifications.
+   * 
+   * @param token
+   * @param appId
+   * 
+   * @return MCS response payload
+   */
+  public String deregisterDevice(String token, String appId)
+  {
+    String os = DeviceManagerFactory.getDeviceManager().getOs().equalsIgnoreCase("IOS") ? "IOS" : "ANDROID";
+    String payload =
+        "{\"notificationToken\": \""+token+"\",\"mobileClient\": {\"id\": \"" + appId +
+        "\",\"platform\": \""+os+"\"}}";    
+    sLog.fine("Request payload for deregisterDevice: "+payload);
+    String result = invokeRestService(getConnectionName(), "POST", DEREGISTER_DEVICE_URI, payload, null,0, false);
+    sLog.fine("Response payload for deregisterDevice: "+result);
+    return result;
   }
 
 }

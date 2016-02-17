@@ -105,7 +105,8 @@ public class StorageObjectService
    * If the storeOnDevice flag of the storage object is true, the metadata are stored
    * in SQLite DB, and the content is written to the file system.
    * If remoteWriteInBackrgound flag is set to true, the storage in MCS happens
-   * in background.
+   * in background. If we are in offline mode, the store action will be saved as apending
+   * sync action.
    * 
    * @param storageObject
    */
@@ -115,10 +116,7 @@ public class StorageObjectService
     {
       saveStorageObjectOnDevice(storageObject);
     }
-    TaskExecutor.getInstance().execute(isDoRemoteWriteInBackground(), () ->
-    {
-      getMCSPersistenceManager().storeStorageObject(storageObject);
-    });
+    saveStorageObjectInMCS(storageObject);
   }
 
   /**
@@ -129,11 +127,11 @@ public class StorageObjectService
    */
   public void saveStorageObjectOnDevice(StorageObject storageObject)
   {
-    
-    // storeOnDevic flag need to be added to PM and sql ddl
-      getLocalPersistenceManager().mergeEntity(storageObject, isAutoCommit());
-      storageObject.setIsNewEntity(false);
-      saveStorageObjectToFileSystem(storageObject);
+    // first store on file syste so filePath is set on StorageObject and
+    // also saved
+    saveStorageObjectToFileSystem(storageObject);
+    getLocalPersistenceManager().mergeEntity(storageObject, isAutoCommit());
+    storageObject.setIsNewEntity(false);
   }
 
   /**
@@ -143,6 +141,7 @@ public class StorageObjectService
    */
   public void saveStorageObjectInMCS(StorageObject storageObject)
   {
+    // We use UPDATE_ACTION, 
     writeEntityRemote(new DataSynchAction(DataSynchAction.UPDATE_ACTION, storageObject, this.getClass().getName()));
   }
 
@@ -193,7 +192,10 @@ public class StorageObjectService
   }
     
   /**
-   * 
+   * Looks up a StorageObject in the entity cache, and if it is not there, it queries
+   * the SQLite DB. If storage object is not found, a new instance is returned with
+   * the id and collectionName set the arguments passed into this method. This instance
+   * is also added to the entity cache.
    * @param collection
    * @param objectId
    * @return
@@ -207,10 +209,16 @@ public class StorageObjectService
     }
     if (storageObject==null)
     {
+      sLog.fine("Storage Object NOT found for collection "+collection+" and ID "+objectId);      
       storageObject = new StorageObject();
       storageObject.setId(objectId);    
       storageObject.setCollectionName(collection);
+      storageObject.setIsNewEntity(true);
       EntityCache.getInstance().addEntity(storageObject);
+    }
+    else
+    {
+      sLog.fine("Storage Object found for collection "+collection+" and ID "+objectId);      
     }
     return storageObject;
   }

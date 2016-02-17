@@ -33,6 +33,7 @@ import oracle.ateam.sample.mobile.v2.persistence.db.DBConnectionFactory;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingOneToMany;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
+import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 
 
@@ -444,7 +445,8 @@ public class RestJSONPersistenceManager
         // For this to work, we need to enable WAL (can be done now through db.use.WAL in persistence-config) 
         // , but still causes issues on Android "Error in SQL step", 
         // so keep it to false for now
-        dbpm.mergeRow(bindParamInfos, true);
+//        dbpm.mergeRow(bindParamInfos, true);
+        dbpm.mergeRow(bindParamInfos, !PersistenceConfig.useWAL());
       }
       else
       {

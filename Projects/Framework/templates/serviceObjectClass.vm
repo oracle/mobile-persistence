@@ -171,16 +171,6 @@ public class ${WSM.currentDataObject.serviceClassName}
   }
   #end
 
-
-    /**
-     * Synchronizes all pending data sync actions using the remote persistence manager
-     * @param inBackground
-     */
-    public void synchronize${WSM.currentDataObject.className}(Boolean inBackground)
-    {
-      super.synchronize(inBackground);
-    }
-
     /**
      * Resets the values of the ${WSM.currentDataObject.classVariableName} instance to the values as stored in the SQLite database. This method
      * will do nothing when the ${WSM.currentDataObject.classVariableName} is not persisted to the database.
@@ -190,14 +180,7 @@ public class ${WSM.currentDataObject.serviceClassName}
     {
       super.resetEntity(${WSM.currentDataObject.classVariableName});
     }
-    
-    /**
-     * Returns true when there are pending ${WSM.currentDataObject.classVariableName} data sync actions. Returns false if there are no such actions.
-     */
-    public boolean getHas${WSM.currentDataObject.className}DataSynchActions()
-    {
-      return getDataSynchManager().getHasDataSynchActions();
-    }
+
 
   #foreach($method in ${WSM.currentDataObject.customMethods})
     /**

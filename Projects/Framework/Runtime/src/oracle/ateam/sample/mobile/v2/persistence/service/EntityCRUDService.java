@@ -33,12 +33,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import oracle.adf.model.datacontrols.device.DeviceManagerFactory;
 
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
-import oracle.adfmf.framework.api.MafExecutorService;
-import oracle.adfmf.framework.exception.AdfException;
-import oracle.adfmf.util.Utility;
 
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.MessageUtils;
@@ -102,9 +98,6 @@ public abstract class EntityCRUDService<E extends Entity>
   {
     super();
     initialize();
-    // we call getDataSynchManager so any pending data synch actions are loaded from the DB
-    // and processed just before the first read/write operation
-    getDataSynchManager();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(getEntityClass());
     if (descriptor.isAutoQuery())
     {
@@ -124,9 +117,6 @@ public abstract class EntityCRUDService<E extends Entity>
   {
     super();
     initialize();
-    // we call getDataSynchManager so any pending data synch actions are loaded from the DB
-    // and processed just before the first read/write operation
-    getDataSynchManager();
     if (doAutoQuery)
     {
       findAll();
@@ -345,24 +335,6 @@ public abstract class EntityCRUDService<E extends Entity>
     MessageUtils.handleError(dataSynchAction.getLastSynchError());
   }
 
-  /**
-   * Callback method called by DataSynchronizer when dataSychronization action is done. It contains a list of succeeded
-   * and failed data sync actions. You can override this method to add custom logic after data synchronization has taken place.
-   * For example, you could warn the end user that one or more transactions have failed and will be re-tried later, or you can
-   * inform them that all pending data sync actions have been processed successfully.
-   * @param succeededDataSynchActions
-   * @param failedDataSynchActions
-   */
-  protected void dataSynchFinished(List<DataSynchAction> succeededDataSynchActions,
-                                   List<DataSynchAction> failedDataSynchActions)
-  {
-    refreshEntityList(getEntityList());
-    //    int ok = succeededDataSynchActions.size();
-    //    int fails = failedDataSynchActions.size();
-    //    int total = ok + fails;
-    //    MessageUtils.handleMessage(AdfException.INFO,
-    //                               total + " data synch actions completed. Successful: " + ok + ", Failed: " + fails);
-  }
 
   /**
    * Returns the value for which the current max key value needs to be
@@ -480,7 +452,8 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void refreshEntityList(List<E> oldEntityList)
   {
-    MafExecutorService.execute(() -> {
+    TaskExecutor.getInstance().executeUIRefreshTask(() -> 
+    {
        getPropertyChangeSupport().firePropertyChange(getEntityListName(), oldEntityList, getEntityList());
        getProviderChangeSupport().fireProviderRefresh(getEntityListName());
        // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
@@ -505,7 +478,7 @@ public abstract class EntityCRUDService<E extends Entity>
 
   /**
    * Returns value of autoCommit flag. When set to true, the local DBPersistenceManager will issue a commit after each
-   * INSERT, UPDATE or DELEET statement.
+   * INSERT, UPDATE or DELETE statement.
    * @param autoCommit
    */
   protected boolean isAutoCommit()
@@ -575,7 +548,10 @@ public abstract class EntityCRUDService<E extends Entity>
   {
     this.remotePersistenceManager = remotePersistenceManager;
     // also set local PM neede for various operations when entity is persistable
-    remotePersistenceManager.setLocalPersistenceManager(localPersistenceManager);
+    if (remotePersistenceManager!=null)
+    {
+      remotePersistenceManager.setLocalPersistenceManager(localPersistenceManager);      
+    }
   }
 
   protected RemotePersistenceManager getRemotePersistenceManager()
@@ -748,16 +724,12 @@ public abstract class EntityCRUDService<E extends Entity>
   }
 
   /**
-   * Returns the dataSynchManager for this CRUD service.
+   * Returns the dataSynchManager instance
    * @return
    */
   protected DataSynchManager getDataSynchManager()
   {
-    if (dataSynchManager == null)
-    {
-      dataSynchManager = new DataSynchManager(this);
-    }
-    return dataSynchManager;
+    return DataSynchManager.getInstance();
   }
 
   protected void setAutoGeneratePrimaryKey(boolean autoGeneratePrimaryKey)
@@ -812,11 +784,13 @@ public abstract class EntityCRUDService<E extends Entity>
 
   /**
    * Process any pending data synch actions.
+   * Note that this method will synchronize all pending sync actions for all entities,
+   * not just for the entity of this CRUD service instance.
    * @param inBackground
    */
-  protected void synchronize(Boolean inBackground)
+  public void synchronize(Boolean inBackground)
   {
-      getDataSynchManager().synchronize(inBackground.booleanValue());      
+      getDataSynchManager().synchronize(inBackground.booleanValue(),this);      
   }
 
   protected String getRemoteFindAllExecutedExpression()
@@ -952,35 +926,8 @@ public abstract class EntityCRUDService<E extends Entity>
   protected void initialize()
   {
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(getEntityClass());
-    String className = descriptor.getLocalPersistenceManagerClassName();
-    if (className != null && !"".equals(className))
-    {
-      Object pm = getClassInstance(className);
-      if (pm instanceof DBPersistenceManager)
-      {
-        setLocalPersistenceManager((DBPersistenceManager) pm);
-      }
-      else if (pm != null)
-      {
-        throw new AdfException("Local persistence manager class " + className + ": should extend DBPersistenceManager",
-                               AdfException.ERROR);
-      }
-    }
-    className = descriptor.getRemotePersistenceManagerClassName();
-    if (className != null && !"".equals(className))
-    {
-      Object pm = getClassInstance(className);
-      if (pm instanceof RemotePersistenceManager)
-      {
-        RemotePersistenceManager rpm = (RemotePersistenceManager) pm;
-        setRemotePersistenceManager(rpm);
-      }
-      else if (pm != null)
-      {
-        throw new AdfException("Remote persistence manager class " + className +
-                               ": should implement RemotePersistenceManager interface", AdfException.ERROR);
-      }
-    }
+    setLocalPersistenceManager(EntityUtils.getLocalPersistenceManager(descriptor));
+    setRemotePersistenceManager(EntityUtils.getRemotePersistenceManager(descriptor));    
     setDoRemoteReadInBackground(descriptor.isRemoteReadInBackground());
     setDoRemoteWriteInBackground(descriptor.isRemoteWriteInBackground());
     setAutoGeneratePrimaryKey(descriptor.isAutoIncrementPrimaryKey());
@@ -989,36 +936,6 @@ public abstract class EntityCRUDService<E extends Entity>
     setOfflineTransactionsEnabled(descriptor.isEnableOfflineTransactions());
   }
 
-  protected Object getClassInstance(String className)
-  {
-    Object instance = null;
-    if (className == null || "".equals(className))
-    {
-      return null;
-    }
-    try
-    {
-      Class clazz = Utility.loadClass(className);
-      //      Class clazz = Class.forName(className, false, Thread.currentThread().getContextClassLoader());
-      instance = clazz.newInstance();
-    }
-    catch (InstantiationException e)
-    {
-      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
-                             AdfException.ERROR);
-    }
-    catch (IllegalAccessException e)
-    {
-      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
-                             AdfException.ERROR);
-    }
-    catch (ClassNotFoundException e)
-    {
-      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
-                             AdfException.ERROR);
-    }
-    return instance;
-  }
 
   protected void setShowWebServiceInvocationErrors(boolean showWebServiceInvocationErrors)
   {
@@ -1039,5 +956,35 @@ public abstract class EntityCRUDService<E extends Entity>
   {
     return offlineTransactionsEnabled;
   }
+
+  /**
+   * Returns true when there are pending data sync actions. Returns false if there are no such actions.
+   */
+  public boolean getHasDataSynchActions()
+  {
+    return getDataSynchManager().getHasDataSynchActions();
+  }
+
+  /**
+   * Callback method called by DataSynchManager when dataSychronization action is done. It contains a list of succeeded
+   * and failed data sync actions. You can override this method to add custom logic after data synchronization has taken place.
+   * For example, you could warn the end user that one or more transactions have failed and will be re-tried later, or you can
+   * inform them that all pending data sync actions have been processed successfully.
+   * 
+   * For this method to be called, the call to the synchronize method on the DataSyncManager must have passed in this
+   * instance as call service.
+   * @param succeededDataSynchActions
+   * @param failedDataSynchActions
+   */
+  protected void dataSynchFinished(List<DataSynchAction> succeededDataSynchActions,
+                                   List<DataSynchAction> failedDataSynchActions)
+  {
+    //    int ok = succeededDataSynchActions.size();
+    //    int fails = failedDataSynchActions.size();
+    //    int total = ok + fails;
+    //    MessageUtils.handleMessage(AdfException.INFO,
+    //                               total + " data synch actions completed. Successful: " + ok + ", Failed: " + fails);
+  }
+
 
 }

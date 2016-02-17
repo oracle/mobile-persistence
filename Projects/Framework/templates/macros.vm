@@ -1,20 +1,20 @@
 ## revision_history
+## 16-feb-2016   Steven Davelaar
+## 1.1           Changed for global data sync
 ## 14-feb-2014   Steven Davelaar
 ## 1.0           Initial creation
 
 
 #macro (SYNCHRONIZE_LINK $dataObject)
-      <amx:commandLink id="menSync" disabled="#{!bindings.has${dataObject.rootDataObject.name}DataSynchActions.inputValue or deviceScope.hardware.networkStatus=='NotReachable' or deviceScope.hardware.networkStatus=='unknown' or Connectivity.offline}" 
+      <amx:commandLink id="menSync" disabled="#{!applicationScope.ampa_hasDataSyncActions or deviceScope.hardware.networkStatus=='NotReachable' or deviceScope.hardware.networkStatus=='unknown' or Connectivity.offline}" 
        actionListener="#{bindings.${pageDef.createSynchronizeBinding()}.execute}" text="Synchronize">
         <amx:closePopupBehavior id="mencSync" popupId="p1" type="action"/>                                                 
       </amx:commandLink>
 #end
 
 #macro (PENDING_SYNCH_ACTIONS_LINK $dataObject)
-      <amx:commandLink id="menPsa" disabled="#{!bindings.has${dataObject.rootDataObject.name}DataSynchActions.inputValue}" text="Pending Sync Actions"
+      <amx:commandLink id="menPsa" disabled="#{!applicationScope.ampa_hasDataSyncActions}" text="Pending Sync Actions"
                          actionListener="#{GoToFeature.goToDataSynchFeature}">
-        <amx:setPropertyListener id="menspaspl" from="${dataObject.rootDataObject.fullyQualifiedClassName}"
-                                 to="#{applicationScope.dataSynchEntity}"/>
         <amx:closePopupBehavior id="mencPsa" popupId="p1" type="action"/>                         
       </amx:commandLink>
 #end

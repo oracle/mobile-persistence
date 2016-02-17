@@ -158,5 +158,13 @@ public class PersistenceConfig
     return dir + "/" + getDatabaseName();
   }
 
-
+  /**
+   * Return the value of property datasync.manager.class
+   * @return
+   */
+  public static String getDataSynchManagerClass()
+  {
+    return getPropertyValue("datasync.manager.class");
+  }
+  
 }

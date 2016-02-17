@@ -160,11 +160,14 @@ public class TaskExecutor
    */
   protected void setRunning(boolean running)
   {
-    if (!isDbInstance)
-    {
-      AdfmfJavaUtilities.setELValue("#{applicationScope.ampa_bgtask_running}", running);      
-    }
-    AdfmfJavaUtilities.flushDataChangeEvent();
+    executeUIRefreshTask(() ->
+     {
+       if (!isDbInstance)
+       {
+         AdfmfJavaUtilities.setELValue("#{applicationScope.ampa_bgtask_running}", running);      
+       }
+       AdfmfJavaUtilities.flushDataChangeEvent();       
+     });
   }
 
   protected synchronized void updateStatus()
@@ -217,6 +220,21 @@ public class TaskExecutor
     }
     else
     {
+      task.run();
+    }
+  }
+
+  public void executeUIRefreshTask(Runnable task)
+  {
+    if (AdfmfJavaUtilities.isBackgroundThread())
+    {
+      // execute inside MafExecutorService
+      MafExecutorService.execute(task);
+//        task.run();
+    }
+    else 
+    {
+      // just execute the task
       task.run();
     }
   }

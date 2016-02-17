@@ -422,7 +422,8 @@ public class RestJSONPersistenceManager
       if (isAllPrimaryKeyBindParamInfosPopulated(descriptor, bindParamInfos))
       {
         DBPersistenceManager dbpm = getLocalPersistenceManager();
-        dbpm.mergeRow(bindParamInfos, true);
+//        dbpm.mergeRow(bindParamInfos, true);
+        dbpm.mergeRow(bindParamInfos, false);
       }
       else
       {

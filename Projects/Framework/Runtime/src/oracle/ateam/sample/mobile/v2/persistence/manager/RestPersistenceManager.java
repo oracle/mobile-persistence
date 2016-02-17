@@ -55,6 +55,7 @@ import oracle.ateam.sample.mobile.util.StringUtils;
 import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.v2.persistence.db.BindParamInfo;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
+import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 
 /**
@@ -782,6 +783,12 @@ public abstract class RestPersistenceManager
         entities =
           handleReadResponse(restResponse, entityClass, findAllMethod.getPayloadElementName(),
                              findAllMethod.getPayloadRowElementName(), null, findAllMethod.isDeleteLocalRows());
+
+        // do COmmit is using WAL
+        if (PersistenceConfig.useWAL() )
+        {
+          dbpm.commmit();
+        }
         // only if an order-by statement is specified, we execute the find method against the local DB to reorder
         // the entity list. Note that the entity instances are not recreated because they will be retrieved from the cache
         if (descriptor.isPersisted() && descriptor.getOrderBy() != null)
