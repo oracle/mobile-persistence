@@ -681,20 +681,51 @@ public class EntityUtils
     }
     catch (InstantiationException e)
     {
-      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
+      throw new AdfException("Error creating instance for class " + className + ": InstantiationException " + e.getLocalizedMessage(),
                              AdfException.ERROR);
     }
     catch (IllegalAccessException e)
     {
-      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
+      throw new AdfException("Error creating instance for class " + className + ": IllegalAccessException " + e.getLocalizedMessage(),
                              AdfException.ERROR);
     }
     catch (ClassNotFoundException e)
     {
-      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
+      throw new AdfException("Error creating instance for class " + className + ": ClassNotFoundException " + e.getLocalizedMessage(),
                              AdfException.ERROR);
     }
     return instance;
   }
 
+  public static Object getSingletonInstance(String className, String instantationMethod)
+  {
+    Class clazz;
+    try
+    {
+      clazz = Class.forName(className);
+      Method method = clazz.getMethod(instantationMethod, clazz);
+      Object o = method.invoke(null, null);
+      return o;
+    }
+    catch (ClassNotFoundException e)
+    {
+      throw new AdfException("Error creating singleton instance for class" + className + ": ClassNotFoundException" + e.getLocalizedMessage(),
+                             AdfException.ERROR);
+    }
+    catch (NoSuchMethodException e)
+    {
+      throw new AdfException("Error creating singleton instance for class" + className + " and method "+instantationMethod+": NoSuchMethodException" + e.getLocalizedMessage(),
+                             AdfException.ERROR);
+    }
+    catch (InvocationTargetException e)
+    {
+      throw new AdfException("Error creating singleton instance for class" + className + ": InvocationTargetException " + e.getLocalizedMessage(),
+                             AdfException.ERROR);
+    }
+    catch (IllegalAccessException e)
+    {
+      throw new AdfException("Error creating singleton instance for class" + className + ": IllegalAccessException " + e.getLocalizedMessage(),
+                             AdfException.ERROR);
+    }
+  }
 }

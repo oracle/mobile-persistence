@@ -29,6 +29,8 @@ import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.api.JSONBeanSerializationHelper;
 
 
+import oracle.adfmf.util.Utility;
+
 import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.model.ChangeEventSupportable;
 import oracle.ateam.sample.mobile.util.MessageUtils;
@@ -86,7 +88,10 @@ public class DataSynchManager
     return sInstance;
   }
 
-  private DataSynchManager()
+  /**
+   *  Protected constructor, not private so subclases can be created to customize/extend the behavior
+   */
+  protected DataSynchManager()
   {
     super();
     loadSynchActionsFromDB();      
