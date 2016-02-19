@@ -222,4 +222,22 @@ public abstract class Entity<E> extends ChangeEventSupportable
 //    TaskExecutor.flushDataChangeEvent();
   }
 
+  /**
+   * This method is called after the entity has been added to the child entity list.
+   * Override this method to execute UI refresh logic like recomputing totals
+   * @param entity
+   */
+  public void childEntityAdded(E entity)
+  {
+  }
+
+  /**
+   * This method is called after the entity has been removed from the child entity list.
+   * Override this method to execute UI refresh logic like recomputing totals
+   * @param entity
+   */
+  public void childEntityRemoved(E entity)
+  {
+  }
+
 }

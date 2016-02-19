@@ -2,6 +2,9 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  19-feb-2016   Steven Davelaar
+  1.6           - No longer generate PK in addEntity method, now done in DBPersistenceManager.insertEntity
+                - added methods entityAdded/Removed
   01-feb-2016   Steven Davelaar
   1.5           - Check for isPersisted instead of localPersistenceManager!=null in entity write methods. 
                 - Commented out call to refreshCurrentEntity in refreshEntityList, refresh of form layout now works fine
@@ -74,13 +77,9 @@ public abstract class EntityCRUDService<E extends Entity>
   //  private Entity currentEntity;
   private boolean doRemoteReadInBackground = true;
   private boolean doRemoteWriteInBackground = true;
-  private int lastNewEntityIndex = -1;
   private boolean autoGeneratePrimaryKey = true;
   private boolean showWebServiceInvocationErrors = false;
   private boolean offlineTransactionsEnabled = true;
-
-
-  private transient DataSynchManager dataSynchManager;
 
   /**
    * The current list of entities. All operations that filter, add or remove
@@ -154,7 +153,6 @@ public abstract class EntityCRUDService<E extends Entity>
       // also do remote find
       doRemoteFindAll();
     }
-    setLastNewEntityIndex(-1);
   }
 
   /**
@@ -216,7 +214,6 @@ public abstract class EntityCRUDService<E extends Entity>
     if (isPersisted())
     {
       setEntityList(getLocalPersistenceManager().find(getEntityClass(), searchValue, getQuickSearchAttributeNames()));
-      setLastNewEntityIndex(-1);
     }
     doRemoteFind(searchValue);
   }
@@ -348,22 +345,45 @@ public abstract class EntityCRUDService<E extends Entity>
   }
 
   /**
-   * Adds new entity and sets entity status to new. Note that the entity is ALREADY added to the entity list
-   * because this method is (indirectly) called through overridden add method in EntityList
-   * If autogeneratePrimaryKey is true, the key value is set based on the current max
-   * key value in the underlying table and the value returned by getKeyValueIncrement
+   * Sets IsNewEntity state to true.
+   * Note that this method does NOT add the entity to the entity list
+   * because this method is typically called by MAF framework when using Create operation.
+   * from data control palette. MAF will add the entity to the list AFTER this method has 
+   * been executed. 
+   * The EntityList class will then call entityAdded method after the entity
+   * is added so developer can override that method to execute some UI refresh logic like
+   * recomputing totals
    * @param index
    * @param entity
    */
   protected void addEntity(int index, E entity)
   {
-    setLastNewEntityIndex(index);
     entity.setIsNewEntity(true);
-    if (isAutoGeneratePrimaryKey())
-    {
-      generatePrimaryKeyValue(entity);
-      EntityCache.getInstance().addEntity(entity);
-    }
+// we now generate PK value in DBPersistenceManager.insertEntity to prevent duplicates when
+// multiple rows are created and not yet saved to DB.    
+//    if (isAutoGeneratePrimaryKey())
+//    {
+//      generatePrimaryKeyValue(entity);
+//      EntityCache.getInstance().addEntity(entity);
+//    }
+  }
+
+  /**
+   * This method is called after the entity has been added to the entity list.
+   * Override this method to execute UI refresh logic like recomputing totals
+   * @param entity
+   */
+  protected void entityAdded(E entity)
+  {
+  }
+
+  /**
+   * This method is called after the entity has been removed from the entity list.
+   * Override this method to execute UI refresh logic like recomputing totals
+   * @param entity
+   */
+  protected void entityRemoved(E entity)
+  {
   }
 
   protected void generatePrimaryKeyValue(Entity entity)
@@ -425,9 +445,13 @@ public abstract class EntityCRUDService<E extends Entity>
 
   /**
    * Removes an entity using the configured local and remote persistence managers.
-   * Note that this method assumes that the entity is ALREADY removed from the entity list
-   * because this method is typically (indirectly) called through overridden remove method in EntityList
-   * which fires when using the standard Remove operation in the data control palette.
+   * Note that this method does NOT remove the entity from the entity list
+   * because this method is typically called by MAF framework when using Remove operation.
+   * from data control palette. MAF will remove the entity from the list AFTER this method has 
+   * been executed.
+   * The EntityList class will then call entityRemoved method after the entity
+   * is removed so developer can override that method to execute some UI refresh logic like
+   * recomputing totals
    * @param entity
    */
   protected void removeEntity(Entity entity)
@@ -701,16 +725,6 @@ public abstract class EntityCRUDService<E extends Entity>
   protected boolean isDoRemoteWriteInBackground()
   {
     return doRemoteWriteInBackground;
-  }
-
-  protected void setLastNewEntityIndex(int lastNewEntityIndex)
-  {
-    this.lastNewEntityIndex = lastNewEntityIndex;
-  }
-
-  protected int getLastNewEntityIndex()
-  {
-    return lastNewEntityIndex;
   }
 
   protected boolean isOffline()

@@ -15,8 +15,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import java.util.HashMap;
 import java.util.List;
 
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -141,18 +143,24 @@ public class StorageObjectService
    */
   public void saveStorageObjectInMCS(StorageObject storageObject)
   {
-    // We use UPDATE_ACTION, 
+    // We use UPDATE_ACTION, doesn't matter whether we use INSERT or UPDATE because we always
+    // excecute the PUT method.
     writeEntityRemote(new DataSynchAction(DataSynchAction.UPDATE_ACTION, storageObject, this.getClass().getName()));
   }
 
-
   /**
-   * Retrieves all storageObject instances in the collection specified
+   * Retrieves all storageObject instances in the collection specified.
    * @param collectionName
    */
-  public void findStorageObjectsInCollection(String collectionName)
+  public void findAllStorageObjectsInCollection(String collectionName)
   {
-    super.find(collectionName);
+    if (isPersisted())
+    {
+      Map<String,String> searchValues = new HashMap<String,String>();
+      searchValues.put("collectionName", collectionName);
+      setEntityList(getLocalPersistenceManager().find(getEntityClass(), searchValues));
+    }
+    doRemoteFind(collectionName);
   }
   
   /**
@@ -184,15 +192,15 @@ public class StorageObjectService
    *
    * @param collectionName
    */
-  public StorageObject getStorageObjectMetadata(String collection, String objectId)
+  public StorageObject findStorageObjectMetadata(String collection, String objectId)
   {
     StorageObject storageObject = findOrCreateStorageObject(collection, objectId);
-    getStorageObjectMetadataRemote(storageObject);
+    findStorageObjectMetadataRemote(storageObject);
     return storageObject;
   }
     
   /**
-   * Looks up a StorageObject in the entity cache, and if it is not there, it queries
+   * Looks up a StorageObject locally in the entity cache, and if it is not there, it queries
    * the SQLite DB. If storage object is not found, a new instance is returned with
    * the id and collectionName set the arguments passed into this method. This instance
    * is also added to the entity cache.
@@ -223,7 +231,7 @@ public class StorageObjectService
     return storageObject;
   }
 
-  public void getStorageObjectMetadataRemote(StorageObject storageObject)
+  public void findStorageObjectMetadataRemote(StorageObject storageObject)
   {
     if (isOffline())
     {
@@ -235,7 +243,7 @@ public class StorageObjectService
         // auto synch any pending storage actions first, pass false for inBackground because
         // we want to proces pending actions before we do remote read
         synchronize(false);
-        getMCSPersistenceManager().getStorageObjectMetadata(storageObject);
+        getMCSPersistenceManager().findStorageObjectMetadata(storageObject);
         if (storageObject.isStoreOnDevice())
         {
           getLocalPersistenceManager().mergeEntity(storageObject, true);
@@ -249,26 +257,26 @@ public class StorageObjectService
    * @param objectId
    * @see getStorageObjectContentRemote
    */
-  public StorageObject getStorageObjectFromMCS(String collection, String objectId, boolean throwNotFoundException)
+  public StorageObject findStorageObjectInMCS(String collection, String objectId, boolean throwNotFoundException)
   {
     StorageObject storageObject = findOrCreateStorageObject(collection, objectId);
-    getStorageObjectFromMCS(storageObject,throwNotFoundException);
+    findStorageObjectInMCS(storageObject,throwNotFoundException);
     return storageObject;
   }
   
   /**
-   * Retrieve the file content from MCS and save it to a file on the system and store the filePath in
-   * the storageObject (see method storeObjectContent).
+   * Retrieve the file content and metadata from MCS and save it to a file on the system and store the filePath 
+   * and metadata in the storageObject (see method storeObjectContent).
    * If the device is offline, or the isLocalVersionIsCurrent flag on the storage object is true, then
    * this method will do nothing.
    * @param storageObject
    * @see storeObjectContent
    */
-  public void getStorageObjectFromMCS(StorageObject storageObject, boolean throwNotFoundException)
+  public void findStorageObjectInMCS(StorageObject storageObject, boolean throwNotFoundException)
   {
     if (isOffline())
     {
-      sLog.fine("Cannot execute getStorageObjectFromMCS, device is offline");
+      sLog.fine("Cannot execute findStorageObjectInMCS, device is offline");
       return;
     }
     if (storageObject.isLocalVersionIsCurrent()) 
@@ -283,7 +291,7 @@ public class StorageObjectService
         synchronize(false);
         try
         {
-          byte[] response = getMCSPersistenceManager().getStorageObject(storageObject);
+          byte[] response = getMCSPersistenceManager().findStorageObject(storageObject);
           // response is null when local file (based on value of eTag) is current version
           if (response!=null)
           {
@@ -417,15 +425,6 @@ public class StorageObjectService
   }
 
   /**
-   * Synchronizes all pending data sync actions using the remote persistence manager
-   * @param inBackground
-   */
-  public void synchronizeStorageObject(Boolean inBackground)
-  {
-    super.synchronize(inBackground);
-  }
-
-  /**
    * Resets the values of the storageObject instance to the values as stored in the SQLite database. This method
    * will do nothing when the storageObject is not persisted to the database.
    * @param storageObject
@@ -434,15 +433,6 @@ public class StorageObjectService
   {
     super.resetEntity(storageObject);
   }
-
-  /**
-   * Returns true when there are pending storageObject data sync actions. Returns false if there are no such actions.
-   */
-  public boolean getHasStorageObjectDataSynchActions()
-  {
-    return getDataSynchManager().getHasDataSynchActions();
-  }
-
 
 }
 

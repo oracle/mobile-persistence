@@ -151,7 +151,7 @@ public class MCSPersistenceManager
    * content from MCS and the istLocalVersionIsCurrent flag will be set to true on the storageObject instance.
    * @param storageObject
    */
-  public void getStorageObjectMetadata(StorageObject storageObject)
+  public void findStorageObjectMetadata(StorageObject storageObject)
   {
     String uri = STORAGE_COLLECTIONS_URI + storageObject.getCollectionName() + "/objects/" + storageObject.getId();
     Map<String, String> headerParams = new HashMap<String, String>();
@@ -215,7 +215,7 @@ public class MCSPersistenceManager
    * 
    * @param storageObject
    */
-  public byte[] getStorageObject(StorageObject storageObject)
+  public byte[] findStorageObject(StorageObject storageObject)
   {
     String uri = STORAGE_COLLECTIONS_URI + storageObject.getCollectionName() + "/objects/" + storageObject.getId();
     Map<String, String> headerParams = new HashMap<String, String>();

@@ -91,21 +91,55 @@ public class ${WSM.currentDataObject.className} extends Entity
     }
 
 
+  /**
+   * This method is automatically called when using the Create operation on the ${child.childDataObject.classVariableName} collection
+   * in the data control palette. 
+   * 
+   * Note that this method does NOT add the ${child.childDataObject.classVariableName} to the entity list because this method is 
+   * automatically called by MAF framework when using the Create operation from the data control palette. 
+   * MAF will add the entity to the list AFTER this method has been executed. 
+   * 
+   * You can use this method to set default values. 
+   * If you want to refresh data in the UI based on the size of the ${child.childDataObject.classVariableName} list, then you cannot do this in this
+   * method because the list is not updated yet (see above), instead override method childEntityAdded and add your 
+   * logic there. The AMPA IndirectList class ensures that this method is called after a ${child.childDataObject.classVariableName} has been added.
+   * 
+   * Do NOT drag and drop this method from the data control palette, use the Create operation 
+   * instead to ensure that iterator binding and ${child.childDataObject.classVariableName} list stay in sync.
+   * @param index
+   * @param ${child.childDataObject.classVariableName}
+   */
   public void add${child.childDataObject.className}(int index, ${child.childDataObject.className} ${child.childDataObject.classVariableName})
   {
     ${child.childDataObject.classVariableName}.setIsNewEntity(true);
-    EntityUtils.generatePrimaryKeyValue(${child.childDataObject.classVariableName}, 1);
     #foreach($mapping in $child.attributeMappings) 
      ${child.childDataObject.classVariableName}.${mapping.childAttrSetterMethod}(${mapping.parentAttrGetterMethod}());
     #end
   }
 
+  /**
+   * This method is automatically called when using the Delete operation on the ${child.childDataObject.classVariableName} collection
+   * in the data control palette. It deletes the corresponding row from the database (if persisted) and 
+   * calls the configured remove method on the remote persistence manager if applicable.
+   * 
+   * Note that this method does NOT remove the ${child.childDataObject.classVariableName} from the ${child.childDataObject.classVariableName} list because this method is 
+   * automatically called by MAF framework when using the Delete operation from the data control palette. 
+   * MAF will remove the entity from the list AFTER this method has been executed. 
+   * 
+   * If you want to refresh data in the UI based on the size of the ${child.childDataObject.classVariableName} list, then you cannot do this in this
+   * method because the list is not updated yet (see above), instead override method childEntityTRemoved and add your 
+   * logic there. The AMPA IndirectList class ensures that this method is called after a ${child.childDataObject.classVariableName} has been added.
+   *   
+   * Do NOT drag and drop this method from the data control palette, use the Delete operation 
+   * instead to ensure that iterator binding and ${child.childDataObject.classVariableName} list stay in sync.
+   * @param ${child.childDataObject.classVariableName}
+   */
   public void remove${child.childDataObject.className}(${child.childDataObject.className} ${child.childDataObject.classVariableName})
   {
     #if ($child.methodAccessor)
       ${child.childDataObject.serviceClassName} crudService = (${child.childDataObject.serviceClassName}) EntityUtils.  getEntityCRUDService(${child.childDataObject.classVariableName}.getClass());
       crudService.remove${child.childDataObject.className}(${child.childDataObject.classVariableName});
-    #else
+    #elseif (${WSM.currentDataObject.persisted} )
       DBPersistenceManager pm = new DBPersistenceManager();
       pm.removeEntity(${child.childDataObject.classVariableName}, true);
     #end

@@ -269,9 +269,12 @@ public class PersistenceMappingLoader
     {
       DirectMapping dm = parentPopulatedAttrs.get(attr);
       DataObjectInfo parent = findDataObject(dm.getParentClass());
-      AttributeInfo parentAttr = parent.getAttributeDef(dm.getParentAttributeName());
-      attr.setParentDataObject(parent);
-      attr.setParentReferenceAttribute(parentAttr);
+      if (parent!=null) 
+      {
+          AttributeInfo parentAttr = parent.getAttributeDef(dm.getParentAttributeName());
+          attr.setParentDataObject(parent);
+          attr.setParentReferenceAttribute(parentAttr);          
+      }
     }
   }
 
