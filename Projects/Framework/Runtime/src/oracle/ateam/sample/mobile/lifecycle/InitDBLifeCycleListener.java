@@ -2,6 +2,9 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 20-feb-2016   Steven Davelaar
+ 1.2           Moved closing DB connecton and shutting down task executor thread pool to stop method,
+               so background processing can continue while app is in background
  26-jan-2015   Steven Davelaar
  1.1           Shut down task executor thread pool in deactive method
  06-feb-2013   Steven Davelaar
@@ -30,7 +33,7 @@ import oracle.ateam.sample.mobile.util.UsageTracker;
  * in the property file to make this InitDBLifeCycleListener class work correctly:
  * <pre>
  * db.name=HR.db
- * persistence.mapping.xml=META-INF/tlMap.xml
+ * persistence.mapping.xml=META-INF/persistence-mapping.xml
  * ddl.script=META-INF/hr.sql
  * </pre>
  *
@@ -57,10 +60,13 @@ public class InitDBLifeCycleListener
   }
 
   /**
-   * No action performed here.
+   * This method closes the DB connection if needed, and shuts down the single thread pool
+   * used to execute background tasks.
    */
   public void stop()
   {
+    DBConnectionFactory.closeConnectionIfNeeded();
+    TaskExecutor.shutDown();
     // Add code here...
   }
 
@@ -72,13 +78,10 @@ public class InitDBLifeCycleListener
   }
 
   /**
-   * This method closes the DB connection if needed, and shuts down the single thread pool
-   * used to execute background tasks.
+   * No action performed here.
    */
   public void deactivate()
   {
-    DBConnectionFactory.closeConnectionIfNeeded();
-    TaskExecutor.shutDown();
   }
 
 }

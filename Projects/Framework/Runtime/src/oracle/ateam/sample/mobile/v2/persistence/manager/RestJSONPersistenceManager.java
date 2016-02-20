@@ -82,6 +82,7 @@ public class RestJSONPersistenceManager
    */
   protected String getSerializedDataObject(Entity entity, String elementName, String rowElementName, List<String> attributesToExclude, boolean deleteRow)
   {
+    sLog.fine("Executing getSerializedDataObject");
     Map<String,Object> keyValuePairs = getPayloadKeyValuePairs(entity,attributesToExclude);
     Map<String,Object> entityInstance = null;
     if (rowElementName != null)
@@ -156,6 +157,7 @@ public class RestJSONPersistenceManager
    */
   protected String substituteNullValuesInPayload(String json)
   {
+    sLog.finest("Executing substituteNullValuesInPayload");
     String newJson = StringUtils.substitute(json, "{\".null\":true}", "null");
     newJson = StringUtils.substitute(newJson, "{\"@nil\":\"true\"}", "null");
     return newJson;
@@ -175,6 +177,7 @@ public class RestJSONPersistenceManager
   protected <E extends Entity> List<E> handleReadResponse(String jsonResponse, Class entityClass, String collectionElementName,
                                     String rowElementName, List<BindParamInfo> parentBindParamInfos, boolean deleteAllRows)
   {
+    sLog.fine("Executing handleReadResponse");
     return handleResponse(jsonResponse, entityClass,collectionElementName,
                                     rowElementName,parentBindParamInfos, null, deleteAllRows);
   }
@@ -195,7 +198,7 @@ public class RestJSONPersistenceManager
   protected <E extends Entity> List<E> handleResponse(String json, Class entityClass, String collectionElementName,
                                     String rowElementName, List<BindParamInfo> parentBindParamInfos, E currentEntity, boolean deleteAllRows)
   {
-      
+    sLog.fine("Executing handleResponse");      
     long startTime = System.currentTimeMillis();
     String jsonResponse = substituteNullValuesInPayload(json); 
     List<E> entities = new ArrayList<E>();
@@ -247,6 +250,7 @@ public class RestJSONPersistenceManager
   protected Object findCollectionElement(JSONObject node, String collectionElementName)
     throws JSONException
   {
+    sLog.finest("Executing findCollectionElement");
     Object collection = null;
     Iterator keys = node.keys();
     while (keys.hasNext())
@@ -276,6 +280,7 @@ public class RestJSONPersistenceManager
                                                List<BindParamInfo> parentBindParamInfos, List<E> entities, E currentEntity)
     throws JSONException
   {
+    sLog.fine("Executing findAndProcessPayloadElements");
     if (collection instanceof JSONArray)
     {
       JSONArray rows = (JSONArray) collection;
@@ -339,6 +344,7 @@ public class RestJSONPersistenceManager
   protected Object getJSONElement(JSONObject row, String elementName, boolean throwError)
     throws JSONException
   {
+    sLog.finest("Executing getJSONElement");
     try
     {
       String[] elements = StringUtils.stringToStringArray(elementName, ".");
@@ -378,6 +384,7 @@ public class RestJSONPersistenceManager
                                          E currentEntity)
     throws JSONException
   {
+    sLog.finest("Executing processPayloadElement");
     if (row.keys()==null  || !row.keys().hasNext()) 
     {
         //this an empty JSON Object : "{}", do not create an entity instance

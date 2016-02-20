@@ -40,6 +40,10 @@ import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 import sun.misc.BASE64Encoder;
 
 
+/**
+ * This class is deprecated. Use MCSPersistenceManager instead
+ * @deprecated
+ */
 public class MCSManager
 {
 

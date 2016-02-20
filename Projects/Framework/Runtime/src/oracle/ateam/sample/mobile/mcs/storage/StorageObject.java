@@ -9,20 +9,31 @@ package oracle.ateam.sample.mobile.mcs.storage;
 
 import java.io.File;
 
+import java.io.IOException;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 
+import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
+import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 
 /**
  * Representation of MCS storage object. Ths object holds the metadata of the storage obhject, as well as a reference to
- * file locatoon on the mobile device. If the object is just retrieved from MCS, the getContent() method returns the
- * file as a byte array.
- * By default storage objects retrieved from MCS are stored on the device: the file itself on the file system, and the 
- * metadata in the STORAGE_OBJECT table. To prevent local storage you can call setStoreOnDevice(false)
+ * file location on the mobile device. The getContent() method returns the content of the file as a byte array.
+ * By default storage objects retrieved from MCS are stored on the device: the file itself on the file system, and the
+ * metadata in the STORAGE_OBJECT table. To prevent local storage you can call setStoreOnDevice(false), and the file is
+ * then only accessible by calling getContent().
  */
 public class StorageObject
   extends Entity
 {
+
+  private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(StorageObjectService.class);
 
   private final static String APP_DIR =
     AdfmfJavaUtilities.getDirectoryPathRoot(AdfmfJavaUtilities.ApplicationDirectory);
@@ -42,6 +53,9 @@ public class StorageObject
   private String directoryPath; 
   private Boolean storeOnDevice = true;
   private transient byte[] content;
+  // dummy attrs to prevent serialization 
+  private transient String downloadIfNeeded;
+  private transient String downloadIfNeededInBackground;
 
   public String getCreatedOn()
   {
@@ -69,12 +83,40 @@ public class StorageObject
   {
     String oldFilePath = this.filePath;
     this.filePath = filePath;
-    propertyChangeSupport.firePropertyChange("filePath", oldFilePath, filePath);
+    TaskExecutor.getInstance().executeUIRefreshTask(() ->
+      {
+        propertyChangeSupport.firePropertyChange("filePath", oldFilePath, filePath);
+        AdfmfJavaUtilities.flushDataChangeEvent();   
+      });
   }
 
   public String getFilePath()
   {
     return filePath;
+  }
+
+  /**
+   * Dummy attribute that can be included in an AMX page to trigger download of the file in the background.
+   * This method returns an empty string
+   * @return
+   */
+  public String getDownloadIfNeededInBackground()
+  {
+    StorageObjectService sos = new StorageObjectService(true,true);
+    sos.findStorageObjectInMCS(this,false);
+    return "";
+  }
+
+  /**
+   * Dummy attribute that can be included in an AMX page to trigger download of the file in foreground.
+   * This method returns an empty string
+   * @return
+   */
+  public String getDownloadIfNeeded()
+  {
+    StorageObjectService sos = new StorageObjectService(false,false);
+    sos.findStorageObjectInMCS(this,false);
+    return "";
   }
 
   public String getId()
@@ -210,6 +252,18 @@ public class StorageObject
 
   public byte[] getContent()
   {
+    if (content==null && getFilePath()!=null)
+    {
+      Path path = Paths.get(getFilePath());
+      try
+      {
+        content = Files.readAllBytes(path);
+      }
+      catch (IOException e)
+      {
+        sLog.severe("Error reading bytes from file "+getId()+": "+e.getLocalizedMessage());
+      }
+    }
     return content;
   }
 

@@ -66,6 +66,7 @@ public class MCSPersistenceManager
 
   private static final String LOGIN_URI = "/platform/users/login";
   private static final String LOGOUT_URI = "/platform/users/logout";
+  private static final String USER_URI = "/platform/users";
   private static final String ANALYTICS_EVENTS_URI = "/platform/analytics/events";
   private static final String REGISTER_DEVICE_URI = "/platform/devices/register";
   private static final String DEREGISTER_DEVICE_URI = "/platform/devices/deregister";
@@ -82,14 +83,41 @@ public class MCSPersistenceManager
   public MCSPersistenceManager()
   {
     super();
-    connectionName = PersistenceConfig.getPropertyValue("mcs.connection");
-    anonymousKey = PersistenceConfig.getPropertyValue("mcs.anonymous-key");
-    mobileBackendId = PersistenceConfig.getPropertyValue("mcs.mobile-backend-id");
+    init();    
+  }
+
+  /**
+   * Initialize connectionName, mobileBackendId and anonymousAccessKey from
+   * mobile-persistence-config.properties. EL expressions are allowed for these
+   * values.
+   */
+  protected void init()
+  {
+    sLog.fine("Executing init");
+    // values might be EL expression
+    String connectionNameConfig = PersistenceConfig.getPropertyValue("mcs.connection");
+    if (connectionNameConfig!=null)
+    {
+      connectionName = AdfmfJavaUtilities.evaluateELExpression(connectionNameConfig).toString();      
+      sLog.fine("MCS default connectionName="+connectionName);
+    }
+    String anonymousKeyConfig = PersistenceConfig.getPropertyValue("mcs.anonymous-key");
+    if (anonymousKeyConfig!=null)
+    {
+      anonymousKey = AdfmfJavaUtilities.evaluateELExpression(anonymousKeyConfig).toString();      
+      sLog.fine("MCS default anonymousKey="+anonymousKey);
+    }
+    String mobileBackendIdConfig = PersistenceConfig.getPropertyValue("mcs.mobile-backend-id");
+    if (mobileBackendIdConfig!=null)
+    {
+      mobileBackendId = AdfmfJavaUtilities.evaluateELExpression(mobileBackendIdConfig).toString();      
+      sLog.fine("MCS default mobileBackendId="+mobileBackendId);
+    }
   }
 
   /**
    * This method allows you to basic authenticatication against MCS using the username and password that you pass in.
-   * The oracle mobile backend id used to authenticate against is by taken from mobile-persistence-config.properties
+   * The oracle mobile backend id used to authenticate against is by taken from mobile-persistence-config.properties.
    * The authorization header constructed out of the username and password is stored on applicationScope, and is injected
    * in any further MCS REST call through method addMCSHeaderParamsIfNeeded.
    * Note that it is preferred to use the standard MAF login functionality, rather than this custom login method. When using
@@ -104,6 +132,7 @@ public class MCSPersistenceManager
    */
   public String login(String userName, String password)
   {
+    sLog.fine("Executing login");
     String userCredentials = userName + ":" + password;
     try
     {
@@ -133,6 +162,7 @@ public class MCSPersistenceManager
    */
   public String logout()
   {    
+    sLog.fine("Executing logout");
     String result = invokeRestService(getConnectionName(), "GET", LOGOUT_URI, null, null, 0, false);
     setAuthHeader(null);
     return result;
@@ -140,6 +170,7 @@ public class MCSPersistenceManager
 
   public void sendAnalyticsEvents(String payload)
   {
+    sLog.fine("Executing sendAnalyticsEvents");
     invokeRestService(getConnectionName(), "POST", ANALYTICS_EVENTS_URI, payload, null, 0, false);
   }
 
@@ -153,6 +184,7 @@ public class MCSPersistenceManager
    */
   public void findStorageObjectMetadata(StorageObject storageObject)
   {
+    sLog.fine("Executing findStorageObjectMetadata");
     String uri = STORAGE_COLLECTIONS_URI + storageObject.getCollectionName() + "/objects/" + storageObject.getId();
     Map<String, String> headerParams = new HashMap<String, String>();
     if (storageObject.getETag() != null)
@@ -187,6 +219,7 @@ public class MCSPersistenceManager
    */
   public void populateStorageObjectMetadata(StorageObject storageObject, Map headers)
   {
+    sLog.fine("Executing populateStorageObjectMetadata");
     Object cl = headers.get("Content-Length");
     if (cl != null)
     {
@@ -217,11 +250,12 @@ public class MCSPersistenceManager
    */
   public byte[] findStorageObject(StorageObject storageObject)
   {
+    sLog.fine("Executing findStorageObject");
     String uri = STORAGE_COLLECTIONS_URI + storageObject.getCollectionName() + "/objects/" + storageObject.getId();
     Map<String, String> headerParams = new HashMap<String, String>();
     // if the file content has been retrieved before, we pass in eTag header, so we don't download
     // it again while it is unchanged
-    if (storageObject.getETag() != null)
+    if (storageObject.getETag() != null &&  storageObject.getFilePath()!=null)
     {
       // Set If-None-Match header param so we know whether the object has changed
       headerParams.put("If-None-Match", storageObject.getETag());
@@ -230,11 +264,13 @@ public class MCSPersistenceManager
     if (getLastResponseStatus() == 304)
     {
       // 304 is Not Modified, this means local eTag is same as remote
+      sLog.info("Storage Object "+storageObject.getId()+" not modified since last download, E-Tags still match.");
     }
     else
     {
       // populate the object metadata attrs with the response headers
       populateStorageObjectMetadata(storageObject, getLastResponseHeaders());
+      sLog.info("Storage Object "+storageObject.getId()+" downloaded succesfully.");
     }
     storageObject.setLocalVersionIsCurrent(true);
     return response;
@@ -265,11 +301,16 @@ public class MCSPersistenceManager
    * header parameters with its own values based on the login configuration. This is convenient, because this means that as long as you are
    * not logged in, this class will inject the anonymous auth header from mobile-persistence-config.properies, and once you are logged
    * in, the MAF login header injection will win.
+   * 
+   * When you specify (one of) the above headers as part of a method in persistence-mapping.xml,
+   * then these values are already included in the header parameter map and this methiod will NOT override them.
+   * 
    * @param headerParams
    * @return
    */
   public Map<String, String> addMCSHeaderParamsIfNeeded(Map<String, String> headerParams)
   {
+    sLog.fine("Executing addMCSHeaderParamsIfNeeded");
     if (headerParams == null)
     {
       headerParams = new HashMap<String, String>();
@@ -336,7 +377,9 @@ public class MCSPersistenceManager
   /**
    * Return the anonymous authorization header parameter value. By default, this value is constructed
    * from the anonymous access key defined in mobile-persistence-config.properties, prefixed
-   * with "Basic ". Note that the anonymous access key can be changed by calling setAnonymousKey.
+   * with "Basic " if needed. When using an EL expression in mobile-persistence-config.properties, the 
+   * value typically already starts with "Basic".
+   * Note that the anonymous access key can be changed by calling setAnonymousKey.
    * If the anonymous access key is not set, this method returns null.
    * @return
    */
@@ -344,7 +387,14 @@ public class MCSPersistenceManager
   {
     if (getAnonymousKey() != null)
     {
-      return "Basic " + getAnonymousKey();
+      if (getAnonymousKey().toUpperCase().startsWith("BASIC "))
+      {
+        return getAnonymousKey();                
+      }
+      else
+      {
+        return "Basic " + getAnonymousKey();        
+      }
     }
     return null;
   }
@@ -406,11 +456,18 @@ public class MCSPersistenceManager
    * Creates or updates a storage object in an MCS collection. The ID of the storage object is used
    * as the object identifier, so, when an objet with the same ID already exists in this collection, it will be updated
    * and the ETag value of the object will be incremented with 1, the new ETag value returned by MCS is stored in the
-   * SQLIte DB together with the other metadata returned by MCS
+   * SQLIte DB together with the other metadata returned by MCS.
+   * If the filePath is not set on the storageObject, this method will do nothing.
    * @param storageObject
    */
   public void storeStorageObject(StorageObject storageObject)
   {
+    sLog.fine("Executing storeStorageObject");
+    if (storageObject.getFilePath()==null)
+    {
+      sLog.severe("Cannot store object in MCS, no file path available");
+      return;
+    }
     try
     {
 
@@ -459,6 +516,19 @@ public class MCSPersistenceManager
     finally
     {
     }
+  }
+
+  /**
+   * Removes a storage object from an MCS collection. 
+   * 
+   * @param storageObject
+   */
+  public void removeStorageObject(StorageObject storageObject)
+  {
+    sLog.fine("Executing removeStorageObject");
+      String requestURI =
+        STORAGE_COLLECTIONS_URI + storageObject.getCollectionName() + "/objects/" + storageObject.getId();
+      invokeRestService(getConnectionName(),"DELETE",requestURI,null,null,0,false);
   }
 
   /**
@@ -524,6 +594,7 @@ public class MCSPersistenceManager
    */
   public String registerDevice(String token, String appId, String appVersion)
   {
+    sLog.fine("Executing registerDevice");
     String os = DeviceManagerFactory.getDeviceManager().getOs().equalsIgnoreCase("IOS") ? "IOS" : "ANDROID";
     String payload =
         "{\"notificationToken\": \""+token+"\",\"mobileClient\": {\"id\": \"" + appId +
@@ -544,6 +615,7 @@ public class MCSPersistenceManager
    */
   public String deregisterDevice(String token, String appId)
   {
+    sLog.fine("Executing deregisterDevice");
     String os = DeviceManagerFactory.getDeviceManager().getOs().equalsIgnoreCase("IOS") ? "IOS" : "ANDROID";
     String payload =
         "{\"notificationToken\": \""+token+"\",\"mobileClient\": {\"id\": \"" + appId +
@@ -552,6 +624,32 @@ public class MCSPersistenceManager
     String result = invokeRestService(getConnectionName(), "POST", DEREGISTER_DEVICE_URI, payload, null,0, false);
     sLog.fine("Response payload for deregisterDevice: "+result);
     return result;
+  }
+  
+  /**
+   * Get MCS User info
+   * 
+   * @param username
+   * @return response payload
+   */
+  public String findUser(String username)
+  {
+    sLog.fine("Executing findUser");
+    String requestURI = USER_URI+"/"+username;
+    return invokeRestService(getConnectionName(),"GET",requestURI,null,null,0,false);    
+  }
+
+  /**
+   * Update MCS User info
+   * 
+   * @param username
+   * @return response payload
+   */
+  public String updateUser(String username, String requestPayload)
+  {
+    sLog.fine("Executing updateUser");
+    String requestURI = USER_URI+"/"+username;
+    return invokeRestService(getConnectionName(),"PUT",requestURI,requestPayload,null,0,false);    
   }
 
 }

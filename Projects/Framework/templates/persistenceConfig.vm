@@ -8,7 +8,7 @@ ddl.script=META-INF/${WSM.workspaceName}.sql
 persistence.mapping.xml=META-INF/persistence-mapping.xml
 
 #if ($WSM.useMCS)
-# MCS connection details
+# MCS connection details, applicationScope EL Expressions are allowed!
 mcs.connection=${WSM.connectionName}
 mcs.mobile-backend-id=${WSM.mcsBackendId}
 mcs.anonymous-key=${WSM.mcsAnonymousAccessKey}

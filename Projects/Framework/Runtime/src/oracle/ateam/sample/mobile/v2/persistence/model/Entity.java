@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  20-feb-2016   Steven Davelaar
+  1.2           Added callback method childEntityAdded/removed 
   19-mar-2015   Steven Davelaar
   1.1           Added call to EntityUtils.refreshCurrentEntity in refreshChildEntityList method
                 to ensure UI is also refreshed correctly when child entities are shown in form layout 
@@ -18,6 +20,9 @@ import java.util.List;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
 
+import oracle.adfmf.java.beans.PropertyChangeSupport;
+
+import oracle.ateam.sample.mobile.persistence.metadata.ClassMappingDescriptor;
 import oracle.ateam.sample.mobile.v2.persistence.service.IndirectList;
 import oracle.ateam.sample.mobile.v2.persistence.service.ValueHolderInterface;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;
@@ -210,8 +215,12 @@ public abstract class Entity<E> extends ChangeEventSupportable
       getProviderChangeSupport().fireProviderRefresh(childAttribute);
       // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
       // a list view. So, we als refresh the current entity. 
-      // Seems to work fine now in MAF 2.2.1                        
+      // refreshCurrentEntity uses iterator refresh and can cause endless loop                      
 //      EntityUtils.refreshCurrentEntity(childAttribute,newList,getProviderChangeSupport());
+      if (newList!=null && newList.size()>0)
+      {
+        EntityUtils.refreshEntity((Entity) newList.get(0));
+      }
       AdfmfJavaUtilities.flushDataChangeEvent();                        
     });
 //    getPropertyChangeSupport().firePropertyChange(childAttribute, oldList, newList);
@@ -238,6 +247,28 @@ public abstract class Entity<E> extends ChangeEventSupportable
    */
   public void childEntityRemoved(E entity)
   {
+  }
+  
+
+  /**
+   * Fire property change events for the attributes passed in. We use null as old value.
+   * The change events are fired using TaskExecutor.executeUIRefreshTask which ensures use
+   * of the MafExecutorService when runnning in the background.
+   * 
+   * @param attrsToRefresh
+   */
+  public void refreshUI(List<String> attrsToRefresh)
+  {
+    sLog.fine("Executing refreshUI");
+    TaskExecutor.getInstance().executeUIRefreshTask(() ->
+    {
+      for(String attrName : attrsToRefresh)
+      {
+        getPropertyChangeSupport().firePropertyChange(attrName, null, getAttributeValue(attrName));
+      }
+      AdfmfJavaUtilities.flushDataChangeEvent();
+      
+    });
   }
 
 }

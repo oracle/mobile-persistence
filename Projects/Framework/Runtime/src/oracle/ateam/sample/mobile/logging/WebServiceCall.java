@@ -1,3 +1,10 @@
+/*******************************************************************************
+ Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+
+ $revision_history$
+ 29-apr-2015   Steven Davelaar
+ 1.0           initial creation
+******************************************************************************/
 package oracle.ateam.sample.mobile.logging;
 
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
@@ -5,6 +12,9 @@ import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 import java.util.Date;
 
 
+/**
+ * Class that holds info about a REST call
+ */
 public class WebServiceCall
   extends Entity
 {

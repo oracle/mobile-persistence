@@ -1,3 +1,10 @@
+/*******************************************************************************
+ Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+
+ $revision_history$
+ 29-apr-2015   Steven Davelaar
+ 1.0           initial creation
+******************************************************************************/
 package oracle.ateam.sample.mobile.logging;
 
 

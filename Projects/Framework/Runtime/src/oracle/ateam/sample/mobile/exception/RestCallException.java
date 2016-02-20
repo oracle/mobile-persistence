@@ -1,3 +1,10 @@
+/*******************************************************************************
+ Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+
+ $revision_history$
+ 10-jan-2016   Steven Davelaar
+ 1.0           initial creation
+******************************************************************************/
 package oracle.ateam.sample.mobile.exception;
 
 import java.util.Map;
@@ -6,6 +13,10 @@ import oracle.adfmf.framework.exception.AdfException;
 import oracle.adfmf.java.beans.PropertyChangeListener;
 import oracle.adfmf.java.beans.PropertyChangeSupport;
 
+/**
+ * Exception class used when a REST call fails. This class allows adding additional info to the exception about the Rest 
+ * call being made.
+ */
 public class RestCallException
   extends AdfException
 {

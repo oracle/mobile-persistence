@@ -183,7 +183,7 @@ public class TaskExecutor
           }
           while (size > 0 || !lasttFuture.isDone())
           {
-            sLog.fine("Number of background tasks in Queue in TaskExecutor: " + size);
+            sLog.finest("Number of background tasks in Queue in TaskExecutor: " + size);
             try
             {
               Thread.sleep(100);
@@ -195,7 +195,7 @@ public class TaskExecutor
           }
           setRunning(false);
 //          AdfmfJavaUtilities.flushDataChangeEvent();
-          sLog.fine("No more background tasks running in TaskExecutor: " + size);
+          sLog.finest("No more background tasks running in TaskExecutor: " + size);
         };
       Thread t = new Thread(r2);
       t.start();

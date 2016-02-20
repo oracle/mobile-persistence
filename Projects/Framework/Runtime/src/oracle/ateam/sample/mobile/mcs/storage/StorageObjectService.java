@@ -29,6 +29,7 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.v2.persistence.cache.EntityCache;
 import oracle.ateam.sample.mobile.v2.persistence.manager.MCSPersistenceManager;
+import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 import oracle.ateam.sample.mobile.v2.persistence.service.DataSynchAction;
 import oracle.ateam.sample.mobile.v2.persistence.service.EntityCRUDService;
 
@@ -59,6 +60,19 @@ public class StorageObjectService
   {
   }
 
+  /**
+   * Constructor that allows you to override the default values for remoteReadInBackground and
+   * remoteWriteInBackground as set in persistence-mapping.xml
+   * @param remoteReadInBackground
+   * @param remoteWriteInBackground
+   */
+  public StorageObjectService(boolean remoteReadInBackground, boolean remoteWriteInBackground)
+  {
+    super();
+    setDoRemoteReadInBackground(remoteReadInBackground);
+    setDoRemoteWriteInBackground(remoteWriteInBackground);
+  }
+
   protected Class getEntityClass()
   {
     return StorageObject.class;
@@ -85,6 +99,7 @@ public class StorageObjectService
    */
   public void addStorageObject(int index, StorageObject storageObject)
   {
+    sLog.fine("Executing addStorageObject");
     addEntity(index, storageObject);
   }
 
@@ -99,6 +114,7 @@ public class StorageObjectService
    */
   public void removeStorageObject(StorageObject storageObject)
   {
+    sLog.fine("Executing removeStorageObject");
     removeEntity(storageObject);
   }
 
@@ -114,6 +130,7 @@ public class StorageObjectService
    */
   public void saveStorageObject(StorageObject storageObject)
   {
+    sLog.fine("Executing saveStorageObject");
     if (storageObject.isStoreOnDevice())
     {
       saveStorageObjectOnDevice(storageObject);
@@ -129,11 +146,44 @@ public class StorageObjectService
    */
   public void saveStorageObjectOnDevice(StorageObject storageObject)
   {
+    sLog.fine("Executing saveStorageObjectOnDevice");
     // first store on file syste so filePath is set on StorageObject and
     // also saved
     saveStorageObjectToFileSystem(storageObject);
     getLocalPersistenceManager().mergeEntity(storageObject, isAutoCommit());
     storageObject.setIsNewEntity(false);
+  }
+
+  @Override
+  /**
+   * Removes the storage object file from the file system and removes the storage 
+   * object from SQLite DB
+   */
+  protected void removeEntity(Entity entity)
+  {
+    if (entity instanceof StorageObject)
+    {
+      removeFromFileSystem((StorageObject)entity);
+    }
+    super.removeEntity(entity);
+  }
+  
+  /**
+   * Remove the storage object file from the device file system
+   * @param storageObject
+   */
+  public void removeFromFileSystem(StorageObject storageObject)
+  {
+    sLog.fine("Executing removeFromFileSystem");
+    if (storageObject.getFilePath()!=null)
+    {
+      File file = new File(storageObject.getFilePath());
+      if (file.exists())
+      {
+        file.delete();
+        sLog.fine("File "+storageObject.getId()+" deleted from file system");
+      }
+    }    
   }
 
   /**
@@ -143,6 +193,7 @@ public class StorageObjectService
    */
   public void saveStorageObjectInMCS(StorageObject storageObject)
   {
+    sLog.fine("Executing saveStorageObjectInMCS");
     // We use UPDATE_ACTION, doesn't matter whether we use INSERT or UPDATE because we always
     // excecute the PUT method.
     writeEntityRemote(new DataSynchAction(DataSynchAction.UPDATE_ACTION, storageObject, this.getClass().getName()));
@@ -154,6 +205,7 @@ public class StorageObjectService
    */
   public void findAllStorageObjectsInCollection(String collectionName)
   {
+    sLog.fine("Executing findAllStorageObjectsInCollection");
     if (isPersisted())
     {
       Map<String,String> searchValues = new HashMap<String,String>();
@@ -194,6 +246,7 @@ public class StorageObjectService
    */
   public StorageObject findStorageObjectMetadata(String collection, String objectId)
   {
+    sLog.fine("Executing findStorageObjectMetadata");
     StorageObject storageObject = findOrCreateStorageObject(collection, objectId);
     findStorageObjectMetadataRemote(storageObject);
     return storageObject;
@@ -210,6 +263,7 @@ public class StorageObjectService
    */
   public StorageObject findOrCreateStorageObject(String collection, String objectId)
   {
+    sLog.fine("Executing findOrCreateStorageObject");
     StorageObject storageObject = null;
     if (isPersisted())
     {
@@ -233,6 +287,7 @@ public class StorageObjectService
 
   public void findStorageObjectMetadataRemote(StorageObject storageObject)
   {
+    sLog.fine("Executing findStorageObjectMetadataRemote");
     if (isOffline())
     {
       sLog.fine("Cannot execute getStorageObjectMetadataRemote, no network connection");
@@ -259,6 +314,7 @@ public class StorageObjectService
    */
   public StorageObject findStorageObjectInMCS(String collection, String objectId, boolean throwNotFoundException)
   {
+    sLog.fine("Executing findStorageObjectInMCS");
     StorageObject storageObject = findOrCreateStorageObject(collection, objectId);
     findStorageObjectInMCS(storageObject,throwNotFoundException);
     return storageObject;
@@ -274,6 +330,7 @@ public class StorageObjectService
    */
   public void findStorageObjectInMCS(StorageObject storageObject, boolean throwNotFoundException)
   {
+    sLog.fine("Executing findStorageObjectInMCS");
     if (isOffline())
     {
       sLog.fine("Cannot execute findStorageObjectInMCS, device is offline");
@@ -322,6 +379,7 @@ public class StorageObjectService
    */
   public void saveStorageObjectToFileSystem(StorageObject storageObject)  
   {
+    sLog.fine("Executing saveStorageObjectToFileSystem");
     byte[] content = storageObject.getContent();
     String dir = storageObject.getDirectoryPath();
     File fileDir = new File(dir);
@@ -338,12 +396,15 @@ public class StorageObjectService
       fos.write(content);
       fos.flush();
       storageObject.setFilePath(filePath);
+      sLog.info("Storage Object "+storageObject.getId()+" succesfully saved to file system.");
     }
     catch (FileNotFoundException e)
     {
+      sLog.info("Storage Object "+storageObject.getId()+" NOT saved to file system: "+e.getLocalizedMessage());
     }
     catch (IOException e)
     {
+      sLog.info("Storage Object "+storageObject.getId()+" NOT saved to file system: "+e.getLocalizedMessage());
     }
     finally
     {
@@ -372,6 +433,7 @@ public class StorageObjectService
    */
   protected void unzipFile(File zipFile, File unzipDir, boolean deleteZipFile)
   {
+    sLog.fine("Executing unzipFile for "+zipFile.getName());
     if (!unzipDir.exists())
     {
       unzipDir.mkdirs();      
@@ -410,9 +472,11 @@ public class StorageObjectService
       zipInput.closeEntry();
       zipInput.close();
       fInput.close();
+      sLog.info("Zip file "+zipFile.getName()+" succesfully unzipped to file system");
     }
     catch (IOException e)
     {
+      sLog.info("Zip file "+zipFile.getName()+" NOT unzipped to file system: "+e.getLocalizedMessage());
       throw new AdfException(e);
     }
     finally
@@ -420,6 +484,7 @@ public class StorageObjectService
       if (deleteZipFile)
       {
         zipFile.delete();        
+        sLog.info("Zip file "+zipFile.getName()+" deleted from file system");
       }
     }
   }

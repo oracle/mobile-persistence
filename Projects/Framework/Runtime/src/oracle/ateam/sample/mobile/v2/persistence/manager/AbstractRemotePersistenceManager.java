@@ -48,7 +48,7 @@ public abstract class AbstractRemotePersistenceManager
   }
 
   /**
-   * This method returns true when the create-method is specified in the corresponding
+   * This method returns true when the createMethod is specified in the corresponding
    * ClassMappingDescriptor in the persistenceMapping.xml file
    */
   public boolean isCreateSupported(Class clazz)
@@ -57,7 +57,7 @@ public abstract class AbstractRemotePersistenceManager
   }
 
   /**
-   * This method returns true when the update-method is specified in the corresponding
+   * This method returns true when the updateMethod is specified in the corresponding
    * ClassMappingDescriptor in the persistenceMapping.xml file
    */
   public boolean isUpdateSupported(Class clazz)
@@ -66,7 +66,7 @@ public abstract class AbstractRemotePersistenceManager
   }
 
   /**
-   * This method returns true when the merge-method is specified in the corresponding
+   * This method returns true when the mergeMethod is specified in the corresponding
    * ClassMappingDescriptor in the persistenceMapping.xml file
    */
   public boolean isMergeSupported(Class clazz)
@@ -75,7 +75,7 @@ public abstract class AbstractRemotePersistenceManager
   }
 
   /**
-   * This method returns true when the remove-method is specified in the corresponding
+   * This method returns true when the removeMethod is specified in the corresponding
    * ClassMappingDescriptor in the persistenceMapping.xml file
    */
   public boolean isRemoveSupported(Class clazz)
@@ -84,7 +84,7 @@ public abstract class AbstractRemotePersistenceManager
   }
 
   /**
-   * This method returns true when the find-all-method is specified in the corresponding
+   * This method returns true when the findAllMethod is specified in the corresponding
    * ClassMappingDescriptor in the persistenceMapping.xml file
    */
   public boolean isFindAllSupported(Class clazz)
@@ -93,7 +93,16 @@ public abstract class AbstractRemotePersistenceManager
   }
 
   /**
-   * This method returns true when the find-all-in-parent-method is specified in the corresponding
+   * This method returns true when the getCanonicalMethod is specified in the corresponding
+   * ClassMappingDescriptor in the persistenceMapping.xml file
+   */
+  public boolean isGetCanonicalSupported(Class clazz)
+  {
+    return ClassMappingDescriptor.getInstance(clazz).isGetCanonicalSupported();
+  }
+
+  /**
+   * This method returns true when the findAllInParentMethod is specified in the corresponding
    * ClassMappingDescriptor in the persistenceMapping.xml file
    */
   public boolean isFindAllInParentSupported(Class clazz, String accessorAttribute)
@@ -102,7 +111,7 @@ public abstract class AbstractRemotePersistenceManager
   }
 
   /**
-   * This method returns true when the get-as-parent-method is specified in the corresponding
+   * This method returns true when the getAsParentMethod is specified in the corresponding
    * ClassMappingDescriptor in the persistenceMapping.xml file
    */
   public boolean isGetAsParentSupported(Class clazz, String accessorAttribute)
@@ -111,7 +120,7 @@ public abstract class AbstractRemotePersistenceManager
   }
 
   /**
-   * This method returns true when the find-method is specified in the corresponding
+   * This method returns true when the findMethod is specified in the corresponding
    * ClassMappingDescriptor in the persistenceMapping.xml file
    */
   public boolean isFindSupported(Class clazz)

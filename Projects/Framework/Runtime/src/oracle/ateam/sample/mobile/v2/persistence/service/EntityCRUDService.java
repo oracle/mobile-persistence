@@ -5,6 +5,7 @@
   19-feb-2016   Steven Davelaar
   1.6           - No longer generate PK in addEntity method, now done in DBPersistenceManager.insertEntity
                 - added methods entityAdded/Removed
+                - still refresh issue in form layout, now using new method refreshEntity
   01-feb-2016   Steven Davelaar
   1.5           - Check for isPersisted instead of localPersistenceManager!=null in entity write methods. 
                 - Commented out call to refreshCurrentEntity in refreshEntityList, refresh of form layout now works fine
@@ -144,6 +145,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void findAll()
   {
+    sLog.fine("Executing findAll");
     if (isPersisted())
     {
       setEntityList(executeLocalFindAll());
@@ -163,6 +165,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected List<E> executeLocalFindAll()
   {
+    sLog.fine("Executing executeLocalFindAll");
     return getLocalPersistenceManager().findAll(getEntityClass());
   }
 
@@ -176,6 +179,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected List<E> executeRemoteFindAll()
   {
+    sLog.fine("Executing executeRemoteFindAll");
     return remotePersistenceManager.findAll(getEntityClass());
   }
 
@@ -189,6 +193,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected List<E> executeRemoteFindAllInParent(Entity parent, String accessorAttribute)
   {
+    sLog.fine("Executing executeRemoteFindAllInParent");
     return remotePersistenceManager.findAllInParent(getEntityClass(), parent, accessorAttribute);
   }
 
@@ -202,6 +207,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected List<E> executeRemoteFind(String searchValue)
   {
+    sLog.fine("Executing executeRemoteFind");
     return remotePersistenceManager.find(getEntityClass(), searchValue);
   }
 
@@ -211,6 +217,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void find(String searchValue)
   {
+    sLog.fine("Executing find with searchValue: "+searchValue);
     if (isPersisted())
     {
       setEntityList(getLocalPersistenceManager().find(getEntityClass(), searchValue, getQuickSearchAttributeNames()));
@@ -250,6 +257,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected Entity findEntityByKey(Object[] key)
   {
+    sLog.fine("Executing findEntityByKey");
     if (isPersisted())
     {
       return getLocalPersistenceManager().findByKey(getEntityClass(), key);
@@ -268,10 +276,13 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void insertEntity(Entity entity)
   {
+    sLog.fine("Executing insertEntity");
     validateEntity(entity);
     if (isPersisted())
     {
       localPersistenceManager.insertEntity(entity, isAutoCommit());
+      sLog.fine("Adding entity to cache");
+      EntityCache.getInstance().addEntity(entity);
     }
     if (remotePersistenceManager != null && remotePersistenceManager.isCreateSupported(entity.getClass()))
     {
@@ -294,6 +305,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void writeEntityRemote(DataSynchAction dataSynchAction)
   {
+    sLog.fine("Executing writeEntityRemote");
     // no need to throw error, data synch actions will be registered and processed next time
     //    if (getDataSynchManager().isDataSynchRunning())
     //    {
@@ -329,6 +341,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void reportFailedTransaction(DataSynchAction dataSynchAction)
   {
+    sLog.fine("Executing reportFailedTransaction");
     MessageUtils.handleError(dataSynchAction.getLastSynchError());
   }
 
@@ -358,6 +371,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void addEntity(int index, E entity)
   {
+    sLog.fine("Executing addEntity");
     entity.setIsNewEntity(true);
 // we now generate PK value in DBPersistenceManager.insertEntity to prevent duplicates when
 // multiple rows are created and not yet saved to DB.    
@@ -375,6 +389,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void entityAdded(E entity)
   {
+    sLog.fine("Executing entityAdded");
   }
 
   /**
@@ -384,10 +399,12 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void entityRemoved(E entity)
   {
+    sLog.fine("Executing entityRemoved");
   }
 
   protected void generatePrimaryKeyValue(Entity entity)
   {
+    sLog.fine("Executing executeLocalFindAll");
     EntityUtils.generatePrimaryKeyValue(getLocalPersistenceManager(), entity, getKeyValueIncrement());
   }
 
@@ -397,6 +414,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void updateEntity(Entity entity)
   {
+    sLog.fine("Executing updateEntity");
     validateEntity(entity);
     if (isPersisted())
     {
@@ -414,6 +432,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void invokeCustomMethod(Entity entity, String methodName)
   {
+    sLog.fine("Executing invokeCustomMethod");
     if (remotePersistenceManager != null)
     {
       DataSynchAction action = new DataSynchAction(DataSynchAction.CUSTOM_ACTION, entity, this.getClass().getName());
@@ -429,6 +448,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void mergeEntity(Entity entity)
   {
+    sLog.fine("Executing mergeEntity");
     boolean isNew = entity.getIsNewEntity();
     // we could have called mergeEntity on persistence manager, but
     // on insert we want to reuse the refresh code in insertEntity method
@@ -456,6 +476,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void removeEntity(Entity entity)
   {
+    sLog.fine("Executing removeEntity");
     if (!entity.getIsNewEntity())
     {
       if (isPersisted())
@@ -476,6 +497,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void refreshEntityList(List<E> oldEntityList)
   {
+    sLog.fine("Executing refreshEntityList");
     TaskExecutor.getInstance().executeUIRefreshTask(() -> 
     {
        getPropertyChangeSupport().firePropertyChange(getEntityListName(), oldEntityList, getEntityList());
@@ -483,7 +505,7 @@ public abstract class EntityCRUDService<E extends Entity>
        // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
        // a list view.
        // This now seems to work fine in MAF 2.2.1, so we can comment out the call to refreshCurrentEntity
-       //    EntityUtils.refreshCurrentEntity(getEntityListName(), getEntityList(), getProviderChangeSupport());
+//       EntityUtils.refreshCurrentEntity(getEntityListName(), getEntityList(), getProviderChangeSupport());
        AdfmfJavaUtilities.flushDataChangeEvent();
      }
     );
@@ -515,6 +537,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void commit()
   {
+    sLog.fine("Executing commit");
     if (localPersistenceManager != null)
     {
       localPersistenceManager.commmit();
@@ -604,6 +627,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void doRemoteFindAll()
   {
+    sLog.fine("Executing doRemoteFindAll");
     if (getRemotePersistenceManager() == null)
     {
       sLog.fine("Cannot execute doRemoteFindAll, no remote persistence manager configured");
@@ -640,6 +664,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void doRemoteFindAllInParent(final Entity parent, final String accessorAttribute)
   {
+    sLog.fine("Executing doRemoteFindAllInParent");
     if (getRemotePersistenceManager() == null)
     {
       sLog.fine("Cannot execute doRemoteFindAllInParent, no remote persistence manager configured");
@@ -678,6 +703,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void doRemoteFind(final String searchValue)
   {
+    sLog.fine("Executing doRemoteFind");
     if (getRemotePersistenceManager() == null)
     {
       sLog.fine("Cannot execute doRemoteFind, no remote persistence manager configured");
@@ -729,12 +755,16 @@ public abstract class EntityCRUDService<E extends Entity>
 
   protected boolean isOffline()
   {
-    return new ConnectivityBean().isOffline();
+    boolean offline = new ConnectivityBean().isOffline();
+    sLog.fine("isOffline: "+offline);
+    return offline;
   }
 
   protected boolean isOnline()
   {
-    return new ConnectivityBean().isOnline();
+    boolean online = new ConnectivityBean().isOnline();
+    sLog.fine("isOnline: "+online);
+    return online;
   }
 
   /**
@@ -767,6 +797,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void validateEntity(Entity entity)
   {
+    sLog.fine("Executing validateEntity");
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entity.getClass());
     List mappings = descriptor.getAttributeMappingsDirect();
     List<String> attrNames = new ArrayList<String>();
@@ -804,6 +835,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   public void synchronize(Boolean inBackground)
   {
+    sLog.fine("Executing synchronize");
       getDataSynchManager().synchronize(inBackground.booleanValue(),this);      
   }
 
@@ -821,6 +853,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void setRemoteFindAllExecuted(boolean executed)
   {
+    sLog.fine("Executing setRemoteFindAllExecuted");
     AdfmfJavaUtilities.setELValue(getRemoteFindAllExecutedExpression(), Boolean.valueOf(executed));
   }
 
@@ -843,6 +876,7 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void resetEntity(Entity entity)
   {
+    sLog.fine("Executing resetEntity");
     if (entity.getIsNewEntity())
     {
       List oldEntities = getEntityList();
@@ -852,7 +886,8 @@ public abstract class EntityCRUDService<E extends Entity>
     else if (isPersisted(entity.getClass()))
     {
       getLocalPersistenceManager().resetEntity(entity);
-      EntityUtils.refreshCurrentEntity(getEntityListName(), getEntityList(), providerChangeSupport);
+//      EntityUtils.refreshCurrentEntity(getEntityListName(), getEntityList(), providerChangeSupport);
+      EntityUtils.refreshEntity(entity);
     }
   }
 
@@ -895,7 +930,9 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void getCanonical(Entity entity, boolean executeInBackground)
   {
-    if (isOnline() && getRemotePersistenceManager() != null && !entity.canonicalGetExecuted())
+    sLog.fine("Executing getCanonical");
+    if (isOnline() && getRemotePersistenceManager() != null && !entity.canonicalGetExecuted()
+        && getRemotePersistenceManager().isGetCanonicalSupported(entity.getClass()))
     {
       // immediately set flag to false, so we can call this method from some get Attribute method without
       // causing endless loop
@@ -916,29 +953,32 @@ public abstract class EntityCRUDService<E extends Entity>
    */
   protected void executeGetCanonical(Entity entity)
   {
+    sLog.fine("Executing executeGetCanonical");
     getRemotePersistenceManager().getCanonical(entity);
     if (isPersisted(entity.getClass()))
     {
       getLocalPersistenceManager().mergeEntity(entity, true);
     }
-    EntityUtils.refreshCurrentEntity(getEntityListName(), getEntityList(), getProviderChangeSupport());
+//    EntityUtils.refreshCurrentEntity(getEntityListName(), getEntityList(), getProviderChangeSupport());
+    EntityUtils.refreshEntity(entity);
   }
 
 
   /**
-   * Initialize this service instance based on properties specified in crud-service-class element
-   * in persistenceMapping XML file:
+   * Initialize this service instance based on properties specified in crudServiceClass element
+   * in persistence-mapping XML file:
    * <ul>
-   * <li>local-persistence-manager</li>
-   * <li>remote-persistence-manager</li>
-   * <li>remote-read-in-background</li>
-   * <li>remote-write-in-background</li>
-   * <li>auto-increment-primary-key</li>
-   * <li>show-web-service-invocation-errors</li>
+   * <li>localPersistenceManager</li>
+   * <li>remotePersistenceManager</li>
+   * <li>remoteReadInBackground</li>
+   * <li>remoteWriteInBackground</li>
+   * <li>autoIncrementPrimaryKey</li>
+   * <li>showWebServiceInvocationErrors</li>
    * </ul>
    */
   protected void initialize()
   {
+    sLog.fine("Executing initialize");
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(getEntityClass());
     setLocalPersistenceManager(EntityUtils.getLocalPersistenceManager(descriptor));
     setRemotePersistenceManager(EntityUtils.getRemotePersistenceManager(descriptor));    
@@ -993,6 +1033,7 @@ public abstract class EntityCRUDService<E extends Entity>
   protected void dataSynchFinished(List<DataSynchAction> succeededDataSynchActions,
                                    List<DataSynchAction> failedDataSynchActions)
   {
+    sLog.fine("Executing dataSynchFinished");
     //    int ok = succeededDataSynchActions.size();
     //    int fails = failedDataSynchActions.size();
     //    int total = ok + fails;

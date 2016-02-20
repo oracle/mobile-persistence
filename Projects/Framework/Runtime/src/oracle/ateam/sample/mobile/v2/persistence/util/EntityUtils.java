@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 
 import java.sql.Timestamp;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -614,6 +615,23 @@ public class EntityUtils
   }
 
   /**
+   * This method refresh all attributes that have an attribute mapping in persistenc-mapping.xml.
+   * It calls entity.refreshUI with this list of attribute names.
+   * @param <E>
+   * @param entity
+   */
+  public static <E extends Entity> void refreshEntity(Entity entity)
+  {
+    List<AttributeMapping> mappings = ClassMappingDescriptor.getInstance(entity.getClass()).getAttributeMappings();
+    List<String> attrs = new ArrayList<String>();
+    for (AttributeMapping mapping : mappings)
+    {
+      attrs.add(mapping.getAttributeName());      
+    }
+    entity.refreshUI(attrs);
+  }
+  
+  /**
    * The standard technique to refresh UI using providerChangeSupport.fireProviderRefresh only refreshes
    * the UI correctly when a list view is used. With a form layout, we need to call
    * providerChangeSupport.fireProviderChange("listName", rowKey, entity) to get form fields refreshed correctly.
@@ -627,6 +645,10 @@ public class EntityUtils
    * named after the entityListName suffixed with "Iterator".
    * @param entities list f entities that holds the current enity that needs to be refreshed
    * @param providerChangeSupport instance used to invoke the fireProviderChange method
+   * 
+   * @deprecated This method can cause an endless loop in combination with getCanonicalEntityy method. Also, the 
+   * iteratorRefresh method was an awkward way to do it, including the "guessing" of iterator name. Use the new refreshEntity 
+   * method instead.
    */
   public static <E extends Entity> void refreshCurrentEntity(String entityListName, List<E> entities,
                                                              ProviderChangeSupport providerChangeSupport)
