@@ -214,7 +214,7 @@ public abstract class Entity<E> extends ChangeEventSupportable
       getPropertyChangeSupport().firePropertyChange(childAttribute, oldList, newList);
       getProviderChangeSupport().fireProviderRefresh(childAttribute);
       // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
-      // a list view. So, we als refresh the current entity. 
+      // a list view. So, we als refresh the first entity in the list                  
       // refreshCurrentEntity uses iterator refresh and can cause endless loop                      
 //      EntityUtils.refreshCurrentEntity(childAttribute,newList,getProviderChangeSupport());
       if (newList!=null && newList.size()>0)
@@ -254,6 +254,8 @@ public abstract class Entity<E> extends ChangeEventSupportable
    * Fire property change events for the attributes passed in. We use null as old value.
    * The change events are fired using TaskExecutor.executeUIRefreshTask which ensures use
    * of the MafExecutorService when runnning in the background.
+   * If canonicalGetExecuted is false, we temporarily set it to true, to prevent any REST calls
+   * to fire as a result of invoking the getter methods for refresh event.
    * 
    * @param attrsToRefresh
    */
@@ -262,10 +264,13 @@ public abstract class Entity<E> extends ChangeEventSupportable
     sLog.fine("Executing refreshUI");
     TaskExecutor.getInstance().executeUIRefreshTask(() ->
     {
+      boolean oldCanonicalGet = canonicalGetExecuted();
+      setCanonicalGetExecuted(true);                                                                                                        
       for(String attrName : attrsToRefresh)
       {
         getPropertyChangeSupport().firePropertyChange(attrName, null, getAttributeValue(attrName));
       }
+      setCanonicalGetExecuted(oldCanonicalGet);
       AdfmfJavaUtilities.flushDataChangeEvent();
       
     });

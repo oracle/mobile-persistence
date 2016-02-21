@@ -105,7 +105,7 @@ public class DBConnectionFactory
         long startTime = System.currentTimeMillis();
         while (connectionInUse)
         {
-          sLog.info("WAITING to acquire DB connection... Ms: "+(System.currentTimeMillis()-startTime));
+          sLog.finest("WAITING to acquire DB connection... Ms: "+(System.currentTimeMillis()-startTime));
           // another thread is still using the connection, wait until released
           // with a maximum of 30 seconds
           if (System.currentTimeMillis()-startTime > 30000)

@@ -199,10 +199,10 @@ public class MCSPersistenceManager
     {
       // 304 is Not Modified, this means local eTag is sams as remote, so
       // no need to retrieve the content of it has been retrieved before
-      if (storageObject.getFilePath() != null)
-      {
-        storageObject.setLocalVersionIsCurrent(true);
-      }
+//      if (storageObject.getFilePath() != null)
+//      {
+//        storageObject.setLocalVersionIsCurrent(true);
+//      }
     }
     else
     {
@@ -264,15 +264,15 @@ public class MCSPersistenceManager
     if (getLastResponseStatus() == 304)
     {
       // 304 is Not Modified, this means local eTag is same as remote
-      sLog.info("Storage Object "+storageObject.getId()+" not modified since last download, E-Tags still match.");
+      sLog.fine("Storage Object "+storageObject.getId()+" not modified since last download, E-Tags still match");
     }
     else
     {
       // populate the object metadata attrs with the response headers
       populateStorageObjectMetadata(storageObject, getLastResponseHeaders());
-      sLog.info("Storage Object "+storageObject.getId()+" downloaded succesfully.");
+      sLog.fine("Storage Object "+storageObject.getId()+" downloaded succesfully");
     }
-    storageObject.setLocalVersionIsCurrent(true);
+//    storageObject.setLocalVersionIsCurrent(true);
     return response;
   }
 

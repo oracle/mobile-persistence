@@ -56,6 +56,7 @@ public class StorageObject
   // dummy attrs to prevent serialization 
   private transient String downloadIfNeeded;
   private transient String downloadIfNeededInBackground;
+  private Runnable downloadCallback;
 
   public String getCreatedOn()
   {
@@ -97,25 +98,33 @@ public class StorageObject
 
   /**
    * Dummy attribute that can be included in an AMX page to trigger download of the file in the background.
+   * If isLocalVersionIsCurrent() retruns true no download attempt is made.
    * This method returns an empty string
    * @return
    */
   public String getDownloadIfNeededInBackground()
   {
-    StorageObjectService sos = new StorageObjectService(true,true);
-    sos.findStorageObjectInMCS(this,false);
+    if (!isLocalVersionIsCurrent())
+    {
+      StorageObjectService sos = new StorageObjectService(true,true);
+      sos.findStorageObjectInMCS(this,false);      
+    }
     return "";
   }
 
   /**
    * Dummy attribute that can be included in an AMX page to trigger download of the file in foreground.
-   * This method returns an empty string
+   * If isLocalVersionIsCurrent() retruns true no download attempt is made.
+   * This method returns an empty string.
    * @return
    */
   public String getDownloadIfNeeded()
   {
-    StorageObjectService sos = new StorageObjectService(false,false);
-    sos.findStorageObjectInMCS(this,false);
+    if (!isLocalVersionIsCurrent())
+    {
+      StorageObjectService sos = new StorageObjectService(false,false);
+      sos.findStorageObjectInMCS(this,false);
+    }
     return "";
   }
 
@@ -267,4 +276,14 @@ public class StorageObject
     return content;
   }
 
+
+  public void setDownloadCallback(Runnable downloadCallback)
+  {
+    this.downloadCallback = downloadCallback;
+  }
+
+  public Runnable getDownloadCallback()
+  {
+    return downloadCallback;
+  }
 }

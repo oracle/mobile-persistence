@@ -369,7 +369,7 @@ public abstract class EntityCRUDService<E extends Entity>
    * @param index
    * @param entity
    */
-  protected void addEntity(int index, E entity)
+  protected void addEntity(int index, Entity entity)
   {
     sLog.fine("Executing addEntity");
     entity.setIsNewEntity(true);
@@ -380,6 +380,26 @@ public abstract class EntityCRUDService<E extends Entity>
 //      generatePrimaryKeyValue(entity);
 //      EntityCache.getInstance().addEntity(entity);
 //    }
+  }
+
+  /**
+   * Sets entity state to new, and if addToList argument is true, it adds the entity to the
+   * entity list and and fires change event to refresh the list in the UI
+   * @param index
+   * @param entity
+   * @param addToList
+   */
+  protected void addEntity(int index, E entity, boolean addToList)
+  {
+    sLog.fine("Executing addEntity with addToList="+addToList);
+    entity.setIsNewEntity(true);
+    if (addToList)
+    {
+      List<E> oldEntityList = new ArrayList<E>();
+      oldEntityList.addAll(getEntityList());
+      getEntityList().add(index, entity);
+      refreshEntityList(oldEntityList);
+    }
   }
 
   /**
@@ -492,6 +512,26 @@ public abstract class EntityCRUDService<E extends Entity>
   }
 
   /**
+   * Removes an entity using the configured local and remote persistence managers.
+   * If removeFromList argument is true, it removes the entity from the
+   * entity list and and fires change event to refresh the list in the UI
+   * @param entity
+   * @param removeFromList
+   */
+  protected void removeEntity(Entity entity, boolean removeFromList)
+  {
+    sLog.fine("Executing removeEntity with removeFromList="+removeFromList);
+    if (removeFromList)
+    {
+      List<E> oldEntityList = new ArrayList<E>();
+      oldEntityList.addAll(getEntityList());
+      removeEntity(entity);
+      getEntityList().remove(entity);
+      refreshEntityList(oldEntityList);
+    }
+  }
+
+  /**
    * Send change notifications when the content of the entity list changes
    * @param oldEntityList
    */
@@ -504,8 +544,14 @@ public abstract class EntityCRUDService<E extends Entity>
        getProviderChangeSupport().fireProviderRefresh(getEntityListName());
        // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
        // a list view.
-       // This now seems to work fine in MAF 2.2.1, so we can comment out the call to refreshCurrentEntity
-//       EntityUtils.refreshCurrentEntity(getEntityListName(), getEntityList(), getProviderChangeSupport());
+       // the above two statements do NOT refresh the UI when the UI displays a form layout instead of
+       // a list view. So, we als refresh the first entity in the list                  
+       // refreshCurrentEntity uses iterator refresh and can cause endless loop                      
+       //       EntityUtils.refreshCurrentEntity(getEntityListName(), getEntityList(), getProviderChangeSupport());
+       if (getEntityList().size()>0)
+       {
+         EntityUtils.refreshEntity((Entity) getEntityList().get(0));
+       }
        AdfmfJavaUtilities.flushDataChangeEvent();
      }
     );

@@ -394,9 +394,11 @@ public class EntityUtils
       return;
     }
     List<AttributeMapping> keyMappings = descriptor.getPrimaryKeyAttributeMappings();
+    List<String> attrsToRefresh = new ArrayList<String>();
     for (AttributeMapping keyMapping: keyMappings)
     {
       String attrName = keyMapping.getAttributeName();
+      attrsToRefresh.add(attrName);
       Class attrType = EntityUtils.getJavaType(entity.getClass(), attrName);
       if (attrType.isAssignableFrom(Date.class))
       {
@@ -434,7 +436,7 @@ public class EntityUtils
       }
 
     }
-
+    entity.refreshUI(attrsToRefresh); 
   }
 
   /**
@@ -622,6 +624,7 @@ public class EntityUtils
    */
   public static <E extends Entity> void refreshEntity(Entity entity)
   {
+    
     List<AttributeMapping> mappings = ClassMappingDescriptor.getInstance(entity.getClass()).getAttributeMappings();
     List<String> attrs = new ArrayList<String>();
     for (AttributeMapping mapping : mappings)

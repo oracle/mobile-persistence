@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  21-feb-2016   Steven Davelaar
+  1.2           Added check for reference descriptor is persisted
   14-aug-2015   Steven Davelaar
   1.1           delegate check for offline to service class
   08-jan-2015   Steven Davelaar
@@ -211,6 +213,7 @@ public class IndirectList<E extends Entity>
     final ClassMappingDescriptor referenceDescriptor = mapping.getReferenceClassMappingDescriptor();
     final EntityCRUDService service = EntityUtils.getEntityCRUDService(referenceDescriptor);  
     boolean offline = service.isOffline();
+    delegate = new ArrayList();
     if (mapping.getAccessorMethod() != null && !offline)
     {
       sLog.fine("Getter method for attribute " + this.mapping.getAttributeName() +
@@ -220,8 +223,12 @@ public class IndirectList<E extends Entity>
       {
         TaskExecutor.getInstance().execute(true
             , () -> {
-                      DBPersistenceManager pm = EntityUtils.getLocalPersistenceManager(referenceDescriptor);
-                      List oldList = pm.findAllInParent(referenceDescriptor.getClazz(), entity, mapping);   
+                      List oldList = new ArrayList();
+                      if (referenceDescriptor.isPersisted())
+                      {
+                        DBPersistenceManager pm = EntityUtils.getLocalPersistenceManager(referenceDescriptor);
+                        oldList = pm.findAllInParent(referenceDescriptor.getClazz(), entity, mapping);                           
+                      }
                       // we don't want the child service to start another backgrounf thread, so we temporarily switch
                       // off background read
                       service.setDoRemoteReadInBackground(false);        
@@ -235,12 +242,17 @@ public class IndirectList<E extends Entity>
       else
       {
         service.doRemoteFindAllInParent(entity,mapping.getAttributeName());        
+        delegate = service.getEntityList();
       }
     }
-    sLog.fine("Getter method for attribute " + this.mapping.getAttributeName() +
-                " called for the first time, querying database to retrieve the content");
-    DBPersistenceManager pm = EntityUtils.getLocalPersistenceManager(referenceDescriptor);
-    List result = pm.findAllInParent(referenceDescriptor.getClazz(), entity, mapping);      
+    List result = delegate;
+    if (referenceDescriptor.isPersisted())
+    {
+      sLog.fine("Getter method for attribute " + this.mapping.getAttributeName() +
+                  " called for the first time, querying database to retrieve the content");
+      DBPersistenceManager pm = EntityUtils.getLocalPersistenceManager(referenceDescriptor);
+      result = pm.findAllInParent(referenceDescriptor.getClazz(), entity, mapping);            
+    }
     return result;
   }
 

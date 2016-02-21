@@ -89,14 +89,23 @@ public class StorageObjectService
   }
 
   /**
-   * This method is automatically called when using the Create operation on the storageObject collection
-   * in the data control palette. It gets a new storageObject instance as argument and adds this instance to the
-   * storageObject list.
-   * Do NOT drag and drop this method from the data control palette, use the Create operation instead to ensure
-   * that iterator binding and storageObject list stay in sync.
-   * @param index
-   * @param storageObject
-   */
+     * This method is automatically called when using the Create operation on the storageObject collection
+     * in the data control palette. 
+     * 
+     * Note that this method does NOT add the storageObject to the entity list because this method is 
+     * automatically called by MAF framework when using the Create operation from the data control palette. 
+     * MAF will add the entity to the list AFTER this method has been executed. 
+     * 
+     * You can use this method to set default values. 
+     * If you want to refresh data in the UI based on the size of the entity list, then you cannot do this in this
+     * method because the list is not updated yet (see above), instead override method entityAdded and add your 
+     * logic there. The AMPA EntityList class ensures that this method is called after a storageObject has been added.
+     * 
+     * Do NOT drag and drop this method from the data control palette, use the Create operation 
+     * instead to ensure that iterator binding and storageObject list stay in sync.
+     * @param index
+     * @param storageObject
+     */
   public void addStorageObject(int index, StorageObject storageObject)
   {
     sLog.fine("Executing addStorageObject");
@@ -104,18 +113,59 @@ public class StorageObjectService
   }
 
   /**
-   * This method is automatically called when using the Delete operation on the storageObject collection
-   * in the data control palette. It removes the storageObject instance passed in from the storageObject list, deletes the
-   * corresponding row from the database (if persisted) and calls the configured remove method on the remote
-   * persistence manager.
-   * Do NOT drag and drop this method from the data control palette, use the Delete operation instead to ensure
-   * that iterator binding and storageObject list stay in sync.
+   * Sets entity state to new, and if addToList argument is true, it adds the storage object to 
+   * the list and fores change event to refresh the list in the UI
+   * @param index
    * @param storageObject
+   * @param addToList
    */
+  public void addStorageObject(int index, StorageObject storageObject, boolean addToList)
+  {
+    sLog.fine("Executing addStorageObject");
+    addEntity(index, storageObject, addToList);
+  }
+
+  /**
+    * Removes the storage object file from the file system and removes the storage 
+    * object from SQLite DB.
+    * This method is automatically called when using the Delete operation on the storageObject collection
+    * in the data control palette. It deletes the corresponding row from the database (if persisted) and 
+    * calls the configured remove method on the remote persistence manager.
+    * 
+    * Note that this method does NOT remove the storageObject from the entity list because this method is 
+    * automatically called by MAF framework when using the Delete operation from the data control palette. 
+    * MAF will remove the entity from the list AFTER this method has been executed. 
+    * If you want to directly remove a storage object without using the binding layer, then call the overloaded version
+    * of this method with removeFromList argument set to true.
+    * 
+    * If you want to refresh data in the UI based on the size of the entity list, then you cannot do this in this
+    * method because the list is not updated yet (see above), instead override method entityRemoved and add your 
+    * logic there. The AMPA EntityList class ensures that this refresh method is called after a storageObject has been added.
+    * 
+    * Do NOT drag and drop this method from the data control palette, use the Delete operation 
+    * instead to ensure that iterator binding and storageObject list stay in sync.
+    * @param storageObject
+    */
   public void removeStorageObject(StorageObject storageObject)
   {
     sLog.fine("Executing removeStorageObject");
+    removeFromFileSystem(storageObject);
     removeEntity(storageObject);
+  }
+
+  /**
+   * Removes the storageObject file from the file system and removes the storage 
+   * object from SQLite DB
+   * If removeFromList argument is true, it removes the storageObject from the
+   * entity list and and fires change event to refresh the list in the UI
+   * @param storageObject
+   * @param removeFromList
+   */
+  public void removeStorageObject(StorageObject storageObject, boolean removeFromList)
+  {
+    sLog.fine("Executing removeStorageObject");
+    removeFromFileSystem(storageObject);
+    removeEntity(storageObject,removeFromList);
   }
 
   /**
@@ -153,21 +203,7 @@ public class StorageObjectService
     getLocalPersistenceManager().mergeEntity(storageObject, isAutoCommit());
     storageObject.setIsNewEntity(false);
   }
-
-  @Override
-  /**
-   * Removes the storage object file from the file system and removes the storage 
-   * object from SQLite DB
-   */
-  protected void removeEntity(Entity entity)
-  {
-    if (entity instanceof StorageObject)
-    {
-      removeFromFileSystem((StorageObject)entity);
-    }
-    super.removeEntity(entity);
-  }
-  
+   
   /**
    * Remove the storage object file from the device file system
    * @param storageObject
@@ -336,11 +372,11 @@ public class StorageObjectService
       sLog.fine("Cannot execute findStorageObjectInMCS, device is offline");
       return;
     }
-    if (storageObject.isLocalVersionIsCurrent()) 
-    {
-      sLog.fine("Local version of storage object "+storageObject.getId()+" is already current");
-      return;
-    }
+//    if (storageObject.isLocalVersionIsCurrent()) 
+//    {
+//      sLog.fine("Local version of storage object "+storageObject.getId()+" is already current");
+//      return;
+//    }
     TaskExecutor.getInstance().execute(isDoRemoteReadInBackground(), () ->
       {
         // auto synch any pending storage actions first, pass false for inBackground because
@@ -352,6 +388,11 @@ public class StorageObjectService
           // response is null when local file (based on value of eTag) is current version
           if (response!=null)
           {
+            if (storageObject.getDownloadCallback()!=null)
+            {
+              sLog.fine("Executing download callback for storage Object "+storageObject.getId());
+              storageObject.getDownloadCallback().run();        
+            }
             storageObject.setContent(response);
             if (storageObject.isStoreOnDevice())
             {
@@ -361,9 +402,15 @@ public class StorageObjectService
         }
         catch (RestCallException e)
         {
-           if (e.getResponseStatus()==404 && throwNotFoundException)
+           // check whether object is not found in MCS
+           if (e.getResponseStatus()==404)
            {
-             throw e;         
+             // remove the storage object from DB and file system  
+             removeStorageObject(storageObject, true);
+             if (throwNotFoundException)
+             {
+               throw e;                        
+             }
            }
         }
       });    
