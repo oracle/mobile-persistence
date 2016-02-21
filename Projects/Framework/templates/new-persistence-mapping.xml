@@ -8,7 +8,7 @@
       </table>
       <attributeMappings>
          <directMapping attributeName="createdOn" payloadAttributeName="createdOn" columnName="CREATED_ON" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
-         <directMapping attributeName="eTag" payloadAttributeName="eTag" columnName="E_TAG" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
+         <directMapping attributeName="eTag" columnName="E_TAG" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
          <directMapping attributeName="id" payloadAttributeName="id" columnName="ID" columnDataType="VARCHAR" required="true" persisted="true" javaType="java.lang.String" keyAttribute="true"/>
          <directMapping attributeName="modifiedOn" payloadAttributeName="modifiedOn" columnName="MODIFIED_ON" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
          <directMapping attributeName="createdBy" payloadAttributeName="createdBy" columnName="CREATED_BY" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
@@ -21,7 +21,7 @@
          <directMapping attributeName="storeOnDevice" columnName="STORE_ON_DEVICE" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.Boolean" keyAttribute="false"/>
       </attributeMappings>
       <methods>
-         <findMethod uri="/platform/storage/collections/{collection}/objects" connectionName="" requestType="GET" secured="false" sendDataObjectAsPayload="false" payloadElementName="root">
+         <findMethod uri="/platform/storage/collections/{collection}/objects" requestType="GET" sendDataObjectAsPayload="false" payloadElementName="items">
             <parameter name="collection" valueProvider="SearchValue" pathParam="true"/>
          </findMethod>
       </methods>
