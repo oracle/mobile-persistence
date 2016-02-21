@@ -79,7 +79,8 @@ public class RAMLParser
     //        is = new ByteArrayInputStream(newFileContent.getBytes());
     raml = getRamlDocument();
     String contentType = raml.getMediaType();
-    if (contentType!=null)
+    // AMPA runtime already defauklts content-type to application/json
+    if (contentType!=null && !"application/json".equals(contentType))
     {
       HeaderParam contentTypeParam = new HeaderParam();
       contentTypeParam.setName("Content-Type");

@@ -58,8 +58,8 @@ public class RuntimeOptionsPanel
   private JCheckBox offlineTransactionsField = new JCheckBox();
   private JLabel showWsErrorsLabel = new JLabel("Show Web Service Errors");
   private JCheckBox showWsErrorsField = new JCheckBox();
-  private JLabel deleteLocalRowsLabel = new JLabel("Delete Local Rows on Find All?");
-  private JCheckBox deleteLocalRowsField = new JCheckBox();
+//  private JLabel deleteLocalRowsLabel = new JLabel("Delete Local Rows on Find All?");
+//  private JCheckBox deleteLocalRowsField = new JCheckBox();
   JLabel sortLabel = new JLabel("Sort Order");
   JTextField sortField = new JTextField();
 
@@ -116,13 +116,13 @@ public class RuntimeOptionsPanel
     gbc.weightx = 1.0f;
     contentPanel.add(remoteWriteField, gbc);
 
-    gbc.gridy++;
-    gbc.gridx = 0;
-    gbc.weightx = 0;
-    contentPanel.add(deleteLocalRowsLabel, gbc); 
-    gbc.gridx++;
-    gbc.weightx = 1.0f;
-    contentPanel.add(deleteLocalRowsField, gbc);
+//    gbc.gridy++;
+//    gbc.gridx = 0;
+//    gbc.weightx = 0;
+//    contentPanel.add(deleteLocalRowsLabel, gbc); 
+//    gbc.gridx++;
+//    gbc.weightx = 1.0f;
+//    contentPanel.add(deleteLocalRowsField, gbc);
 
     gbc.gridy++;
     gbc.gridx = 0;
@@ -220,9 +220,14 @@ public class RuntimeOptionsPanel
    
   private void saveDataObjectProps()
   {    
+    if (getCurrentDataObject()==null)
+    {
+      return;
+    }
+    
     getCurrentDataObject().setRemoteReadInBackground(remoteReadField.isSelected());
     getCurrentDataObject().setRemoteWriteInBackground(remoteWriteField.isSelected());
-    getCurrentDataObject().setDeleteLocalRows(deleteLocalRowsField.isSelected());
+//    getCurrentDataObject().setDeleteLocalRows(deleteLocalRowsField.isSelected());
     getCurrentDataObject().setAutoQuery(autoQueryField.isSelected());
     getCurrentDataObject().setGeneratePrimaryKey(generatePkField.isSelected());
     getCurrentDataObject().setEnableOfflineTransactions(offlineTransactionsField.isSelected());
@@ -236,7 +241,7 @@ public class RuntimeOptionsPanel
     this.currentDataObject = currentDataObject;
     remoteReadField.setSelected(currentDataObject.isRemoteReadInBackground());
     remoteWriteField.setSelected(currentDataObject.isRemoteWriteInBackground());
-    deleteLocalRowsField.setSelected(currentDataObject.isDeleteLocalRows());
+//    deleteLocalRowsField.setSelected(currentDataObject.isDeleteLocalRows());
     autoQueryField.setSelected(currentDataObject.isAutoQuery());
     generatePkField.setSelected(currentDataObject.isGeneratePrimaryKey());
     offlineTransactionsField.setSelected(currentDataObject.isEnableOfflineTransactions());

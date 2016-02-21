@@ -688,7 +688,12 @@ public class DataObjectInfo
     if (findAllMethod!=null)
     {
       findAllMethod.setIsFindAllMethod(true);
-      findAllMethod.setDataObject(this);      
+      findAllMethod.setDataObject(this);   
+      if (!isExisting())
+      {
+        // default deleteLocalRows to true for findAll method
+        findAllMethod.setDeleteLocalRows(true);        
+      }
     }
   }
 

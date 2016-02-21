@@ -98,6 +98,9 @@ public class CRUDMethodParametersPanel
   private JTextField payloadListElementField = new JTextField();
   private JLabel payloadRowElementLabel = new JLabel("Payload Row Element Name");
   private JTextField payloadRowElementField = new JTextField();
+  private JCheckBox deleteLocalRows = new JCheckBox("Delete Local Rows");
+  private JLabel attrsToExcludeLabel = new JLabel("Attributes to Exclude");
+  private JTextField attrsToExclude = new JTextField();
 
 
   JPanel restSpecificPanel = new JPanel();
@@ -132,11 +135,17 @@ public class CRUDMethodParametersPanel
     methodList.addActionListener(this);
     dataObjectField.addActionListener(this);
     resourceNameField.addKeyListener(this);
+
+    deleteLocalRows.setToolTipText("Delete local rows in SQLite DB before executing this REST resource?");
+    attrsToExcludeLabel.setToolTipText("Comma-delimited list of attribute names that should not be included in the request payload");
+    attrsToExclude.setToolTipText("Comma-delimited list of attribute names that should not be included in the request payload");
+
     resourceNameLabel.setToolTipText("Name of the method that will be generated to invoke the custom resource.");
     resourceNameField.setToolTipText("Name of the method that will be generated to invoke the custom resource.");
     resourceUriField.addKeyListener(this);
     resourceUriLabel.setToolTipText("The REST URI of the resource. You can specify a sample query string to define query parameters.");
     resourceUriField.setToolTipText("The REST URI of the resource. You can specify a sample query string to define query parameters.");
+    
     setLayout(new GridBagLayout());
     this.add(instruction,
              new GridBagConstraints(0, 0, 6, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
@@ -218,29 +227,43 @@ public class CRUDMethodParametersPanel
                                          new Insets(0, 0, 5, 5), 0, 0));
     sendAsArray.addActionListener(this);
 
+    restSpecificPanel.add(deleteLocalRows,
+                  new GridBagConstraints(0, 2, 2, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+                                         new Insets(0, 0, 5, 5), 0, 0));
+    deleteLocalRows.addActionListener(this);
+
     restSpecificPanel.add(payloadListElementLabel,
-                  new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
-                                         new Insets(0, 0, 5, 5), 0, 0));
-    restSpecificPanel.add(payloadListElementField,
-                  new GridBagConstraints(1, 2, 4, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
-                                         new Insets(0, 0, 5, 5), 0, 0));
-    restSpecificPanel.add(payloadRowElementLabel,
                   new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
                                          new Insets(0, 0, 5, 5), 0, 0));
-    restSpecificPanel.add(payloadRowElementField,
+    restSpecificPanel.add(payloadListElementField,
                   new GridBagConstraints(1, 3, 4, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
                                          new Insets(0, 0, 5, 5), 0, 0));
+    restSpecificPanel.add(payloadRowElementLabel,
+                  new GridBagConstraints(0, 4, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+                                         new Insets(0, 0, 5, 5), 0, 0));
+    restSpecificPanel.add(payloadRowElementField,
+                  new GridBagConstraints(1, 4, 4, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
+                                         new Insets(0, 0, 5, 5), 0, 0));
+
+    restSpecificPanel.add(attrsToExcludeLabel,
+                  new GridBagConstraints(0, 5, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+                                         new Insets(0, 0, 5, 5), 0, 0));
+    restSpecificPanel.add(attrsToExclude,
+                  new GridBagConstraints(1, 5, 4, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
+                                         new Insets(0, 0, 5, 5), 0, 0));
+
+
     restSpecificPanel.add(new JLabel("Parameters"),
-                  new GridBagConstraints(0, 4, 5, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
+                  new GridBagConstraints(0, 6, 5, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE,
                                          new Insets(0, 0, 5, 5), 0, 0));
     restSpecificPanel.add(addButton,
-                  new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE,
+                  new GridBagConstraints(1, 6, 1, 1, 0.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE,
                                          new Insets(0, 0, 5, 5), 0, 0));
     restSpecificPanel.add(removeButton,
-                  new GridBagConstraints(2, 4, 1, 1, 0.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE,
+                  new GridBagConstraints(2, 6, 1, 1, 0.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE,
                                          new Insets(0, 0, 5, 5), 0, 0));
     restSpecificPanel.add(setHeadersButton,
-                  new GridBagConstraints(3, 4, 1, 1, 0.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE,
+                  new GridBagConstraints(3, 6, 1, 1, 0.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE,
                            new Insets(0, 0, 5, 5), 0, 0));
 
     return contentPanel;    
@@ -470,8 +493,16 @@ public class CRUDMethodParametersPanel
 
   private void saveCurrentMethod()
   {
+    if (currentMethod==null)
+    {
+      return;
+    }
     boolean getRequest = "GET".equals(currentMethod.getRequestType());
-    currentMethod.setSendSerializedDataObjectAsPayload(!getRequest && sendSerializedDO.isSelected());        
+    currentMethod.setSendSerializedDataObjectAsPayload(!getRequest && sendSerializedDO.isSelected());   
+    
+    currentMethod.setDeleteLocalRows(getRequest && deleteLocalRows.isSelected());  
+    currentMethod.setAttrsToExclude(attrsToExclude.getText());
+
     String elemName= StringUtils.isEmpty(payloadListElementField.getText()) ? "root" : payloadListElementField.getText();
     if (getRequest)
     {
@@ -512,12 +543,15 @@ public class CRUDMethodParametersPanel
       if (sendSerializedDO.isSelected())
       {
         sendAsArray.setEnabled(true);
+        attrsToExclude.setEnabled(true);
         payloadListElementField.setEnabled(true);
       }
       else
       {
         sendAsArray.setSelected(false);
-        sendAsArray.setEnabled(false);  
+        sendAsArray.setEnabled(false); 
+        attrsToExclude.setText(null);
+        attrsToExclude.setEnabled(false);
         payloadListElementField.setText(null);
         payloadListElementField.setEnabled(false);
       }
@@ -571,6 +605,10 @@ public class CRUDMethodParametersPanel
     this.currentMethod = method;
     boolean nonGetRequest = !"GET".equals(method.getRequestType());
     sendSerializedDO.setEnabled(nonGetRequest);
+    attrsToExclude.setEnabled(nonGetRequest);
+    deleteLocalRows.setEnabled(!nonGetRequest);
+    attrsToExclude.setText(method.getAttrsToExclude());
+    deleteLocalRows.setSelected(method.isDeleteLocalRows());
     sendSerializedDO.setSelected(method.isSendSerializedDataObjectAsPayload());
     sendAsArray.setEnabled(nonGetRequest && sendSerializedDO.isSelected());
     // if we have an array payload and there is no payload list element name, we store "root" as 

@@ -58,6 +58,8 @@ public class DCMethod
   private String dataControlName;
   private boolean existing = false;
   private boolean ramlCreated = false;
+  private boolean deleteLocalRows = false;
+  private String attrsToExclude;
 
   public void setExisting(boolean existing)
   {
@@ -632,5 +634,26 @@ public class DCMethod
   public boolean isRamlCreated()
   {
     return ramlCreated;
+  }
+
+
+  public void setDeleteLocalRows(boolean deleteLocalRows)
+  {
+    this.deleteLocalRows = deleteLocalRows;
+  }
+
+  public boolean isDeleteLocalRows()
+  {
+    return deleteLocalRows;
+  }
+
+  public void setAttrsToExclude(String attrsToExclude)
+  {
+    this.attrsToExclude = attrsToExclude;
+  }
+
+  public String getAttrsToExclude()
+  {
+    return attrsToExclude;
   }
 }

@@ -221,7 +221,7 @@ public class PersistenceMappingGenerator
         methods.setFindAllMethod(jaxbMethod);
       }
       setMethodPropertiesAndParams(jaxbMethod, dataObject.getFindAllMethod());
-      jaxbMethod.setDeleteLocalRows(dataObject.isDeleteLocalRows());
+//      jaxbMethod.setDeleteLocalRows(dataObject.isDeleteLocalRows());
     }
     if (dataObject.getFindMethod() != null)
     {
@@ -337,8 +337,26 @@ public class PersistenceMappingGenerator
         jaxbMethod.setConnectionName(wizardMethod.getConnectionName());        
       }
       //      jaxbMethod.setRequestType(RequestType.fromValue(wizardMethod.getRequestType()));
+      boolean isGet = "GET".equalsIgnoreCase(wizardMethod.getRequestType());
       jaxbMethod.setRequestType(wizardMethod.getRequestType());
       jaxbMethod.setSendDataObjectAsPayload(wizardMethod.isSendSerializedDataObjectAsPayload());
+      if (isGet)
+      {
+        jaxbMethod.setDeleteLocalRows(wizardMethod.isDeleteLocalRows());        
+      }
+      else
+      {
+        if (wizardMethod.getAttrsToExclude()!=null && !"".equals(wizardMethod.getAttrsToExclude()))
+        {
+          jaxbMethod.setAttributesToExclude(wizardMethod.getAttrsToExclude());        
+        }
+        // only clear it when it was set before, otherwise we get redundant empty attributesToExclude
+        // in persistence-mapping.xml
+        else if (jaxbMethod.getAttributesToExclude()!=null)
+        {
+          jaxbMethod.setAttributesToExclude(null);
+        }
+      }
     }
     else
     {

@@ -376,6 +376,10 @@ public class CRUDMethodsRESTPanel
    
   private void saveDataObjectProps()
   {    
+    if (getCurrentDataObject()==null)
+    {
+      return;
+    }
     getCurrentDataObject().setFindAllMethod(findOrCreateMethod(findAllField, findAllRequestType));
     getCurrentDataObject().setFindMethod(findOrCreateMethod(findField,findRequestType));
     getCurrentDataObject().setGetCanonicalMethod(findOrCreateMethod(getCanonicalField, getCanonicalRequestType));

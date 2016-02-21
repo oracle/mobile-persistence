@@ -373,6 +373,8 @@ public class PersistenceMappingLoader
 //    dcMethod.setRequestType(method.getRequestType().value());
     dcMethod.setRequestType(method.getRequestType());
     dcMethod.setSendSerializedDataObjectAsPayload(method.isSendDataObjectAsPayload());
+    dcMethod.setDeleteLocalRows(method.isDeleteLocalRows());
+    dcMethod.setAttrsToExclude(method.getAttributesToExclude());
     if (method.getUri()!=null)
     {
       // REST service, we set the uri in name field, and name in accessorName
