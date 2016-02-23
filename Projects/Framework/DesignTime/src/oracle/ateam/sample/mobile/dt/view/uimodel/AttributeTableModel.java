@@ -19,7 +19,7 @@ public class AttributeTableModel
 {
   
   String[] colHeaders = 
-  { "Persist?", "Key?","Required?","Name","Java Type","DB Column Type"};
+  { "Persist?", "Key?","Required?","Name","Name in Payload","Java Type","Column Type"};
   List<AttributeInfo> attributeInfos;
   private DataObjectInfo dataObjectInfo;
   
@@ -63,9 +63,13 @@ public class AttributeTableModel
     }
     else if (columnIndex==4)
     {
-      return attr.getJavaTypeFullName();
+      return attr.getPayloadName();
     }
     else if (columnIndex==5)
+    {
+      return attr.getJavaTypeFullName();
+    }
+    else if (columnIndex==6)
     {
       return attr.getColumnType();
     }
@@ -107,9 +111,13 @@ public class AttributeTableModel
     }
     else if (columnIndex==4)
     {
-      attr.setJavaTypeFullName((String) aValue);
+      attr.setPayloadName((String) aValue);
     }
     else if (columnIndex==5)
+    {
+      attr.setJavaTypeFullName((String) aValue);
+    }
+    else if (columnIndex==6)
     {
       attr.setColumnType((String) aValue);
     }

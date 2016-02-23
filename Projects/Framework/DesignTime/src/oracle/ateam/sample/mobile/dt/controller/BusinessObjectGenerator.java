@@ -212,8 +212,10 @@ public class BusinessObjectGenerator
       FileUtils.addFileToProject(sourceURL, output, null);      
       verb = is!=null ? " updated " : " created ";
       log.info("Persistence configuration file "+fileName+verb+"  in src/META-INF folder in "+appControllerProject.getShortLabel());      
-
-      setApplicationListenerClass(log);      
+      if (model.getExistingPersistenceMappingModel()==null)
+      {
+        setApplicationListenerClass(log);            
+      }
     }
 
 
