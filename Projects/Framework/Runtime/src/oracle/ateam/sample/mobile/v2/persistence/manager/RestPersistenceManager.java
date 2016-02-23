@@ -446,8 +446,13 @@ public abstract class RestPersistenceManager
    * @param e
    * @return
    */
-  protected String handleInvokeRestServiceError(String requestType, String uri, Exception e)
+  protected String handleInvokeRestServiceError(String requestType, String uri, Exception exception)
   {
+    Exception e = exception;
+    if (exception instanceof RestCallException)
+    {
+      e = ((RestCallException)exception).getWrappedException();
+    }
     String rootError = e.getLocalizedMessage();
     String causeError = e.getCause() != null? e.getCause().getLocalizedMessage() : null;
     // the cause exception can have a null or "" message, in that case we throw the root exception message

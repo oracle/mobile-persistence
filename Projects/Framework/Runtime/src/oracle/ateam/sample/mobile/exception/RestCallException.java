@@ -25,30 +25,17 @@ public class RestCallException
   private String requestMethod;
   private int responseStatus;
   Map responseHeaders;
+  private Exception wrappedException;
 
-  public RestCallException(Throwable throwable, String string)
+  public RestCallException(Exception exception)
   {
-    super(throwable, string);
+    super(exception);
+    this.wrappedException = exception;
   }
 
-  public RestCallException(Throwable throwable)
+  public Exception getWrappedException()
   {
-    super(throwable);
-  }
-
-  public RestCallException(String string, String string1)
-  {
-    super(string, string1);
-  }
-
-  public RestCallException(String string, String string1, String string2, Object[] objects)
-  {
-    super(string, string1, string2, objects);
-  }
-
-  public RestCallException()
-  {
-    super();
+    return wrappedException;
   }
 
 

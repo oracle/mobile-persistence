@@ -98,7 +98,12 @@ public class ADFBCDescribeDataObjectParser
       if (parentDataObject!=null)
       {
         String uri = getResourceUri(desc);
-        createChildAccessor(parentDataObject, parentDesc, doi, uri);
+        Map<String,String> attributeMapping = getChildAccessorAttributeMapping(doi.getName(), parentDesc);
+        // it attributeMapping is null, then it is an lov, not a child data object
+        if (attributeMapping!=null)
+        {
+          createChildAccessor(parentDataObject, attributeMapping, doi, uri);          
+        }
       }
     }
     else
@@ -124,7 +129,12 @@ public class ADFBCDescribeDataObjectParser
       String uri = getResourceUri(desc);
       if (parentDataObject!=null)
       {
-        createChildAccessor(parentDataObject, parentDesc, doi, uri);
+        Map<String,String> attributeMapping = getChildAccessorAttributeMapping(doi.getName(), parentDesc);
+        // it attributeMapping is null, then it is an lov, not a child data object
+        if (attributeMapping!=null)
+        {
+          createChildAccessor(parentDataObject, attributeMapping, doi, uri);          
+        }
       }
       else
       {
@@ -243,7 +253,7 @@ public class ADFBCDescribeDataObjectParser
     }
   }
 
-  private void createChildAccessor(DataObjectInfo parentDataObject, Map parentDesc, DataObjectInfo doi, String uri)
+  private void createChildAccessor(DataObjectInfo parentDataObject, Map<String,String> attributeMapping, DataObjectInfo doi, String uri)
   {
 //    DCMethod childAccessorMethod = new DCMethod(doi.getName()+"List",connectionName, uri, "GET");
     String accessorName = getAccessorName(doi);
@@ -261,7 +271,6 @@ public class ADFBCDescribeDataObjectParser
     childAccessor.setChildAccessorMethod(childAccessorMethod);
     childAccessor.setChildAccessorName(accessorName);            
     
-    Map<String,String> attributeMapping = getChildAccessorAttributeMapping(doi.getName(), parentDesc);
     for (String sourceAttr :attributeMapping.keySet())
     {
       AttributeInfo parentAttributeDef = parentDataObject.getAttributeDefByPayloadName(sourceAttr);
@@ -387,6 +396,11 @@ public class ADFBCDescribeDataObjectParser
       }
     }
     Map cardinality = (Map) child.get("cardinality");
+    if (cardinality==null)
+    {
+      // It is not a real child but an lov definition, stop here and return null
+      return null;
+    }
     String sourceAttributes = (String) cardinality.get("sourceAttributes");
     String destinationAttributes = (String) cardinality.get("destinationAttributes");
     List<String> sourceAttrs = StringUtils.stringToList(sourceAttributes, ",");

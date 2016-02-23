@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  23-feb-2016   Steven Davelaar
+  1.4           added property use.maf.executor.service
   14-feb-2016   Steven Davelaar
   1.3           added property enable parallel rest calls.
   10-dec-2015   Steven Davelaar
@@ -76,6 +78,21 @@ public class PersistenceConfig
     {
       // property not found, default to false for backwards compatibility
       return false;
+    }
+  }
+
+  public static boolean useMafExecutorService()
+  {
+    // allow unencrypted mode for developm,ent debugging purposes
+    try
+    {
+      String enable = config.getString("use.maf.executor.service");
+      return "true".equals(enable);    
+    }
+    catch (MissingResourceException e)
+    {
+      // property not found, default to true 
+      return true;
     }
   }
 

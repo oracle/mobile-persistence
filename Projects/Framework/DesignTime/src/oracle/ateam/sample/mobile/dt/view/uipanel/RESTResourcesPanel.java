@@ -44,6 +44,7 @@ import oracle.adfdtinternal.model.adapter.url.URLUtil;
 
 import oracle.ateam.sample.mobile.dt.controller.PersistenceMappingLoader;
 import oracle.ateam.sample.mobile.dt.controller.RESTResourcesProcessor;
+import oracle.ateam.sample.mobile.dt.controller.parser.ADFBCDescribeDataObjectParser;
 import oracle.ateam.sample.mobile.dt.controller.parser.RAMLParser;
 import oracle.ateam.sample.mobile.dt.exception.ParseException;
 import oracle.ateam.sample.mobile.dt.model.BusinessObjectGeneratorModel;
@@ -76,6 +77,8 @@ public class RESTResourcesPanel
     new MultiLineText("Specify RESTful resources. The return payload will be parsed for candidate data objects. You can use both query parameters with sample values and path parameters. A path parameter name needs to be enclosed in curly brackets. A dialog will be presented to enter sample values for the path parameters. If you specify a sample payload, the REST resource return payload will not be used.");
   MultiLineText instructionRaml =
     new MultiLineText("Select a RAML file from the file system. If your RAML contains references to other documents using the '!include' keyword, the referenced files should be present in the (relative) directory as specified in the base RAML file.");
+  MultiLineText instructionDescribe =
+    new MultiLineText("Specify the ADF BC Describe URI");
   GenericTable table = null;
   JScrollPane headerScrollPane =
     new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -84,6 +87,7 @@ public class RESTResourcesPanel
   JButton removeResourceButton = new JButton("Remove");
   JButton setHeadersButton = new JButton("Set Headers");
   JButton setHeadersRamlButton = new JButton("Set Headers");
+  JButton setHeadersDescribeButton = new JButton("Set Headers");
   JButton addHeaderParamButton = new JButton("Add");
   JButton removeHeaderParamButton = new JButton("Remove");
   JCheckBox flattenNestedObjects = new JCheckBox("Flatten Nested Objects");
@@ -98,17 +102,24 @@ public class RESTResourcesPanel
   ButtonGroup resourceType = new ButtonGroup();
   JRadioButton resourceTypeSample = new JRadioButton("Sample Resources");
   JRadioButton resourceTypeRAML = new JRadioButton("RAML Specification");
+  JRadioButton resourceTypeAdfcDescribe = new JRadioButton("ADF BC Describe");
   JPanel sampleResourcesPanel = new JPanel();
   JPanel ramlPanel = new JPanel();
+  JPanel describePanel = new JPanel();
   private static File mLastDirectoryUsed = null;
   
   private JLabel ramlFileLabel = new JLabel("RAML File");
   private JTextField ramlFileField = new JTextField();
   private JButton ramlFileBrowseButton = new JButton(OracleIcons.getIcon(OracleIcons.LOV));  
+
+  private JLabel describeUriLabel = new JLabel("ADF BC Describe URI");
+  private JTextField describeUriField = new JTextField();
   
   public RESTResourcesPanel()
   {
     super();
+    describeUriLabel.setToolTipText("URI path releative to the connection URL that returns ADF BC Describe definition");
+    describeUriField.setToolTipText("URI path releative to the connection URL that returns ADF BC Describe definition");
     addResourceButton.addActionListener(this);
     removeResourceButton.addActionListener(this);
     removeResourceButton.setEnabled(false);
@@ -119,6 +130,8 @@ public class RESTResourcesPanel
     setHeadersButton.setToolTipText("Specify HTTP request headers");
     setHeadersRamlButton.addActionListener(this);
     setHeadersRamlButton.setToolTipText("Specify common HTTP request headers for all RAML resources");
+    setHeadersDescribeButton.addActionListener(this);
+    setHeadersDescribeButton.setToolTipText("Specify common HTTP request headers for all ADF BC Describe resources");
     flattenNestedObjects.setSelected(false);
     addResourceButton.setToolTipText("Add REST resource");
     removeResourceButton.setToolTipText("Remove selected REST resource");
@@ -135,6 +148,7 @@ public class RESTResourcesPanel
     resourceTypeSample.setSelected(true);
     resourceType.add(resourceTypeSample);
     resourceType.add(resourceTypeRAML);
+    resourceType.add(resourceTypeAdfcDescribe);
 
     resourceTypePanel.add(resourceTypeSample,
                       new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE,
@@ -142,8 +156,12 @@ public class RESTResourcesPanel
     resourceTypePanel.add(resourceTypeRAML,
                       new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE,
                                           new Insets(0, 10, 0, 0), 0, 0));
+    resourceTypePanel.add(resourceTypeAdfcDescribe,
+                      new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE,
+                                          new Insets(0, 10, 0, 0), 0, 0));
     resourceTypeSample.addActionListener(this);
     resourceTypeRAML.addActionListener(this);
+    resourceTypeAdfcDescribe.addActionListener(this);
 
     // Build up RAML panel
     ramlPanel.setLayout(new GridBagLayout());
@@ -200,6 +218,34 @@ public class RESTResourcesPanel
 //    ramlPanel.add(sp, new GridBagConstraints(0, 2, 1, 1, 1.0, 1.0, GridBagConstraints.LINE_START
 //                    , GridBagConstraints.BOTH, new Insets(5, 0, 0, 0), 0, 0));    
 //    sp.setViewportView(ramlField);
+
+
+    // Build up DESCRIBE panel
+    describePanel.setLayout(new GridBagLayout());
+    describePanel.setVisible(false);
+    add(describePanel,
+                 new GridBagConstraints(0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.HORIZONTAL,
+                        new Insets(10, 0, 0, 0), 0, 0));
+
+    describePanel.add(instructionDescribe,
+             new GridBagConstraints(0, 0, 6, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
+                                    new Insets(0, 0, 0, 0), 0, 0));
+
+    describePanel.add(setHeadersDescribeButton,
+        new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.LINE_START, GridBagConstraints.NONE,
+                               new Insets(10, 0, 0, 0), 0, 0));
+
+    describePanel.add(describeUriLabel,
+                 new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.NORTH,
+                                        new Insets(10,0, 0, 0), 0, 0));
+
+        describePanel.add(describeUriField,
+                 new GridBagConstraints(1, 2, 1, 1, 1.f, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL,
+                                        new Insets(10, 10, 0, 0), 0, 0));
+
+
+    describeUriField.setAutoscrolls(true);
+//    describeField.setLineWrap(true);
 
 
     // Build up Sample resources panel
@@ -422,10 +468,10 @@ public class RESTResourcesPanel
          }
        }
        RESTResourcesProcessor dataObjectParser =
-         new RESTResourcesProcessor(resources, connectionName, connectionUri, headerParams, mcsHeaderParams, pathParams,flattenNestedObjects.isSelected());
+         new RESTResourcesProcessor(resources, connectionName, connectionUri, headerParams, mcsHeaderParams, pathParams,flattenNestedObjects.isSelected(),false);
         model.setDataObjectInfos(dataObjectParser.run());      
      }
-     else
+     else if (resourceTypeRAML.isSelected())
      {
        if (ramlFileField.getText()==null || ramlFileField.getText().trim().equals(""))
        {
@@ -435,6 +481,20 @@ public class RESTResourcesPanel
        ramlParser.run();
        model.setDataObjectInfos(ramlParser.getParsedDataObjects());
        model.setUriPrefix(ramlParser.getUriPrefix(connectionUri));
+     }
+     else if (resourceTypeAdfcDescribe.isSelected())
+     {
+       boolean uriSet = describeUriField.getText()!=null && !describeUriField.getText().trim().equals("");       
+       if (!uriSet)
+       {
+         throw new TraversalException("Please specify ADF BC Describe URI");
+       }
+       DCMethod descMethod = new DCMethod(connectionName,describeUriField.getText(),"GET");
+       List<DCMethod> methods = new ArrayList<DCMethod>();
+       methods.add(descMethod);
+       RESTResourcesProcessor dataObjectParser =
+         new RESTResourcesProcessor(methods, connectionName, connectionUri, headerParams, null, pathParams,false,true);
+        model.setDataObjectInfos(dataObjectParser.run());      
      }
    }
     catch (ParseException e)
@@ -522,7 +582,7 @@ public class RESTResourcesPanel
         createHeaderParamsTable(model.getHeaderParams());              
       }
     }
-    else if (e.getSource()==setHeadersButton || e.getSource()==setHeadersRamlButton)
+    else if (e.getSource()==setHeadersButton || e.getSource()==setHeadersRamlButton || e.getSource()==setHeadersDescribeButton)
     {
       boolean OK = headersDialog.runDialog();      
     }
@@ -530,11 +590,19 @@ public class RESTResourcesPanel
     {
       sampleResourcesPanel.setVisible(true);   
       ramlPanel.setVisible(false);   
+      describePanel.setVisible(false);   
     }
     else if (e.getSource()==resourceTypeRAML)
     {
       sampleResourcesPanel.setVisible(false);   
       ramlPanel.setVisible(true);   
+      describePanel.setVisible(false);   
+    }
+    else if (e.getSource()==resourceTypeAdfcDescribe)
+    {
+      sampleResourcesPanel.setVisible(false);   
+      ramlPanel.setVisible(false);   
+      describePanel.setVisible(true);   
     }
 
     removeResourceButton.setEnabled(table.getSelectedRow()>-1);

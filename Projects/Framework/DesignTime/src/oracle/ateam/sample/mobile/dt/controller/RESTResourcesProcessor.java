@@ -48,8 +48,9 @@ public class RESTResourcesProcessor
   private List<HeaderParam> mcsHeaderParams;
   private List<DCMethod> resources;
   private boolean flattenNestedObjects;
+  private boolean adfbcDescribe;
 
-  public RESTResourcesProcessor(List<DCMethod> resources, String connectionName, String connectionUri, List<HeaderParam> headerParams, List<HeaderParam> mcsHeaderParams, Map<String,String> pathParams, boolean flattenNestedObjects)
+  public RESTResourcesProcessor(List<DCMethod> resources, String connectionName, String connectionUri, List<HeaderParam> headerParams, List<HeaderParam> mcsHeaderParams, Map<String,String> pathParams, boolean flattenNestedObjects, boolean adfbcDescribe)
   {
     super();
     this.resources = resources;
@@ -59,6 +60,7 @@ public class RESTResourcesProcessor
     this.mcsHeaderParams = mcsHeaderParams;
     this.pathParams = pathParams;
     this.flattenNestedObjects = flattenNestedObjects;
+    this.adfbcDescribe = adfbcDescribe;
   }
 
 
@@ -124,7 +126,7 @@ public class RESTResourcesProcessor
 //            dataObjectInfos = processor.run();
 //            continue;
 //        }
-        else if (urlString.endsWith("/describe"))
+        else if (adfbcDescribe)
         {
           ADFBCDescribeDataObjectParser processor =
             new ADFBCDescribeDataObjectParser(response, connectionName, connectionUri, headerParams);          

@@ -228,9 +228,17 @@ public class TaskExecutor
   {
     if (AdfmfJavaUtilities.isBackgroundThread())
     {
-      // execute inside MafExecutorService
-      MafExecutorService.execute(task);
-//        task.run();
+      // bug 22666682, fixed in MAF 2.3, can cause app to hang when using MafExecutorService
+      // So, we use switch in mobile-persistence-config.properties to be abe to not use it for now
+      if (PersistenceConfig.useMafExecutorService())
+      {
+        // execute inside MafExecutorService
+         MafExecutorService.execute(task);        
+      }
+      else
+      {
+        task.run();        
+      }
     }
     else 
     {
