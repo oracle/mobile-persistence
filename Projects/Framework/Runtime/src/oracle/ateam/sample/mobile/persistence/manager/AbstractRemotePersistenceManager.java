@@ -29,6 +29,8 @@ import oracle.ateam.sample.mobile.util.MessageUtils;
  /**
  * Abstract class that provides generic implementation of some of the methods of the
  * RemotePersistenceManager interface that can be used by concrete subclasses.
+  * 
+  * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public abstract class AbstractRemotePersistenceManager
   extends AbstractPersistenceManager

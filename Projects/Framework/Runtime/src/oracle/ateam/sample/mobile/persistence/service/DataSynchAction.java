@@ -31,7 +31,10 @@ import oracle.ateam.sample.mobile.persistence.util.EntityUtils;
 import oracle.ateam.sample.mobile.util.DateUtils;
 import oracle.ateam.sample.mobile.util.MessageUtils;
 
-
+/**
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
+ */
 public class DataSynchAction extends Entity
 {
   public static final String INSERT_ACTION = "Create";

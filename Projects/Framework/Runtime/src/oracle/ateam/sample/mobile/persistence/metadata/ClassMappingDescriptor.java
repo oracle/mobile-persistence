@@ -34,6 +34,8 @@ import oracle.ateam.sample.mobile.persistence.manager.DBPersistenceManager;
  *
  * The information is read from the persistenceMapping xml file as configured in
  * mobile-persistence-config.properties 
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class ClassMappingDescriptor
   extends XmlAnyDefinition

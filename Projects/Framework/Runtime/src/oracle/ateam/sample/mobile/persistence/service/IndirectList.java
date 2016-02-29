@@ -48,6 +48,8 @@ import oracle.ateam.sample.mobile.util.TaskExecutor;
  * the employees from the database and populate the list.
  * If the child collection is not returned with the parent payload, the find-all-in-parent method as
  * defined in persistenceMapping.xml is executed.
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class IndirectList
   implements java.util.List

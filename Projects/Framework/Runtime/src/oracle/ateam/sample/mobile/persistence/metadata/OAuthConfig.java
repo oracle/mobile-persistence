@@ -14,6 +14,10 @@ import java.util.Map;
 
 import oracle.adfmf.util.XmlAnyDefinition;
 
+/**
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
+ */
 public class OAuthConfig
   extends XmlAnyDefinition
 {

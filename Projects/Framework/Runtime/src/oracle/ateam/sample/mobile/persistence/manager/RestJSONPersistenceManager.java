@@ -58,6 +58,8 @@ import oracle.ateam.sample.mobile.util.StringUtils;
  * Implementation of Persistence manager interface that provides basic CRUD operations using
  * the REST web services protocol against a remote server. The payload of the REST web service should
  * be in JSON format.
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class RestJSONPersistenceManager
   extends RestPersistenceManager

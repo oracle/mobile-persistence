@@ -50,6 +50,8 @@ import oracle.ateam.sample.mobile.util.MessageUtils;
  * the REST web services protocol against a remote server. The payload of the REST web service should
  * be in ADF BC XML format, the format that is created by using the readXml and writeXMl API's on
  * an ADF BC view object.
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class RestADFBCXMLPersistenceManager extends RestXMLPersistenceManager
 {

@@ -16,6 +16,8 @@ import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 /**
  *  Helper class that returns the information defined in the mobile-persistence-config.properties file,
  *  that should be located in the META-INF directory of your ApplicationCPOntroller project.
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class PersistenceConfig
 {

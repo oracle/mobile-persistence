@@ -10,6 +10,8 @@ package oracle.ateam.sample.mobile.persistence.service;
 /**
  * Class that holds a collection of data sync actions that will be synchronized in one run
  * of the DataSynchronizer.
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class DataSynchPayload
 {

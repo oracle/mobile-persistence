@@ -26,6 +26,8 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 
 /**
  *  Helper class for implementing OAuth security
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.security instead
  */
 public class OAuthTokenManager
 {

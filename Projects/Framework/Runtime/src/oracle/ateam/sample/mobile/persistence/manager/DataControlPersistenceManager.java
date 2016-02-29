@@ -54,6 +54,8 @@ import oracle.ateam.sample.mobile.util.MessageUtils;
  * <pre>
  *   &lt;remote-persistence-manager&gt;demo.model.service.MyDataControlPersistenceManager&lt;/remote-persistence-manager&gt;
  * </pre>
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class DataControlPersistenceManager
   extends AbstractRemotePersistenceManager

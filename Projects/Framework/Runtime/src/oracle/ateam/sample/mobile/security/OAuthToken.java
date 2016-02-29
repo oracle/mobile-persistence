@@ -7,6 +7,11 @@
 ******************************************************************************/
 package oracle.ateam.sample.mobile.security;
 
+/**
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.security instead
+ * 
+ */
 public class OAuthToken
 {
   private String expires_in;

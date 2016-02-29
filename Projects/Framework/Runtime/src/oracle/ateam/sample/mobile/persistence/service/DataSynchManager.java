@@ -35,6 +35,8 @@ import oracle.ateam.sample.mobile.util.TaskExecutor;
  * the SQLite database.
  * This persistence is implemented in method saveSynchActionsToDB(). When a new instance of the DataSynchManager is created,
  * typically when the entity CRUD service class is instantiated, the persisted data synch actions will be loaded again.
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  *
  */
 public class DataSynchManager

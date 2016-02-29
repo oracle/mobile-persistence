@@ -33,7 +33,8 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
  * For example, the Department object can have a getManager method which uses a ValueHolder to return 
  * the employee on the first call of the getManager method. 
  * This class will execute a SQL statement to retrieve the manager from the database and populate the list. 
-
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class ValueHolder
   implements ValueHolderInterface

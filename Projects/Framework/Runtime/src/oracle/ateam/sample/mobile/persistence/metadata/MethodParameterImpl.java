@@ -16,6 +16,8 @@ import oracle.ateam.sample.mobile.util.MessageUtils;
 
 /**
  * Implementation of SOAP method parameter or REST resource parameter that can be instantiated programmatically
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class MethodParameterImpl
   implements MethodParameter

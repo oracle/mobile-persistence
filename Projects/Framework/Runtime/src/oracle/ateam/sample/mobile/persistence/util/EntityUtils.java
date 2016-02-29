@@ -56,6 +56,8 @@ import oracle.ateam.sample.mobile.util.DateUtils;
 
 /**
  * Utility class with helper methods related to entity instances
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class EntityUtils
 {

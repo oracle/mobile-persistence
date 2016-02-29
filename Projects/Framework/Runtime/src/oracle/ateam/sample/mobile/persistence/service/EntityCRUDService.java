@@ -66,6 +66,8 @@ import oracle.ateam.sample.mobile.util.TaskExecutor;
  * remote data source. In persistenceMapping.xml, you can also specify whether the remote CRUD actions are performed
  * in the background so the user can continue to work with his mobile app, or whether he needs to wait until
  * the remote action has completed.
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  *
  */
 public abstract class EntityCRUDService

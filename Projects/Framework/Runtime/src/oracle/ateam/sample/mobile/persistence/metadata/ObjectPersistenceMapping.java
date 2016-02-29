@@ -31,6 +31,8 @@ import oracle.adfmf.util.XmlAnyDefinition;
 
 /**
  * Class that maps to the top-level node in the persistenceMapping XML file
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class ObjectPersistenceMapping
   extends XmlAnyDefinition

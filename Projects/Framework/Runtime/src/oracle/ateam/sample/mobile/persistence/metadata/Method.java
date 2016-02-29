@@ -18,6 +18,8 @@ import oracle.ateam.sample.mobile.util.StringUtils;
 
 /**
  * Class that represents a method instance as defined in persistenceMapping.xml file.
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class Method extends XmlAnyDefinition
 {
