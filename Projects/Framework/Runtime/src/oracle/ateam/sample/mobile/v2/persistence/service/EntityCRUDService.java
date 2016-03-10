@@ -1,7 +1,10 @@
  /*******************************************************************************
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
-  $revision_history$
+  $revision_history$  
+  04-mar-2016   Steven Davelaar
+  1.7           - getHasDataSynchActions method deprecated and made protected again (was also protected
+                  in previous release, so no issue with backwards compatibility)
   19-feb-2016   Steven Davelaar
   1.6           - No longer generate PK in addEntity method, now done in DBPersistenceManager.insertEntity
                 - added methods entityAdded/Removed
@@ -1059,8 +1062,9 @@ public abstract class EntityCRUDService<E extends Entity>
 
   /**
    * Returns true when there are pending data sync actions. Returns false if there are no such actions.
+   * @deprecated Evaluate expression #{applicationScope.ampa_hasDataSyncActions} instead
    */
-  public boolean getHasDataSynchActions()
+  protected boolean getHasDataSynchActions()
   {
     return getDataSynchManager().getHasDataSynchActions();
   }

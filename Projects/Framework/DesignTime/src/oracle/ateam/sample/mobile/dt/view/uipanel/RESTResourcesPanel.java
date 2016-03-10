@@ -2,6 +2,10 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 06-mar-2016   Steven Davelaar
+ 1.1           Fixed issue where model header params were duplicated, and these duplicated entries
+               were also re-added to existing methods, causing many duplicate header param entries
+               in persistence-mapping.xml
  06-feb-2013   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -335,7 +339,12 @@ public class RESTResourcesPanel
           pathParams.put(param.getName(), "");
         }
       }
-      resource.getHeaderParams().addAll(model.getHeaderParams());
+//      resource.getHeaderParams().addAll(model.getHeaderParams());
+      for (HeaderParam param : model.getHeaderParams())
+      {
+        // param might have been added before, addHeader method checks this
+        resource.addHeaderParam(param);
+      }
     }    
   }
 
@@ -449,7 +458,8 @@ public class RESTResourcesPanel
        // we add them in separate map, because they should not be added to individual data object methods,
        // because the MCSPersistenceManager will inject them already.
        List<HeaderParam> mcsHeaderParams = new ArrayList<HeaderParam>();
-       headerParams.addAll(model.getHeaderParams());
+// SD 06 mar: following line caused entries to be duplicated because the headerParams already points to model list
+//       headerParams.addAll(model.getHeaderParams());
        if (model.isUseMCS())
        {
          if (model.getMcsBackendId()!=null)

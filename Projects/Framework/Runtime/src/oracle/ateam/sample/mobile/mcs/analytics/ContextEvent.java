@@ -2,14 +2,13 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  10-mar-2016   Steven Davelaar
+  1.1           added determineLocationFailed flag so we only try it once per session
+                if location cannot be rerieved
   29-dec-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
 package oracle.ateam.sample.mobile.mcs.analytics;
-
-import java.text.SimpleDateFormat;
-
-import java.util.Date;
 
 import oracle.adf.model.datacontrols.device.DeviceManager;
 import oracle.adf.model.datacontrols.device.DeviceManagerFactory;
@@ -31,6 +30,9 @@ public class ContextEvent extends AnalyticsEvent
   // define transient to prevent inclusion in MCS payload when serializing to JSON
   protected transient String sessionID;
 
+
+  private static boolean determineLocationFailed = false;
+  
   public ContextEvent()
   {
     super(true,"context",null);
@@ -68,7 +70,7 @@ public class ContextEvent extends AnalyticsEvent
   {
     Location location = null;
     DeviceManager dmgr = DeviceManagerFactory.getDeviceManager();
-    if (!dmgr.hasGeolocation())
+    if (!dmgr.hasGeolocation() || determineLocationFailed)
     {
       return null;
     }
@@ -84,6 +86,7 @@ public class ContextEvent extends AnalyticsEvent
     catch (Exception e)
     {
       // cur pos not available, van happen in Android simulator
+      determineLocationFailed = true;
       sLog.severe("Cannot determine current location: " + e.getLocalizedMessage());
     }
     return location;

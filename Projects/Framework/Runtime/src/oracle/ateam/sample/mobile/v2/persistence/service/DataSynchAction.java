@@ -2,6 +2,9 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  10-mar-2016   Steven Davelaar
+  1.2           Added method isAnalyticsSyncAction and check for this boolean
+                in createEntityFromJSONString
   29-dec-2015   Steven Davelaar
   1.1           Added constructor so we can use this class to store pending MCS analytics 
                 events as well (they do not extend from Entity class)
@@ -19,6 +22,7 @@ import oracle.adfmf.java.beans.PropertyChangeListener;
 import oracle.adfmf.java.beans.PropertyChangeSupport;
 import oracle.adfmf.util.Utility;
 
+import oracle.ateam.sample.mobile.mcs.analytics.AnalyticsEvent;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 import oracle.ateam.sample.mobile.util.MessageUtils;
@@ -50,7 +54,8 @@ public class DataSynchAction extends Entity
   private transient Map attributeValues;
   private transient Class entityClass;
   private transient String data;
-
+  private transient boolean analyticsSyncAction;
+  
   public DataSynchAction()
   {
     super();
@@ -244,7 +249,8 @@ public class DataSynchAction extends Entity
 
   public void createEntityFromJSONString()
   {
-    if (entityAsJSONString!=null)
+    // AnalyticsEvent is not an entity, so we exclude it from conversion
+    if (entityAsJSONString!=null && !isAnalyticsSyncAction())
     {
       try
       {
@@ -302,5 +308,9 @@ public class DataSynchAction extends Entity
   {
     return serviceClass;
   }
-  
+
+  public boolean isAnalyticsSyncAction()
+  {
+    return AnalyticsEvent.class.toString().equals(getEntityClassString());    
+  }
 }

@@ -2,6 +2,9 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 
  $revision_history$
+ 10-mar-2016   Steven Davelaar
+ 1.1           - Generate sessionId wehn adding custom event if needed
+               - isAnalyticsEnabled now defaults to true when flag is not set in mobile-persistence-config.properties
  29-dec-2015   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -43,6 +46,7 @@ import sun.misc.BASE64Encoder;
 public class AnalyticsService
 {
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(AnalyticsService.class);
+  private static final String TASK_INSTANCE_KEY = "ampa_MCSAnalytics";
   private String sessionId;
   private List<AnalyticsEvent> analyticsEvents = new ArrayList<AnalyticsEvent>();
   private transient static AnalyticsService instance;
@@ -85,7 +89,7 @@ public class AnalyticsService
     {
       return;
     }
-    TaskExecutor.getInstance().execute(true, () ->
+    TaskExecutor.getSequentialInstance(TASK_INSTANCE_KEY).execute(true, () ->
       {
         // serialize the analytics payload. If we are online, send it, if we are offline, save it in DB
         // we use data synch actions table to store when offline
@@ -113,18 +117,19 @@ public class AnalyticsService
 
         DBPersistenceManager pm = new DBPersistenceManager();
         String className = AnalyticsEvent.class.toString();                              
+        // first send any pending analytics events that were saved before when offline
+        Map<String,String> attrNamesToSearch = new HashMap<String,String>();
+        attrNamesToSearch.put("entityClassString",className);
+        List<DataSynchAction> dataSynchActions = pm.find(DataSynchAction.class, attrNamesToSearch);
         if (new ConnectivityBean().isOffline())
         {
            sLog.info("We are offline, save MCS analytics events to local DB");
            DataSynchAction action = new DataSynchAction(DataSynchAction.INSERT_ACTION,className,payload,MCSPersistenceManager.class.toString());
+           action.setId(dataSynchActions.size()+1);
            pm.insertEntity(action, true);
         }
         else
         {
-          // first send any pending analytics events that were saved before when offline
-          List<String> attrNamesToSearch = new ArrayList<String>();
-          attrNamesToSearch.add("entityClass");
-          List<DataSynchAction> dataSynchActions = pm.find(DataSynchAction.class, className, attrNamesToSearch);
           int count = dataSynchActions.size();
           if (count>0)
           {
@@ -150,7 +155,7 @@ public class AnalyticsService
   public boolean isAnalyticsEnabled()
   {
     String enabled = PersistenceConfig.getPropertyValue("mcs.enable-analytics");
-    return "true".equalsIgnoreCase(enabled);
+    return !"false".equalsIgnoreCase(enabled);
   }
 
   public void setSessionId(String sessionId)
@@ -165,8 +170,12 @@ public class AnalyticsService
 
   public void addCustomEvent(String name, Map<String,Object> properties)
   {
-      AnalyticsEvent event = new AnalyticsEvent(name,sessionId,properties);
-      addEvent(event);
+    if (sessionId==null)    
+    {
+      sessionId = UUID.randomUUID().toString();
+    }
+    AnalyticsEvent event = new AnalyticsEvent(name,sessionId,properties);
+    addEvent(event);
   }
 
   public void addEvent(AnalyticsEvent event)
@@ -174,8 +183,8 @@ public class AnalyticsService
     // execute in background because when adding contxt event, the current location needs to be fetched
     // which can take a while. To prevent subsequent calls to addEvent to succeed before the context
     // event is added (which would cause invalid payload), we use TaskExecutor to execute the actions sequentially
-    // in background thread.
-    TaskExecutor.getInstance().execute(true, () ->
+    // in background thread. 
+    TaskExecutor.getSequentialInstance(TASK_INSTANCE_KEY).execute(true, () ->
     {
       if (analyticsEvents.size() == 0 && !addingContextEvent)
       {
@@ -186,5 +195,4 @@ public class AnalyticsService
       }
       analyticsEvents.add(event);
     });                                       
-  }
-}
+  }}

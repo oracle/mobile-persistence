@@ -2,6 +2,10 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 
  $revision_history$
+ 07-mar-2016   Steven Davelaar
+ 1.1           - Add collectionName to response payload when storing object in MCS, so we can insert/update
+               it in DB, collectionName if part of primary key 
+               - Added rest call logging in storeStorageObject
  29-dec-2015   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -468,24 +472,26 @@ public class MCSPersistenceManager
       sLog.severe("Cannot store object in MCS, no file path available");
       return;
     }
+
+    String requestURI =
+      STORAGE_COLLECTIONS_URI + storageObject.getCollectionName() + "/objects/" + storageObject.getId();
+    HashMap<String, String> httpHeadersValue = new HashMap<String, String>();
+    httpHeadersValue.put("Oracle-Mobile-Name", storageObject.getId());
+    httpHeadersValue.put("Content-Type", storageObject.getContentType());
+    addMCSHeaderParamsIfNeeded(httpHeadersValue);
+
     try
     {
-
       RestServiceAdapter adp = Model.createRestServiceAdapter();
       adp.setConnectionName(getConnectionName());
       String requestEndPoint = adp.getConnectionEndPoint(getConnectionName());
-      // Get the URI which is defined after the end point
-      String requestURI =
-        STORAGE_COLLECTIONS_URI + storageObject.getCollectionName() + "/objects/" + storageObject.getId();
       String request = requestEndPoint + requestURI;
-      HashMap<String, String> httpHeadersValue = new HashMap<String, String>();
-      httpHeadersValue.put("Oracle-Mobile-Name", storageObject.getId());
-      httpHeadersValue.put("Content-Type", storageObject.getContentType());
-      addMCSHeaderParamsIfNeeded(httpHeadersValue);
+      // Get the URI which is defined after the end point
       // Get the connection
       HttpConnection connection = adp.getHttpConnection("PUT", request, httpHeadersValue);
       Path path = Paths.get(storageObject.getFilePath());
       byte[] data = Files.readAllBytes(path);
+      long startTime = System.currentTimeMillis();
       //        FileInputStream fis = new FileInputStream(storageObject.getContent());
       OutputStream os = connection.openOutputStream();
       os.write(data);
@@ -504,13 +510,17 @@ public class MCSPersistenceManager
       InputStream is = adp.getInputStream(connection);
       boolean gzip = adp.getResponseHeaders().get("Content-Encoding").equals("gzip");
       String response = getResponse(is, gzip);
+      logRestCall(connectionName,"STREAM",requestURI,httpHeadersValue.toString(),"byte[]",response,startTime,null);
 //      System.err.println(response);
       JSONObject responseObject = (JSONObject) JSONBeanSerializationHelper.fromJSON(JSONObject.class, response);
+      // add the collection name to the payload, this is part of primary key and needed for DB insert/update!
+      responseObject.append("collectionName", storageObject.getCollectionName());
       super.processPayloadElement(responseObject, StorageObject.class, null, storageObject);
 //      System.err.println(response);
     }
     catch (Exception e)
     {
+      logRestCall(connectionName,"STREAM",requestURI,httpHeadersValue.toString(),"byte[]",null,System.currentTimeMillis(),e);
       throw new AdfException(e, AdfException.ERROR);
     }
     finally

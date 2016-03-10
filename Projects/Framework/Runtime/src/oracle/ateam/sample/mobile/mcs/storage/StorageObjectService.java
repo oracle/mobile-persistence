@@ -2,6 +2,8 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 
  $revision_history$
+ 07-mar-2016   Steven Davelaar
+ 1.1           saveStorageObjectToFileSystem now uses id instead of name to construct filepath!
  29-dec-2015   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -17,7 +19,6 @@ import java.io.OutputStream;
 
 import java.util.HashMap;
 import java.util.List;
-
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -29,7 +30,6 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.v2.persistence.cache.EntityCache;
 import oracle.ateam.sample.mobile.v2.persistence.manager.MCSPersistenceManager;
-import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 import oracle.ateam.sample.mobile.v2.persistence.service.DataSynchAction;
 import oracle.ateam.sample.mobile.v2.persistence.service.EntityCRUDService;
 
@@ -434,7 +434,7 @@ public class StorageObjectService
     {
       fileDir.mkdirs();      
     }
-    String filePath = dir + File.separator + storageObject.getName();
+    String filePath = dir + File.separator + storageObject.getId();
     File file = new File(filePath);
     OutputStream fos = null;
     try

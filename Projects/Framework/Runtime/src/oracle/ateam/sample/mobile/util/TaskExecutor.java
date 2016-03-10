@@ -2,6 +2,8 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 10-mar-2016   Steven Davelaar
+ 1.3           Added getSequentialInstance method, renamed isDBInstance to updateUI and switched true/false meaning
  14-feb-2016   Steven Davelaar
   1.2           Added support for obtaining an instance that supports parallel task execution
  14-feb-2015   Steven Davelaar
@@ -20,7 +22,6 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import oracle.adfmf.framework.api.AdfmfContainerUtilities;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.api.MafExecutorService;
 
@@ -30,11 +31,11 @@ import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
  * This class is used to execute tasks (runnables), either in foreground or in background.
  * Depending on the type of instance obtained and parameters passed in, the background tasks are executed sequentially
  * or in parallel.
- * When calling the getInstance() method without arguments, the value of property enable.parallel.rest.calls in 
+ * When calling the getInstance() method without arguments, the value of property enable.parallel.rest.calls in
  * mobile-persistence.config.properties  determines the type of instance returned. If set to true, the instance
  * uses a multiThreadPool enabling parallel executing of multiple tasks. If set to false, a single thread
- * pool is used which means all tasks are executed sequentially. To explicitly obtain a specific instance type, call the 
- * getInstance() method with the boolean seiqential argument. 
+ * pool is used which means all tasks are executed sequentially. To explicitly obtain a specific instance type, call the
+ * getInstance() method with the boolean seiqential argument.
  *
  * When making multiple remote REST calls, the sequence migh be important as result of the first call might be needed by the next call.
  * Furthermore, actions against the local SQLite database might require sequential execution, for example to prevent
@@ -58,7 +59,8 @@ public class TaskExecutor
   private static Map<String, TaskExecutor> instanceMap = new HashMap<String, TaskExecutor>();
   
   private boolean sequential;
-  private boolean isDbInstance = false;
+  // set/update boolean EL expression that background task is runnning so UI can show spinning wheel
+  private boolean updateUI = true;
 
   public TaskExecutor(boolean sequential)
   {
@@ -120,7 +122,26 @@ public class TaskExecutor
     {
       sLog.fine("Creating new instance of TaskExecutor for " + instanceId);
       instance = new TaskExecutor(true);
-      instance.isDbInstance = true;
+      instance.updateUI = false;
+      instanceMap.put(instanceId, instance);
+    }
+    return instance;
+  }
+
+  /**
+   * Returns an instance based on the key that always executes tasks sequentially using a singlethread pool.
+   * This instance does NOT set/update the #{applicationScope.ampa_bgtask_running} expression value
+   * @return
+   */
+  public static synchronized TaskExecutor getSequentialInstance(String key)
+  {
+    String instanceId = key;
+    TaskExecutor instance = instanceMap.get(instanceId);
+    if (instance == null)
+    {
+      sLog.fine("Creating new instance of TaskExecutor for " + instanceId);
+      instance = new TaskExecutor(true);
+      instance.updateUI = false;
       instanceMap.put(instanceId, instance);
     }
     return instance;
@@ -162,7 +183,7 @@ public class TaskExecutor
   {
     executeUIRefreshTask(() ->
      {
-       if (!isDbInstance)
+       if (updateUI)
        {
          AdfmfJavaUtilities.setELValue("#{applicationScope.ampa_bgtask_running}", running);      
        }

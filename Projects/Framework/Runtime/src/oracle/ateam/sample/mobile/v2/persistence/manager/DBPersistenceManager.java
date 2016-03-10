@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  04-mar-2016   Steven Davelaar
+  1.6           Allow passing in null for bindParamInfos argument in executeSqlDml
   07-jan-2016   Steven Davelaar
   1.5           Reverted change to use INSERT or REPLACE in mergeRow/mergeEntity methods, when not all attrs are included in
                 bind params, the values of columns not included are wiped out!
@@ -174,7 +176,10 @@ public class DBPersistenceManager
       statement = c.prepareStatement(sql);
       boolean isUpdate = sql.toUpperCase().startsWith(SQL_UPDATE_KEYWORD);
       boolean isDelete = sql.toUpperCase().startsWith(SQL_DELETE_KEYWORD);
-      setSqlBindParams(bindParamInfos, statement, isUpdate || isDelete);
+      if (bindParamInfos != null && bindParamInfos.size() > 0)
+      {
+        setSqlBindParams(bindParamInfos, statement, isUpdate || isDelete);
+      }  
       statement.execute();
       // reset so user does not accidently commit when doing select statement with own code
       c.setAutoCommit(false);

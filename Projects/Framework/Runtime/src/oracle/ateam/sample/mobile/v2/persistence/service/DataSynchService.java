@@ -2,6 +2,11 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 04-mar-2016   Steven Davelaar
+ 1.3           removed method refreshHasDataSyncActions, not needed, we now have two global
+               expressions, #{applicationScope.ampa_hasDataSyncActions} and 
+                #{applicationScope.ampa_dataSyncActionsCount} that can be used show info about
+               pending sync actioins in UI
  15-feb-2016   Steven Davelaar
  1.2           data syncing is now global, no longer per entity type, moved this
                class from DayaStychFeatire jar to runtime jar, so user can easily
@@ -83,26 +88,5 @@ public class DataSynchService extends EntityCRUDService<DataSynchAction>
       getDataSynchManager().removeDataSynchAction(dataSynchAction);
   }
 
-  /**
-   * This method fires property change events when value of property hasDataSynchActions has changed.
-   * It also sets the current number of data sync actions in an applicationScope variable named
-   * ampa_DataSyncActionsCount. 
-   * This applicationScope variable can be used by the UI to show a badge on a UI widget to show the 
-   * current number of pending data sync actions.
-   * @param oldValue
-   */
-  protected void refreshHasDataSynchActions(boolean oldValue)
-  {
-  //    String name = getCrudService().getEntityListName() + "_dataSyncActionsCount";
-    TaskExecutor.getInstance().executeUIRefreshTask(() -> 
-    {
-      AdfmfJavaUtilities.setELValue("#{applicationScope.ampa_dataSyncActionsCount}", new Integer(getDataSynchActions().size()));
-      if (getHasDataSynchActions() != oldValue)
-      {
-        getPropertyChangeSupport().firePropertyChange("hasDataSynchActions", oldValue, getHasDataSynchActions());
-      }
-      AdfmfJavaUtilities.flushDataChangeEvent();
-    });
-  }
 
 }

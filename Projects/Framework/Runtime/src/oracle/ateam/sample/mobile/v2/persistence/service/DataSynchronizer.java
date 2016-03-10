@@ -2,6 +2,9 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  10-mar-2016   Steven Davelaar
+  1.3           Check if sync actions is analytics sync action, if so skip it, and call 
+                AnalyticsService.sendAnalytics at the end if needed
   14-feb-2016   Steven Davelaar
   1.2           This class is no longer dependent on an entityCrudService, it can synchronize
                 all sync actions for all entities in one run.
@@ -12,10 +15,12 @@
   1.0           initial creation
  ******************************************************************************/
  package oracle.ateam.sample.mobile.v2.persistence.service;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import oracle.ateam.sample.mobile.mcs.analytics.AnalyticsService;
 import oracle.ateam.sample.mobile.v2.persistence.manager.RemotePersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
@@ -60,8 +65,16 @@ public class DataSynchronizer
       List<DataSynchAction> dataSynchActions = payload.getDataSynchActions();
       if (dataSynchActions != null)
       {
+        boolean syncAnalyticsEvents = false;
         for (DataSynchAction syncAction : dataSynchActions)
         {
+          // analytics events are synchronized using McsAnalyticsService.sendAnalyticsEvents
+          // call is made at the end of this method
+          if (syncAction.isAnalyticsSyncAction())
+          {
+            syncAnalyticsEvents = true;
+            continue;
+          }
           String action = syncAction.getAction();
           Entity entity = syncAction.getEntity();
           ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entity.getClass());
@@ -105,6 +118,10 @@ public class DataSynchronizer
             failedSynchActions.add(syncAction);            
           }
           
+        }
+        if (syncAnalyticsEvents)
+        {
+          AnalyticsService.getInstance().sendAnalyticsEvents();
         }
       }
     }

@@ -2,6 +2,9 @@
   Copyright ? 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  04-mar-2016   Steven Davelaar
+  1.4           Made handleReadResponse, handleresponse and getSerializedDataObjecy public so we can use this to process 
+                request and/or response from custom REST calls that directly call invokerestService
   10-dec-2015   Steven Davelaar
   1.3           Changed log level to info when something is not found in JSON payload
   24-mar-2015   Steven Davelaar
@@ -60,7 +63,7 @@ public class RestJSONPersistenceManager
    * @param deleteRow
    * @return
    */
-  protected String getSerializedDataObject(Entity entity, String elementName, String rowElementName, boolean deleteRow)
+  public String getSerializedDataObject(Entity entity, String elementName, String rowElementName, boolean deleteRow)
   {
     return getSerializedDataObject(entity, elementName, rowElementName,null,deleteRow);
   }
@@ -80,7 +83,7 @@ public class RestJSONPersistenceManager
    * @param deleteRow
    * @return JSON-formatted string containing the serialized entity instance
    */
-  protected String getSerializedDataObject(Entity entity, String elementName, String rowElementName, List<String> attributesToExclude, boolean deleteRow)
+  public String getSerializedDataObject(Entity entity, String elementName, String rowElementName, List<String> attributesToExclude, boolean deleteRow)
   {
     sLog.fine("Executing getSerializedDataObject");
     Map<String,Object> keyValuePairs = getPayloadKeyValuePairs(entity,attributesToExclude);
@@ -174,7 +177,7 @@ public class RestJSONPersistenceManager
    * @param deleteAllRows no longer used (delete performed in calling method)
    * @return
    */
-  protected <E extends Entity> List<E> handleReadResponse(String jsonResponse, Class entityClass, String collectionElementName,
+  public <E extends Entity> List<E> handleReadResponse(String jsonResponse, Class entityClass, String collectionElementName,
                                     String rowElementName, List<BindParamInfo> parentBindParamInfos, boolean deleteAllRows)
   {
     sLog.fine("Executing handleReadResponse");
@@ -195,7 +198,7 @@ public class RestJSONPersistenceManager
    * @param deleteAllRows no longer used (delete performed in calling method)
    * @return
    */
-  protected <E extends Entity> List<E> handleResponse(String json, Class entityClass, String collectionElementName,
+  public <E extends Entity> List<E> handleResponse(String json, Class entityClass, String collectionElementName,
                                     String rowElementName, List<BindParamInfo> parentBindParamInfos, E currentEntity, boolean deleteAllRows)
   {
     sLog.fine("Executing handleResponse");      
