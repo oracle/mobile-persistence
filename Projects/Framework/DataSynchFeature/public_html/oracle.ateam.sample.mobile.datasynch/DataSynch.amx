@@ -13,6 +13,10 @@
       </amx:commandLink>
     </amx:facet>
     <amx:panelGroupLayout id="pgl2" layout="vertical">
+      <amx:panelGroupLayout id="pgl1" layout="horizontal" halign="center">
+        <amx:commandButton actionListener="#{bindings.refreshDataSynchActions.execute}" text="Refresh"
+                            id="cb3"/>
+      </amx:panelGroupLayout>
       <amx:listView var="row" value="#{bindings.dataSynchActions.collectionModel}"
                     fetchSize="#{bindings.dataSynchActions.rangeSize}" id="lv2">
         <amx:listItem id="li2" showLinkIcon="false">

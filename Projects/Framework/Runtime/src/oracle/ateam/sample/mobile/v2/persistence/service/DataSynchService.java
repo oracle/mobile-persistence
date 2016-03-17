@@ -2,6 +2,8 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 17-mar-2016   Steven Davelaar
+ 1.4           Added method refreshDataSynchActions
  04-mar-2016   Steven Davelaar
  1.3           removed method refreshHasDataSyncActions, not needed, we now have two global
                expressions, #{applicationScope.ampa_hasDataSyncActions} and 
@@ -75,6 +77,13 @@ public class DataSynchService extends EntityCRUDService<DataSynchAction>
     //                               total + " data synch actions completed. Successful: " + ok + ", Failed: " + fails);
   }
 
+  /**
+   * Refresh data sync actions list so UI gets updated with latest list.
+   */
+  public void refreshDataSynchActions()
+  {
+    refreshEntityList(new ArrayList<DataSynchAction>());    
+  }
 
   /**
    * This method is automatically called when using the Delete operation on the dataSynchAction collection
