@@ -58,6 +58,18 @@ public class ${WSM.currentDataObject.serviceClassName}
     super(autoQuery);
   }
 
+  /**
+   * Use this constructor to get an instance without performing an autoQuery, and with remoteReadInBackground
+   * and remoteWriteInBackground set to the values passed in as constructor argument. 
+   * This constructor overrides (ignores) the settings of these properties in persistence-mapping.xml
+   */
+  public ${WSM.currentDataObject.serviceClassName}(boolean doRemoteReadInBackground, boolean doRemoteWriteInBackground)
+  {
+    super(false);
+    setDoRemoteReadInBackground(doRemoteReadInBackground);
+    setDoRemoteWriteInBackground(doRemoteWriteInBackground);
+  }
+
   protected Class getEntityClass()
   {
     return ${WSM.currentDataObject.className}.class;
