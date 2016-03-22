@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  22-mar-2016   Steven Davelaar
+  1.5           Only refresh direct mapping attrs in refreshEntity
   16-feb-2016   Steven Davelaar
   1.4           Added getRemotePersistenceManager, getClassInstance, added support for Boolean attrs
   21-aug-2015   Steven Davelaar
@@ -617,7 +619,7 @@ public class EntityUtils
   }
 
   /**
-   * This method refresh all attributes that have an attribute mapping in persistenc-mapping.xml.
+   * This method refresh all attributes that have a direct attribute mapping in persistence-mapping.xml.
    * It calls entity.refreshUI with this list of attribute names.
    * @param <E>
    * @param entity
@@ -625,7 +627,7 @@ public class EntityUtils
   public static <E extends Entity> void refreshEntity(Entity entity)
   {
     
-    List<AttributeMapping> mappings = ClassMappingDescriptor.getInstance(entity.getClass()).getAttributeMappings();
+    List<AttributeMappingDirect> mappings = ClassMappingDescriptor.getInstance(entity.getClass()).getAttributeMappingsDirect();
     List<String> attrs = new ArrayList<String>();
     for (AttributeMapping mapping : mappings)
     {
