@@ -11,16 +11,16 @@
    <path id="classpath">
 
 
-      <fileset dir="${oracle.commons}/modules/oracle.xdk_12.1.3">
+      <fileset dir="${oracle.commons}/modules/oracle.xdk">
         <include name="**/*.jar"/>
       </fileset>
-      <fileset dir="${oracle.commons}/modules/oracle.adf.view_12.1.3">
+      <fileset dir="${oracle.commons}/modules/oracle.adf.view">
         <include name="**/*.jar"/>
       </fileset>
-      <fileset dir="${oracle.commons}/modules/oracle.adf.model_12.1.3">
+      <fileset dir="${oracle.commons}/modules/oracle.adf.model">
         <include name="**/*.jar"/>
       </fileset>
-      <fileset dir="${oracle.commons}/modules/oracle.xmlef_12.1.3">
+      <fileset dir="${oracle.commons}/modules/oracle.xmlef">
         <include name="**/*.jar"/>
       </fileset>
 
@@ -65,9 +65,9 @@
 
       <pathelement location="${oracle.home}/adfdt/lib/oracle.adf.common.dt.jar"/>
 
-      <pathelement location="${oracle.commons}/modules/oracle.bali.share_12.1.13share.jar"/>
-      <pathelement location="${oracle.commons}/modules/oracle.javatools_12.1.3/javatools-nodeps.jar"/>
-      <pathelement location="${oracle.commons}/modules/oracle.javatools_12.1.3/javamodel-rt.jar"/>
+      <pathelement location="${oracle.commons}/modules/oracle.bali.share/share.jar"/>
+      <pathelement location="${oracle.commons}/modules/oracle.javatools/javatools-nodeps.jar"/>
+      <pathelement location="${oracle.commons}/modules/oracle.javatools/javamodel-rt.jar"/>
 
    </path>
 

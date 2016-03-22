@@ -48,7 +48,7 @@ public class ObjectPersistenceMapping
       {
         // we use mobile-object-persistence as top node name so we can edit it inside JDev!
         topNode =
-          (ObjectPersistenceMapping) KXmlUtil.loadFromXml(is, ObjectPersistenceMapping.class,
+          (ObjectPersistenceMapping) KXmlUtil.getInstance().loadFromXml(is, ObjectPersistenceMapping.class,
                                                           "mobileObjectPersistence");
       }
       catch (Exception e)

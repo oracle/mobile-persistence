@@ -117,7 +117,7 @@ public class RestXMLPersistenceManager extends RestPersistenceManager
     try
     {
       String topNodeName = getTopNodeName(xmlResponse);
-      XmlAnyDefinition topNode = (XmlAnyDefinition) KXmlUtil.loadFromXml(is, XmlAnyDefinition.class,topNodeName);
+      XmlAnyDefinition topNode = (XmlAnyDefinition) KXmlUtil.getInstance().loadFromXml(is, XmlAnyDefinition.class,topNodeName);
       collectionNode = collectionElementName.equals(topNodeName) ? topNode : findCollectionElement(topNode, collectionElementName);     
       if (collectionNode==null)
       {

@@ -57,7 +57,7 @@ public class ObjectPersistenceMapping
       {
         // we use mobile-object-persistence as top node name so we can edit it inside JDev!
         topNode =
-          (ObjectPersistenceMapping) KXmlUtil.loadFromXml(is, ObjectPersistenceMapping.class,
+          (ObjectPersistenceMapping) KXmlUtil.getInstance().loadFromXml(is, ObjectPersistenceMapping.class,
                                                           "mobile-object-persistence");
       }
       catch (Exception e)
@@ -66,7 +66,7 @@ public class ObjectPersistenceMapping
         is =
           Thread.currentThread().getContextClassLoader().getResourceAsStream(PersistenceConfig.getPersistenceMappingXML());
         topNode =
-          (ObjectPersistenceMapping) KXmlUtil.loadFromXml(is, ObjectPersistenceMapping.class, "object-persistence");
+          (ObjectPersistenceMapping) KXmlUtil.getInstance().loadFromXml(is, ObjectPersistenceMapping.class, "object-persistence");
       }
       instance = topNode;
     }

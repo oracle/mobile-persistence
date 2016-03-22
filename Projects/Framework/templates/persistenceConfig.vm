@@ -17,5 +17,3 @@ mcs.anonymous-key=${WSM.mcsAnonymousAccessKey}
 # background rest calls
 enable.parallel.rest.calls=true
 
-# Work around for bug 22666682 (fixed in MAF 2.3), can cause app to hang when using MafExecutorService
-use.maf.executor.service=false
