@@ -2,6 +2,8 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
  $revision_history$
+ 24-mar-2016   Steven Davelaar
+ 1.5           - Use new MAF 2.3 RestServiceAdapter and factory class
  29-dec-2015   Steven Davelaar
  1.4           - HTTP status codes < 300 are no longer treated as exception (work around  for MAF bug still throwing an exception 
                  if status code is not 200)
@@ -56,6 +58,9 @@ import oracle.ateam.sample.mobile.v2.persistence.db.BindParamInfo;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
+
+import oracle.maf.api.dc.ws.rest.RestServiceAdapter;
+import oracle.maf.api.dc.ws.rest.RestServiceAdapterFactory;
 
 /**
  * Abstract class that provides generic implementation of some of the methods of the
@@ -282,7 +287,7 @@ public abstract class RestPersistenceManager
     {
       response = restService.send((isGET? null: payload));      
       sLog.fine("Response from "+requestType+" "+requestUri+ " :"+response);
-      logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,response,startTime,null);
+      logRestCall(connectionName,restService.getRequestMethod(),uri,restService.getRequestProperties().toString(),payload,response,startTime,null);
       setLastResponseHeaders(restService.getResponseHeaders());
       setLastResponseStatus(restService.getResponseStatus());
       return response;
@@ -297,12 +302,12 @@ public abstract class RestPersistenceManager
       {
         // return detail message as response if available
         String causeMessage = e.getCause() != null? e.getCause().getLocalizedMessage() : null;
-        logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,causeMessage,startTime,e);
+        logRestCall(connectionName,restService.getRequestMethod(),uri,restService.getRequestProperties().toString(),payload,causeMessage,startTime,e);
         return causeMessage;
       }
       else
       {
-        logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,null,startTime,e);
+        logRestCall(connectionName,restService.getRequestMethod(),uri,restService.getRequestProperties().toString(),payload,null,startTime,e);
         RestCallException re = new RestCallException(e);
         re.setRequestMethod(requestType);
         re.setRequestUri(uri);
@@ -318,17 +323,17 @@ public abstract class RestPersistenceManager
   {
     sLog.fine("Executing setupRestServiceCall for "+requestType+" "+requestUri);
     boolean isGET = "GET".equals(requestType);
-    RestServiceAdapter restService = Model.createRestServiceAdapter();
+    RestServiceAdapter restService = RestServiceAdapterFactory.newFactory().createRestServiceAdapter();
     restService.clearRequestProperties();
     restService.setConnectionName(connectionName);
     if ("PATCH".equals(requestType))
     {
-      restService.setRequestType("POST");
+      restService.setRequestMethod("POST");
       restService.addRequestProperty("X-HTTP-Method-Override", "PATCH");
     }
     else
     {
-      restService.setRequestType(requestType);
+      restService.setRequestMethod(requestType);
     }
     //    boolean added = addAuthorizationHeaderIfNeeded(connectionName, requestUri, secured, restService);
     if (headerParamMap != null)
@@ -367,7 +372,7 @@ public abstract class RestPersistenceManager
     try
     {
       response = restService.sendReceive((isGET? null: payload));      
-      logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,"byte[]",startTime,null);
+      logRestCall(connectionName,restService.getRequestMethod(),uri,restService.getRequestProperties().toString(),payload,"byte[]",startTime,null);
       setLastResponseHeaders(restService.getResponseHeaders());
       setLastResponseStatus(restService.getResponseStatus());
       return response;
@@ -376,7 +381,7 @@ public abstract class RestPersistenceManager
     {
       setLastResponseHeaders(restService.getResponseHeaders());
       setLastResponseStatus(restService.getResponseStatus());
-      logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,null,startTime,e);
+      logRestCall(connectionName,restService.getRequestMethod(),uri,restService.getRequestProperties().toString(),payload,null,startTime,e);
       RestCallException re = new RestCallException(e);
       re.setRequestMethod(requestType);
       re.setRequestUri(uri);
