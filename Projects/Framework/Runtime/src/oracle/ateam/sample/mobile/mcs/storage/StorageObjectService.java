@@ -2,6 +2,8 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 
  $revision_history$
+ 23-mar-2016   Steven Davelaar
+ 1.2           Use storageobject name as file name when downloading. Only use storageObject id if name is null
  07-mar-2016   Steven Davelaar
  1.1           saveStorageObjectToFileSystem now uses id instead of name to construct filepath!
  29-dec-2015   Steven Davelaar
@@ -419,6 +421,9 @@ public class StorageObjectService
   /**
    * Save byte content of storage object to a file on file system. The default directory for download is the value
    * of AdfmfJavaUtilities.ApplicationDirectory concatenated with /MCS/ and the name of the collection.
+   * The storageObject name is used as file name. If the storageObject name is null,
+   * the storageObject id is used as file name. 
+   * If the download is succesfull, the storageObject filePath is set to the fully qualified file system path.
    * If the content type is application/zip, we unzip the file in the same directory after downloading to the file system.
    * 
    * @param storageObject
@@ -434,7 +439,8 @@ public class StorageObjectService
     {
       fileDir.mkdirs();      
     }
-    String filePath = dir + File.separator + storageObject.getId();
+    String fileName = storageObject.getName()!= null ? storageObject.getName() : storageObject.getId();
+    String filePath = dir + File.separator + fileName;
     File file = new File(filePath);
     OutputStream fos = null;
     try
@@ -443,15 +449,15 @@ public class StorageObjectService
       fos.write(content);
       fos.flush();
       storageObject.setFilePath(filePath);
-      sLog.info("Storage Object "+storageObject.getId()+" succesfully saved to file system.");
+      sLog.info("Storage Object "+fileName+" succesfully saved to file system.");
     }
     catch (FileNotFoundException e)
     {
-      sLog.info("Storage Object "+storageObject.getId()+" NOT saved to file system: "+e.getLocalizedMessage());
+      sLog.info("Storage Object "+fileName+" NOT saved to file system: "+e.getLocalizedMessage());
     }
     catch (IOException e)
     {
-      sLog.info("Storage Object "+storageObject.getId()+" NOT saved to file system: "+e.getLocalizedMessage());
+      sLog.info("Storage Object "+fileName+" NOT saved to file system: "+e.getLocalizedMessage());
     }
     finally
     {

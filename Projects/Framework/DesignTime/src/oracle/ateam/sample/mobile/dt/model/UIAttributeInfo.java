@@ -29,7 +29,7 @@ public class UIAttributeInfo
   {
     this.attrName = attrDef.getName();
     this.javaType = attrDef.getJavaTypeString();
-    if ("isNewEntity".equals(attrName))
+    if ("isNewEntity".equals(attrName) || "key".equals(attrName))
     {
       setDisplayInForm(false);
     }

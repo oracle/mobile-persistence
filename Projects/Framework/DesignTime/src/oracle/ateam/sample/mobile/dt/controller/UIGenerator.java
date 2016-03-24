@@ -137,7 +137,7 @@ public class UIGenerator
 // before we have set up mobile security
 //    if (model.getSecurityType()!=null)
 //    {
-      addUserContextBean();
+//      addUserContextBean();
 //    }  
     // set iter bean
     addConnectivityBean();

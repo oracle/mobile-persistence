@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  23-mar-2016   Steven Davelaar
+  1.7           Added log message with DB file location
   04-mar-2016   Steven Davelaar
   1.6           Allow passing in null for bindParamInfos argument in executeSqlDml
   07-jan-2016   Steven Davelaar
@@ -1271,6 +1273,7 @@ public class DBPersistenceManager
    */
   public void initDBIfNeeded()
   {
+    sLog.info("SQLite database path: "+PersistenceConfig.getDatabaseFilePath());
     File dbFile = new File(PersistenceConfig.getDatabaseFilePath());
     if (!dbFile.exists())
     {
@@ -1313,7 +1316,7 @@ public class DBPersistenceManager
         }
         catch (Exception e)
         {
-          throw new AdfException("Error enrypting the database: "+e.getMessage(), AdfException.ERROR);
+          throw new AdfException("Error encrypting the database: "+e.getMessage(), AdfException.ERROR);
         }
         finally
         {
