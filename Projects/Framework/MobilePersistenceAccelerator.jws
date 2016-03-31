@@ -28,7 +28,6 @@
    <list n="listOfChildren">
       <hash><url n="URL" path="DataSynchFeature/DataSynchFeature.jpr"/></hash>
       <hash><url n="URL" path="DesignTime/DesignTime.jpr"/></hash>
-      <hash><url n="URL" path="Diagrams/Diagrams.jpr"/></hash>
       <hash><url n="URL" path="Runtime/Runtime.jpr"/></hash>
       <hash><url n="URL" path="WebServiceCallsFeature/WebServiceCallsFeature.jpr"/></hash>
    </list>
