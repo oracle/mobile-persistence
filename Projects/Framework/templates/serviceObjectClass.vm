@@ -39,10 +39,11 @@ public class ${WSM.currentDataObject.serviceClassName}
    *  
    * ${WSM.currentDataObject.serviceClassName} crudService = (${WSM.currentDataObject.serviceClassName}) EntityUtils.getEntityCRUDService(${WSM.currentDataObject.className}.class);
    *  
-   * Note that calling this method might fire a remote method call when autoQuery is set to true in the 
-   * classMappingDescriptor and the data control has not been instantiated yet for the feature context in which you 
-   * execute the above call. Remember: each feature has its own class loader, bean data controls are NOT shared 
-   * accross features!
+   * Note that calling this method might fire a remote method call when autoQuery is set to true in the
+   * classMappingDescriptor and the data control has not been instantiated yet for the feature context in which you
+   * execute the above call. Remember: each feature has its own class loader, bean data controls are NOT shared
+   * accross features unless you generated this service class in the ApplicationController project and created the
+   * data control there.
    */
   public ${WSM.currentDataObject.serviceClassName}()
   {
@@ -55,6 +56,18 @@ public class ${WSM.currentDataObject.serviceClassName}
   public ${WSM.currentDataObject.serviceClassName}(boolean autoQuery)
   {
     super(autoQuery);
+  }
+
+  /**
+   * Use this constructor to get an instance without performing an autoQuery, and with remoteReadInBackground
+   * and remoteWriteInBackground set to the values passed in as constructor argument. 
+   * This constructor overrides (ignores) the settings of these properties in persistence-mapping.xml
+   */
+  public ${WSM.currentDataObject.serviceClassName}(boolean doRemoteReadInBackground, boolean doRemoteWriteInBackground)
+  {
+    super(false);
+    setDoRemoteReadInBackground(doRemoteReadInBackground);
+    setDoRemoteWriteInBackground(doRemoteWriteInBackground);
   }
 
   protected Class getEntityClass()
@@ -72,34 +85,80 @@ public class ${WSM.currentDataObject.serviceClassName}
     return getEntityList();
   }
 
-   /**
-     * This method is automatically called when using the Create operation on the ${WSM.currentDataObject.classVariableName} collection
-     * in the data control palette. It gets a new ${WSM.currentDataObject.classVariableName} instance as argument and adds this instance to the 
-     * ${WSM.currentDataObject.classVariableName} list. 
-     * Do NOT drag and drop this method from the data control palette, use the Create operation instead to ensure 
-     * that iterator binding and ${WSM.currentDataObject.classVariableName} list stay in sync.
-     * @param index
-     * @param ${WSM.currentDataObject.classVariableName}
-     */
-    public void add${WSM.currentDataObject.className}(int index, ${WSM.currentDataObject.className} ${WSM.currentDataObject.classVariableName})
-    {
-      addEntity(index, ${WSM.currentDataObject.classVariableName});
-    }
+  /**
+   * This method is automatically called when using the Create operation on the ${WSM.currentDataObject.classVariableName} collection
+   * in the data control palette. 
+   * 
+   * Note that this method does NOT add the ${WSM.currentDataObject.classVariableName} to the entity list because this method is 
+   * automatically called by MAF framework when using the Create operation from the data control palette. 
+   * MAF will add the entity to the list AFTER this method has been executed. 
+   * 
+   * You can use this method to set default values. 
+   * If you want to refresh data in the UI based on the size of the entity list, then you cannot do this in this
+   * method because the list is not updated yet (see above), instead override method entityAdded and add your 
+   * logic there. The AMPA EntityList class ensures that this method is called after a ${WSM.currentDataObject.classVariableName} has been added.
+   * If you want to directly add a storage object without using the binding layer, then call the overloaded version
+   * of this method with addToList argument set to true.
+   * 
+   * Do NOT drag and drop this method from the data control palette, use the Create operation 
+   * instead to ensure that iterator binding and ${WSM.currentDataObject.classVariableName} list stay in sync.
+   * @param index
+   * @param ${WSM.currentDataObject.classVariableName}
+   */
+   public void add${WSM.currentDataObject.className}(int index, ${WSM.currentDataObject.className} ${WSM.currentDataObject.classVariableName})
+   {
+     addEntity(index, ${WSM.currentDataObject.classVariableName});
+   }
 
-    /**
-     * This method is automatically called when using the Delete operation on the ${WSM.currentDataObject.classVariableName} collection
-     * in the data control palette. It removes the ${WSM.currentDataObject.classVariableName} instance passed in from the ${WSM.currentDataObject.classVariableName} list, deletes the
-     * corresponding row from the database (if persisted) and calls the configured remove method on the remote
-     * persistence manager.  
-     * Do NOT drag and drop this method from the data control palette, use the Delete operation instead to ensure 
-     * that iterator binding and ${WSM.currentDataObject.classVariableName} list stay in sync.
-     * @param ${WSM.currentDataObject.classVariableName}
-     */
-    public void remove${WSM.currentDataObject.className}(${WSM.currentDataObject.className} ${WSM.currentDataObject.classVariableName})
-    {
-      removeEntity(${WSM.currentDataObject.classVariableName});
-    }
+  /**
+   * Sets ${WSM.currentDataObject.classVariableName} state to new, and if addToList argument is true, it adds the ${WSM.currentDataObject.classVariableName} to the
+   * ${WSM.currentDataObject.classVariableName} list and and fires change event to refresh the list in the UI
+   * @param index
+   * @param ${WSM.currentDataObject.classVariableName}
+   * @param addToList
+   */
+   public void add${WSM.currentDataObject.className}(int index, ${WSM.currentDataObject.className} ${WSM.currentDataObject.classVariableName}, boolean addToList)
+  {
+     addEntity(index, ${WSM.currentDataObject.classVariableName}, addToList);
+  }
+
+  /**
+   * This method is automatically called when using the Delete operation on the ${WSM.currentDataObject.classVariableName} collection
+   * in the data control palette. It deletes the corresponding row from the database (if persisted) and 
+   * calls the configured remove method on the remote persistence manager.
+   * 
+   * Note that this method does NOT remove the ${WSM.currentDataObject.classVariableName} from the entity list because this method is 
+   * automatically called by MAF framework when using the Delete operation from the data control palette. 
+   * MAF will remove the entity from the list AFTER this method has been executed. 
+   * If you want to directly remove a storage object without using the binding layer, then call the overloaded version
+   * of this method with removeFromList argument set to true.
+   * 
+   * If you want to refresh data in the UI based on the size of the entity list, then you cannot do this in this
+   * method because the list is not updated yet (see above), instead override method entityRemoved and add your 
+   * logic there. The AMPA EntityList class ensures that this refresh method is called after a ${WSM.currentDataObject.classVariableName} has been added.
+   * 
+   * Do NOT drag and drop this method from the data control palette, use the Delete operation 
+   * instead to ensure that iterator binding and ${WSM.currentDataObject.classVariableName} list stay in sync.
+   * @param ${WSM.currentDataObject.classVariableName}
+   */
+   public void remove${WSM.currentDataObject.className}(${WSM.currentDataObject.className} ${WSM.currentDataObject.classVariableName})
+   {
+     removeEntity(${WSM.currentDataObject.classVariableName});
+   }
     
+
+  /**
+   * Removes a ${WSM.currentDataObject.classVariableName} using the configured local and remote persistence managers.
+   * If removeFromList argument is true, it removes the ${WSM.currentDataObject.classVariableName} from the
+   * a ${WSM.currentDataObject.classVariableName} list and and fires change event to refresh the list in the UI
+   * @param a ${WSM.currentDataObject.classVariableName}
+   * @param removeFromList
+   */
+   public void remove${WSM.currentDataObject.className}(${WSM.currentDataObject.className} ${WSM.currentDataObject.classVariableName}, boolean removeFromList)
+   {
+     removeEntity(${WSM.currentDataObject.classVariableName}, removeFromList);
+   }
+
     /**
      * Inserts or updates a ${WSM.currentDataObject.classVariableName} using the configured persistence managers.
      * The insert or update is determined by calling isNewEntity on the ${WSM.currentDataObject.classVariableName} instance.
@@ -171,16 +230,6 @@ public class ${WSM.currentDataObject.serviceClassName}
   }
   #end
 
-
-    /**
-     * Synchronizes all pending data sync actions using the remote persistence manager
-     * @param inBackground
-     */
-    public void synchronize${WSM.currentDataObject.className}(Boolean inBackground)
-    {
-      super.synchronize(inBackground);
-    }
-
     /**
      * Resets the values of the ${WSM.currentDataObject.classVariableName} instance to the values as stored in the SQLite database. This method
      * will do nothing when the ${WSM.currentDataObject.classVariableName} is not persisted to the database.
@@ -190,14 +239,7 @@ public class ${WSM.currentDataObject.serviceClassName}
     {
       super.resetEntity(${WSM.currentDataObject.classVariableName});
     }
-    
-    /**
-     * Returns true when there are pending ${WSM.currentDataObject.classVariableName} data sync actions. Returns false if there are no such actions.
-     */
-    public boolean getHas${WSM.currentDataObject.className}DataSynchActions()
-    {
-      return getDataSynchManager().getHasDataSynchActions();
-    }
+
 
   #foreach($method in ${WSM.currentDataObject.customMethods})
     /**

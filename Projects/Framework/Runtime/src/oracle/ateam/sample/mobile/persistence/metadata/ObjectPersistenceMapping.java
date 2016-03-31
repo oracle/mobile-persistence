@@ -31,6 +31,8 @@ import oracle.adfmf.util.XmlAnyDefinition;
 
 /**
  * Class that maps to the top-level node in the persistenceMapping XML file
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class ObjectPersistenceMapping
   extends XmlAnyDefinition
@@ -55,7 +57,7 @@ public class ObjectPersistenceMapping
       {
         // we use mobile-object-persistence as top node name so we can edit it inside JDev!
         topNode =
-          (ObjectPersistenceMapping) KXmlUtil.loadFromXml(is, ObjectPersistenceMapping.class,
+          (ObjectPersistenceMapping) KXmlUtil.getInstance().loadFromXml(is, ObjectPersistenceMapping.class,
                                                           "mobile-object-persistence");
       }
       catch (Exception e)
@@ -64,7 +66,7 @@ public class ObjectPersistenceMapping
         is =
           Thread.currentThread().getContextClassLoader().getResourceAsStream(PersistenceConfig.getPersistenceMappingXML());
         topNode =
-          (ObjectPersistenceMapping) KXmlUtil.loadFromXml(is, ObjectPersistenceMapping.class, "object-persistence");
+          (ObjectPersistenceMapping) KXmlUtil.getInstance().loadFromXml(is, ObjectPersistenceMapping.class, "object-persistence");
       }
       instance = topNode;
     }

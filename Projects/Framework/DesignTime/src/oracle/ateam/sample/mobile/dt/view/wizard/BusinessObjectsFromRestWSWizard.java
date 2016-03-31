@@ -23,6 +23,7 @@ import oracle.ateam.sample.mobile.dt.view.uipanel.DataObjectsPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.GeneratorSettingsPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.ParentChildAccessorsPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.RESTResourcesPanel;
+import oracle.ateam.sample.mobile.dt.view.uipanel.RuntimeOptionsPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.SecurityWarningPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.SelectURLConnectionPanel;
 
@@ -50,8 +51,6 @@ import oracle.javatools.dialogs.DialogUtil;
 public class BusinessObjectsFromRestWSWizard extends Wizard
 {
 
-  private static final String DEFAULT_PACKAGE_PROPERTY = "defaultPackage";
-
   public static final String MODEL_KEY = "model";
   static final String STATE_WELCOME = "welcome";
     static final String STATE_SECURITY_WARNING = "secWarning";
@@ -62,6 +61,7 @@ public class BusinessObjectsFromRestWSWizard extends Wizard
   static final String STATE_PERSISTENCE_MAPPING= "pmapping";
   static final String STATE_CRUD_METHOD= "crudMethods";
   static final String STATE_CRUD_METHOD_PARAMS = "crudMethodParams";
+  static final String STATE_RUNTIME_OPTIONS = "runtimeOptions";
   static final String STATE_OPTIONS = "options";
 
 //  private String wizardTitle = "Create Mobile Web Service Proxy and Persistence Provider";
@@ -90,7 +90,7 @@ public class BusinessObjectsFromRestWSWizard extends Wizard
         Step step = new Step("Security Warning", SecurityWarningPanel.class, null);
         builder.newState(STATE_SECURITY_WARNING, step, STATE_CONNECTION,false);
 
-       step = new Step("URL Connection", SelectURLConnectionPanel.class, null);
+       step = new Step("Connection", SelectURLConnectionPanel.class, null);
       builder.newState(STATE_CONNECTION, step, STATE_RESOURCES,false);
 
        step = new Step("Data Object Resources", RESTResourcesPanel.class, null);
@@ -109,7 +109,10 @@ public class BusinessObjectsFromRestWSWizard extends Wizard
       builder.newState(STATE_CRUD_METHOD, step, STATE_CRUD_METHOD_PARAMS,false);
 
       step = new Step("Resource Details", CRUDMethodParametersPanel.class, null);
-      builder.newState(STATE_CRUD_METHOD_PARAMS, step, STATE_OPTIONS,false);
+      builder.newState(STATE_CRUD_METHOD_PARAMS, step, STATE_RUNTIME_OPTIONS,false);
+
+      step = new Step("Runtime Options", RuntimeOptionsPanel.class, null);
+      builder.newState(STATE_RUNTIME_OPTIONS, step, STATE_OPTIONS,false);
 
       step = new Step("Generator Settings", GeneratorSettingsPanel.class, null);
       builder.newFinalState(STATE_OPTIONS, step);
@@ -120,8 +123,7 @@ public class BusinessObjectsFromRestWSWizard extends Wizard
     {
       FSM stateMachine = builder.getFSM();
       Namespace ns = new Namespace();
-      String defaultPackage = ProjectUtils.getViewControllerProject().getProperty(DEFAULT_PACKAGE_PROPERTY);
-      BusinessObjectGeneratorModel model = new BusinessObjectGeneratorModel(defaultPackage);
+      BusinessObjectGeneratorModel model = new BusinessObjectGeneratorModel();
       model.setLogTitle(wizardTitle);
       ns.put(MODEL_KEY, model);
 
@@ -195,7 +197,7 @@ public class BusinessObjectsFromRestWSWizard extends Wizard
     {
       BusinessObjectGeneratorModel model = (BusinessObjectGeneratorModel) context.get(MODEL_KEY);
       model.setLogTitle(logTitle);
-      BusinessObjectGenerator generator = new BusinessObjectGenerator(ProjectUtils.getViewControllerProject(),model);
+      BusinessObjectGenerator generator = new BusinessObjectGenerator(model);
       generator.run();
     }
     catch (IOException ioe)

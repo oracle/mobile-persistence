@@ -2,6 +2,8 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 14-aug-2015   Steven Davelaar
+ 1.2           delegate check for offline to service class
  27-dec-2013   Steven Davelaar
  1.1           Added support for remotely calling findAllInParent in background
  06-feb-2013   Steven Davelaar
@@ -46,6 +48,8 @@ import oracle.ateam.sample.mobile.util.TaskExecutor;
  * the employees from the database and populate the list.
  * If the child collection is not returned with the parent payload, the find-all-in-parent method as
  * defined in persistenceMapping.xml is executed.
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class IndirectList
   implements java.util.List
@@ -223,13 +227,12 @@ public class IndirectList
   protected List buildDelegate()
   {
     final ClassMappingDescriptor referenceDescriptor = mapping.getReferenceClassMappingDescriptor();
-    String status = DeviceManagerFactory.getDeviceManager().getNetworkStatus();
-    boolean offline = "NotReachable".equals(status) || "unknown".equals(status);
+    final EntityCRUDService service = EntityUtils.getEntityCRUDService(referenceDescriptor);  
+    boolean offline = service.isOffline();
     if (mapping.getAccessorMethod() != null && !offline)
     {
       sLog.fine("Getter method for attribute " + this.mapping.getAttributeName() +
                 " called for the first time, calling find-all-in-parent web service method");
-      final EntityCRUDService service = EntityUtils.getEntityCRUDService(referenceDescriptor);  
       boolean inBackground = service.isDoRemoteReadInBackground();
       if (inBackground)
       {

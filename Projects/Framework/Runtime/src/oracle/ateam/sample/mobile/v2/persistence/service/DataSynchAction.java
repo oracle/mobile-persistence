@@ -2,6 +2,12 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  10-mar-2016   Steven Davelaar
+  1.2           Added method isAnalyticsSyncAction and check for this boolean
+                in createEntityFromJSONString
+  29-dec-2015   Steven Davelaar
+  1.1           Added constructor so we can use this class to store pending MCS analytics 
+                events as well (they do not extend from Entity class)
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
@@ -16,6 +22,7 @@ import oracle.adfmf.java.beans.PropertyChangeListener;
 import oracle.adfmf.java.beans.PropertyChangeSupport;
 import oracle.adfmf.util.Utility;
 
+import oracle.ateam.sample.mobile.mcs.analytics.AnalyticsEvent;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 import oracle.ateam.sample.mobile.util.MessageUtils;
@@ -47,7 +54,8 @@ public class DataSynchAction extends Entity
   private transient Map attributeValues;
   private transient Class entityClass;
   private transient String data;
-
+  private transient boolean analyticsSyncAction;
+  
   public DataSynchAction()
   {
     super();
@@ -60,6 +68,17 @@ public class DataSynchAction extends Entity
     this.entityClassString = entity.getClass().getName();
     this.serviceClass = serviceClass;
     setEntity(entity);
+    this.dateCreated = new Date();
+    this.lastSynchAttempt = new Date();
+  }
+
+  public DataSynchAction(String action, String entityClassName, String entityAsJSONString, String serviceClass)
+  {
+    super();
+    this.action = action;
+    this.entityClassString = entityClassName;
+    this.serviceClass = serviceClass;
+    this.entityAsJSONString = entityAsJSONString;
     this.dateCreated = new Date();
     this.lastSynchAttempt = new Date();
   }
@@ -169,6 +188,11 @@ public class DataSynchAction extends Entity
 
   public String getData()
   {
+    if (getEntity()==null)
+    {
+      // can happen with analytics event which we also store using data sync action when offline
+      return getEntityAsJSONString();
+    }
     StringBuffer data = new StringBuffer("");
     Map<String,Object> values = getAttributeValues();
     Iterator<String> attrs = values.keySet().iterator();
@@ -221,22 +245,12 @@ public class DataSynchAction extends Entity
   public void setEntityAsJSONString(String entityAsJSONString)
   {
     this.entityAsJSONString = entityAsJSONString;
-//    try
-//    {
-//      entity = (Entity) JSONBeanSerializationHelper.fromJSON(getEntityClass(), entityAsJSONString);
-//    }
-//    catch (Exception e)
-//    {
-//      // the question is what we do in this case,
-//      // as the JSON data is invalid... This should just never happen... so let's throw message
-//      // to end user
-//      MessageUtils.handleError(e);
-//    }
   }
 
   public void createEntityFromJSONString()
   {
-    if (entityAsJSONString!=null)
+    // AnalyticsEvent is not an entity, so we exclude it from conversion
+    if (entityAsJSONString!=null && !isAnalyticsSyncAction())
     {
       try
       {
@@ -244,9 +258,7 @@ public class DataSynchAction extends Entity
       }
       catch (Exception e)
       {
-        // the question is what we do in this case,
-        // as the JSON data is invalid... This should just never happen... so let's throw message
-        // to end user
+        // This should never happen
         MessageUtils.handleError(e);
       }      
     }
@@ -296,5 +308,9 @@ public class DataSynchAction extends Entity
   {
     return serviceClass;
   }
-  
+
+  public boolean isAnalyticsSyncAction()
+  {
+    return AnalyticsEvent.class.toString().equals(getEntityClassString());    
+  }
 }

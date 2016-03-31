@@ -45,18 +45,22 @@ public class RESTResourcesProcessor
   private String connectionUri;
   private String connectionName;
   private List<HeaderParam> headerParams;
+  private List<HeaderParam> mcsHeaderParams;
   private List<DCMethod> resources;
   private boolean flattenNestedObjects;
+  private boolean adfbcDescribe;
 
-  public RESTResourcesProcessor(List<DCMethod> resources, String connectionName, String connectionUri, List<HeaderParam> headerParams, Map<String,String> pathParams, boolean flattenNestedObjects)
+  public RESTResourcesProcessor(List<DCMethod> resources, String connectionName, String connectionUri, List<HeaderParam> headerParams, List<HeaderParam> mcsHeaderParams, Map<String,String> pathParams, boolean flattenNestedObjects, boolean adfbcDescribe)
   {
     super();
     this.resources = resources;
     this.connectionName = connectionName;
     this.connectionUri = connectionUri;
     this.headerParams = headerParams;
+    this.mcsHeaderParams = mcsHeaderParams;
     this.pathParams = pathParams;
     this.flattenNestedObjects = flattenNestedObjects;
+    this.adfbcDescribe = adfbcDescribe;
   }
 
 
@@ -98,6 +102,16 @@ public class RESTResourcesProcessor
         {          
           conn.setRequestProperty(param.getName(),param.getValue());          
         }
+        if (mcsHeaderParams!=null)
+        {
+          // Add MCS headers as specified as part of MCS connection details/
+          // These headers should NOT be added to each data object method, because
+          // the MCSPersistenceManager will automatically add them.
+          for(HeaderParam param : mcsHeaderParams)
+          {          
+            conn.setRequestProperty(param.getName(),param.getValue());          
+          }
+        }
         conn.setRequestMethod(resource.getRequestType());
         conn.setDoOutput(true);
         boolean samplePayloadSet = resource.getSamplePayload()!=null && !"".equals(resource.getSamplePayload().trim());
@@ -112,7 +126,7 @@ public class RESTResourcesProcessor
 //            dataObjectInfos = processor.run();
 //            continue;
 //        }
-        else if (urlString.endsWith("/describe"))
+        else if (adfbcDescribe)
         {
           ADFBCDescribeDataObjectParser processor =
             new ADFBCDescribeDataObjectParser(response, connectionName, connectionUri, headerParams);          

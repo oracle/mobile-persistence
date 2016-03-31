@@ -8,7 +8,6 @@
 #set ($iteratorName = "${dataObject.accessorName}Iterator")
 $pageDef.createFormPageDef($taskFlow.name)
 $pageDef.createIteratorBindings($dataObject)
-$pageDef.createDataSynchBindings()
   <amx:panelPage id="pp1">
     <amx:facet name="header">
 ## need isNewEntity binding for readOnly expression when create is allowed and update not allowed
@@ -113,7 +112,9 @@ $pageDef.createDataSynchBindings()
       #SYNCHRONIZE_LINK($dataObject)
       <amx:spacer height="20" id="ms3"/>
       #PENDING_SYNCH_ACTIONS_LINK($dataObject)
-      <amx:spacer height="10" id="ms4"/>
+      <amx:spacer height="20" id="ms4"/>
+      #FORCE_OFFLINE_LINK($dataObject)
+      <amx:spacer height="10" id="ms5"/>
 
     </amx:panelGroupLayout>
   </amx:popup>

@@ -13,6 +13,8 @@ import oracle.ateam.sample.mobile.util.MessageUtils;
 
 /**
  * Implementation of SOAP method header parameter or REST resource header parameter that can be instantiated programmatically
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class MethodHeaderParameterImpl
   implements MethodHeaderParameter

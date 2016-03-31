@@ -258,7 +258,7 @@ public class UIGeneratorSettingsPanel
     List<String> attrNames = new ArrayList<String>();
     for (UIAttributeInfo attr: currentDataObject.getAttributeDefs())
     {
-      if (!"isNewEntity".equals(attr.getAttrName()))
+      if (!"isNewEntity".equals(attr.getAttrName()) && !"key".equals(attr.getAttrName()))
       {
         attrNames.add(attr.getAttrName());        
       }

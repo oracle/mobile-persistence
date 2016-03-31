@@ -81,6 +81,15 @@ public class DataObjectInfo
   private boolean createdFromDBTable = false;
   private String jsonSchema;
   private AttributeInfo canonicalTriggerAttribute;
+  
+  private String remotePersistenceManager;
+  private String localPersistenceManager;
+  private boolean remoteReadInBackground = true;
+  private boolean remoteWriteInBackground = true;
+  private boolean autoQuery = true;
+  private boolean generatePrimaryKey = true;
+  private boolean enableOfflineTransactions = true;
+  private boolean showWebServiceErrors = true;
 
 
   //  Map<AttributeInfo,AttributeInfo> parentAttrMappings = new HashMap<AttributeInfo,AttributeInfo>();
@@ -679,7 +688,12 @@ public class DataObjectInfo
     if (findAllMethod!=null)
     {
       findAllMethod.setIsFindAllMethod(true);
-      findAllMethod.setDataObject(this);      
+      findAllMethod.setDataObject(this);   
+      if (!isExisting())
+      {
+        // default deleteLocalRows to true for findAll method
+        findAllMethod.setDeleteLocalRows(true);        
+      }
     }
   }
 
@@ -1067,4 +1081,83 @@ public class DataObjectInfo
     return canonicalTriggerAttribute;
   }
 
+  public void setRemotePersistenceManager(String remotePersistenceManager)
+  {
+    this.remotePersistenceManager = remotePersistenceManager;
+  }
+
+  public String getRemotePersistenceManager()
+  {
+    return remotePersistenceManager;
+  }
+
+  public void setLocalPersistenceManager(String localPersistenceManager)
+  {
+    this.localPersistenceManager = localPersistenceManager;
+  }
+
+  public String getLocalPersistenceManager()
+  {
+    return localPersistenceManager;
+  }
+
+  public void setAutoQuery(boolean autoQuery)
+  {
+    this.autoQuery = autoQuery;
+  }
+
+  public boolean isAutoQuery()
+  {
+    return autoQuery;
+  }
+
+  public void setGeneratePrimaryKey(boolean generatePrimaryKey)
+  {
+    this.generatePrimaryKey = generatePrimaryKey;
+  }
+
+  public boolean isGeneratePrimaryKey()
+  {
+    return generatePrimaryKey;
+  }
+
+  public void setEnableOfflineTransactions(boolean enabelOfflineTransactions)
+  {
+    this.enableOfflineTransactions = enabelOfflineTransactions;
+  }
+
+  public boolean isEnableOfflineTransactions()
+  {
+    return enableOfflineTransactions;
+  }
+
+  public void setShowWebServiceErrors(boolean showWebServiceErrors)
+  {
+    this.showWebServiceErrors = showWebServiceErrors;
+  }
+
+  public boolean isShowWebServiceErrors()
+  {
+    return showWebServiceErrors;
+  }
+
+  public void setRemoteReadInBackground(boolean remoteReadInBackground)
+  {
+    this.remoteReadInBackground = remoteReadInBackground;
+  }
+
+  public boolean isRemoteReadInBackground()
+  {
+    return remoteReadInBackground;
+  }
+
+  public void setRemoteWriteInBackground(boolean remoteWriteInBackground)
+  {
+    this.remoteWriteInBackground = remoteWriteInBackground;
+  }
+
+  public boolean isRemoteWriteInBackground()
+  {
+    return remoteWriteInBackground;
+  }
 }

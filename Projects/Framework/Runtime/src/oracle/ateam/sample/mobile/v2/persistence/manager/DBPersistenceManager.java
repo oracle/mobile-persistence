@@ -2,6 +2,22 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  29-mar-2016   Steven Davelaar
+  1.8           Synchronized methods that acquire and release DB connection
+  23-mar-2016   Steven Davelaar
+  1.7           Added log message with DB file location
+  04-mar-2016   Steven Davelaar
+  1.6           Allow passing in null for bindParamInfos argument in executeSqlDml
+  07-jan-2016   Steven Davelaar
+  1.5           Reverted change to use INSERT or REPLACE in mergeRow/mergeEntity methods, when not all attrs are included in
+                bind params, the values of columns not included are wiped out!
+  10-dec-2015   Steven Davelaar
+  1.4           Call createDatabasePassword instead of getDatabasePassword on PersistenceConfig to
+                allow for pw generation using MAF GeneratedPassword class
+  03-nov-2015   Steven Davelaar
+  1.3           Use SQLite Write Ahead Loggindg (WAL) when db.use.WAL is set in persistence-config
+                to improve performance with 40% and to allow autoCommit to
+                be turned off. (Thanks to Julien Brodier from Talium for figuring this out).
   16-jun-2015   Steven Davelaar
   1.2           Fixed NPE in getColumnValueFromResultSet when timestamp from DB returns null (can happen
                 when wrong date format is used to insert the value)
@@ -70,6 +86,7 @@ public class DBPersistenceManager
   public static final String SQL_SELECT_KEYWORD = "SELECT ";
   public static final String SQL_UPDATE_KEYWORD = "UPDATE ";
   public static final String SQL_INSERT_KEYWORD = "INSERT INTO ";
+  public static final String SQL_INSERT_OR_REPLACE_KEYWORD = "INSERT OR REPLACE INTO ";
   public static final String SQL_DELETE_KEYWORD = "DELETE FROM ";
   public static final String SQL_WHERE_KEYWORD = " WHERE ";
   public static final String SQL_FROM_KEYWORD = " FROM ";
@@ -116,7 +133,7 @@ public class DBPersistenceManager
    * @param bindParamInfos
    * @return
    */
-  public ResultSet executeSqlSelect(String sql, List<BindParamInfo> bindParamInfos)
+  public synchronized ResultSet executeSqlSelect(String sql, List<BindParamInfo> bindParamInfos)
   {
     sLog.fine("Executing SQL statement "+sql);
     PreparedStatement statement = null;
@@ -153,7 +170,7 @@ public class DBPersistenceManager
    * @param bindParamInfos
    * @param doCommit
    */
-  public void executeSqlDml(String sql, List<BindParamInfo> bindParamInfos, boolean doCommit)
+  public synchronized void executeSqlDml(String sql, List<BindParamInfo> bindParamInfos, boolean doCommit)
   {
     PreparedStatement statement = null;
     try
@@ -163,7 +180,10 @@ public class DBPersistenceManager
       statement = c.prepareStatement(sql);
       boolean isUpdate = sql.toUpperCase().startsWith(SQL_UPDATE_KEYWORD);
       boolean isDelete = sql.toUpperCase().startsWith(SQL_DELETE_KEYWORD);
-      setSqlBindParams(bindParamInfos, statement, isUpdate || isDelete);
+      if (bindParamInfos != null && bindParamInfos.size() > 0)
+      {
+        setSqlBindParams(bindParamInfos, statement, isUpdate || isDelete);
+      }  
       statement.execute();
       // reset so user does not accidently commit when doing select statement with own code
       c.setAutoCommit(false);
@@ -171,6 +191,13 @@ public class DBPersistenceManager
     catch (Exception e)
     {
       sLog.severe("Error executing SQL statement "+sql+": "+e.getLocalizedMessage());
+      if (bindParamInfos!=null)
+      {
+        for (BindParamInfo bp : bindParamInfos)
+        {
+          sLog.severe("... bind param "+bp.getColumnName()+"="+bp.getValue());          
+        }
+      }
       throw new AdfException(e);
     }
     finally
@@ -200,7 +227,7 @@ public class DBPersistenceManager
    * @param doCommit
    */
   public void mergeEntity(Entity entity, boolean doCommit)
-  {
+  {    
     boolean doInsert = entity.getIsNewEntity();
     if (doInsert)
     {
@@ -210,15 +237,23 @@ public class DBPersistenceManager
     {
       updateEntity(entity, doCommit);
     }
+//    List<BindParamInfo> bindParamInfos = getBindParamInfos(entity,false,true);
+//    mergeRow(bindParamInfos, doCommit);
+//    mergeChildren(entity,doCommit);
   }
 
   /**
-   * Persists the entity using SQL INSERT Statement
+   * Persists the entity using SQL INSERT Statement.
+   * if the entity primary key is nul,, and the descriptor in persistenc-mapping.xml
+   * has property autoIncrementPrimry Key to true, this method generates a unique PK value
+   * before inserting the entity.
+   * 
    * @param entity
    * @param doCommit
    */
   public void insertEntity(Entity entity, boolean doCommit)
   {
+    EntityUtils.generatePrimaryKeyValue(entity, 1);
     if (isEntityExixtsInDB(entity))
     {
       MessageUtils.handleError(entity.getClass().getName()+ " with this key already exists");
@@ -271,6 +306,12 @@ public class DBPersistenceManager
     }
     if (primaryKeyBindParamInfos.size()>0)
     {
+      // Cannot use INSERT or REPLACE: when not all attrs are included in
+      // bind params, the values of columns not included are wiped out!      
+//      StringBuffer sql = getSqlInsertOrReplaceIntoPart(bindParamInfos);
+//      sql.append(getSqlInsertValuesPart(bindParamInfos));
+//      executeSqlDml(sql.toString(), bindParamInfos, doCommit);
+
       if (isRowExistsInDB(primaryKeyBindParamInfos))   
       {
         updateRow(bindParamInfos, doCommit);
@@ -405,6 +446,23 @@ public class DBPersistenceManager
   {
     BindParamInfo firstValue = bindParamInfos.get(0);
     StringBuffer insertSQL = new StringBuffer(SQL_INSERT_KEYWORD);
+    insertSQL.append(firstValue.getTableName());
+    insertSQL.append(" (");
+    insertSQL.append(getSqlColumnNamesCommaSeparated(bindParamInfos));
+    insertSQL.append(") ");
+    return insertSQL;
+  }
+
+  /**
+   * Helper method to create the INSERT OR REPLACE INTO part of the SQL statement. 
+   * For each BindParamInfo in the list, a column is added to the INSERT statement.
+   * @param bindParamInfos
+   * @return
+   */
+  public StringBuffer getSqlInsertOrReplaceIntoPart(List<BindParamInfo> bindParamInfos)
+  {
+    BindParamInfo firstValue = bindParamInfos.get(0);
+    StringBuffer insertSQL = new StringBuffer(SQL_INSERT_OR_REPLACE_KEYWORD);
     insertSQL.append(firstValue.getTableName());
     insertSQL.append(" (");
     insertSQL.append(getSqlColumnNamesCommaSeparated(bindParamInfos));
@@ -703,6 +761,10 @@ public class DBPersistenceManager
       }
       ObjectPersistenceMapping persMapping = ObjectPersistenceMapping.getInstance();
       ClassMappingDescriptor descriptor = persMapping.findClassMappingDescriptor(entityClass.getName());
+      if (!descriptor.isPersisted())
+      {
+        return null;
+      }
       StringBuffer sql = getSqlSelectFromPart(descriptor);
       constructWhereClause(sql, keyBindParamInfos);      
       ResultSet set = executeSqlSelect(sql.toString(), keyBindParamInfos);
@@ -840,6 +902,56 @@ public class DBPersistenceManager
     ClassMappingDescriptor descriptor = persMapping.findClassMappingDescriptor(entityClass);
     StringBuffer sql = getSqlSelectFromPart(descriptor);
     sql = constructWhereClause(sql, bindParamInfos);
+    sql = constructOrderByClause(sql, descriptor);
+    ResultSet set = executeSqlSelect(sql.toString(), bindParamInfos);
+    return createEntitiesFromResultSet(set, descriptor.getAttributeMappings());
+  }
+
+  /**
+   * Executes a SELECT statement on the table mapped to the entity class, returning all columns.
+   * The WHERE clause is build based on the searchValues map passed in. The map should contain an attribute name
+   * as the key, and a value to search on. The = operator is used on this value. When multiple
+   * attributes  are passed in the WHERE clause conditions are chained using the AND operator.
+   * For each row in the result set an entity instance of the specified type
+   * is created, and the list returned is a list of these instances.
+   * @param entityClass
+   * @return
+   */
+  public <E extends Entity> List<E> find(Class entityClass, Map<String,String> searchValues)
+  {
+    ObjectPersistenceMapping persMapping = ObjectPersistenceMapping.getInstance();
+    ClassMappingDescriptor descriptor = persMapping.findClassMappingDescriptor(entityClass.getName());
+    StringBuffer sql = getSqlSelectFromPart(descriptor);
+
+    List<BindParamInfo> bindParamInfos = new ArrayList<BindParamInfo>();
+
+    Iterator<String> iter = searchValues.keySet().iterator();
+    while (iter.hasNext())
+    {
+      String attrName = iter.next();
+      String searchValue = searchValues.get(attrName);
+      BigDecimal numericSearchValue = getBigDecimalValue(searchValue);
+      boolean isNumeric = numericSearchValue!=null;
+      
+      AttributeMapping mapping = descriptor.findAttributeMappingByName(attrName);
+      BindParamInfo bindParamInfo = constructBindParamInfo(entityClass, mapping);
+      // check the SQL type to determine whether we can search on it
+      int sqlType = bindParamInfo.getSqlType();
+      if (sqlType==Types.CHAR || sqlType==Types.CLOB || sqlType==Types.VARCHAR)
+      {
+        bindParamInfo.setValue(searchValue);
+        bindParamInfos.add(bindParamInfo);            
+      }
+      else if (isNumeric
+              && (sqlType==Types.BIGINT ||sqlType==Types.DECIMAL || sqlType==Types.DOUBLE || sqlType==Types.FLOAT
+                  || sqlType==Types.INTEGER || sqlType==Types.NUMERIC || sqlType==Types.SMALLINT) )
+      {
+        bindParamInfo.setValue(numericSearchValue);
+        // no need to set operator, default operator is already "="
+        bindParamInfos.add(bindParamInfo);              
+      }
+    }    
+    sql = constructWhereClause(sql, bindParamInfos, SQL_AND_OPERATOR);
     sql = constructOrderByClause(sql, descriptor);
     ResultSet set = executeSqlSelect(sql.toString(), bindParamInfos);
     return createEntitiesFromResultSet(set, descriptor.getAttributeMappings());
@@ -1163,6 +1275,7 @@ public class DBPersistenceManager
    */
   public void initDBIfNeeded()
   {
+    sLog.info("SQLite database path: "+PersistenceConfig.getDatabaseFilePath());
     File dbFile = new File(PersistenceConfig.getDatabaseFilePath());
     if (!dbFile.exists())
     {
@@ -1175,6 +1288,16 @@ public class DBPersistenceManager
         // when rows are deleted. See http://www.sqlite.org/pragma.html#pragma_auto_vacuum
         PreparedStatement stmt = connection.prepareStatement("PRAGMA auto_vacuum = FULL;");
         stmt.execute();
+        if (PersistenceConfig.useWAL())
+        {
+          // to be able to disable auto-commit, we must use Write Ahead Logging
+          // To prevent issues on Android with WAL, we also need to set temp_store to MEMORY
+          // (Special thanks to Julien Brodier from Talium for figuring this out)
+          stmt = connection.prepareStatement("PRAGMA journal_mode = WAL;");
+          stmt.execute();
+          stmt = connection.prepareStatement("PRAGMA temp_store = MEMORY;");
+          stmt.execute();          
+        }
       }
       catch (Exception e)
       {
@@ -1185,18 +1308,17 @@ public class DBPersistenceManager
         DBConnectionFactory.releaseConnection();
       }
       // check whether we need to encrypt the database
-      // always encrypt now
       if (PersistenceConfig.encryptDatabase())
       {
         sLog.info("Encrypting SQLite database");
-        String pwString = PersistenceConfig.getEncryptionType()+":"+PersistenceConfig.getDatabasePassword();
+        String pwString = PersistenceConfig.createDatabasePassword();
         try
         {
           AdfmfJavaUtilities.encryptDatabase(DBConnectionFactory.getConnection(), pwString);
         }
         catch (Exception e)
         {
-          throw new AdfException("Error enrypting the database: "+e.getMessage(), AdfException.ERROR);
+          throw new AdfException("Error encrypting the database: "+e.getMessage(), AdfException.ERROR);
         }
         finally
         {
@@ -1252,7 +1374,7 @@ public class DBPersistenceManager
       {
         Statement pStmt = connection.createStatement();
         String sql = stmts.get(i);
-        sLog.severe("Processing SQL script "+script+", executing statement "+sql);
+        sLog.fine("Processing SQL script "+script+", executing statement "+sql);
         try
         {
           pStmt.executeUpdate(sql);
@@ -1282,7 +1404,7 @@ public class DBPersistenceManager
   /**
    *  Execute Comnmit statement on DB connection
    */
-  public void commmit()
+  public synchronized void commmit()
   {
     try
     {
@@ -1302,7 +1424,7 @@ public class DBPersistenceManager
   /**
    *  Execute Rollback statement on DB connection
    */
-  public void rollback()
+  public synchronized void rollback()
   {
     try
     {

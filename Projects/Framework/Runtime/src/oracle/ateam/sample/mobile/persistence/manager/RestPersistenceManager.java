@@ -71,6 +71,8 @@ import oracle.ateam.sample.mobile.util.StringUtils;
  * Abstract class that provides generic implementation of some of the methods of the
  * PersistenceManager interface that can be used by concrete subclasses that use RESTful web services.
  * Also provides helper methods that can be used by subclasses.
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  *
  */
 public abstract class RestPersistenceManager
@@ -216,7 +218,7 @@ public abstract class RestPersistenceManager
             String attrName = (String) attributesToExclude.get(k);
             if (attrName.startsWith(childDataObjectName+"."))
             {
-              childAttrsToIgnore.add(attrName.substring(childDataObjectName.length()));
+              childAttrsToIgnore.add(attrName.substring(childDataObjectName.length()+1));
             }            
           }
         }

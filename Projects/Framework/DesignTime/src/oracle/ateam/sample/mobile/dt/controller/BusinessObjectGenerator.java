@@ -20,8 +20,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.util.Properties;
+
 import oracle.adfdt.model.ide.managers.ApplicationManager;
 import oracle.adfdt.model.objects.Application;
+
 
 import oracle.adfmf.common.util.McAppUtils;
 import oracle.adfmf.framework.dt.editor.FrameworkXmlEditorConstants;
@@ -43,6 +46,10 @@ import oracle.bali.xml.gui.jdev.xmlComponent.XmlPanelGui;
 import oracle.bali.xml.model.XmlView;
 
 import oracle.ide.Context;
+import oracle.ide.Ide;
+import oracle.ide.model.Dependable;
+import oracle.ide.model.DependableFactory;
+import oracle.ide.model.DependencyConfiguration;
 import oracle.ide.model.NodeFactory;
 import oracle.ide.model.Project;
 import oracle.ide.model.TextNode;
@@ -66,12 +73,13 @@ public class BusinessObjectGenerator
 {
   private BusinessObjectGeneratorModel model;
   private Project project;
+  private GeneratorLogPage log;
 
-  public BusinessObjectGenerator(Project project, BusinessObjectGeneratorModel model)
+  public BusinessObjectGenerator(BusinessObjectGeneratorModel model)
   {
     super();
     this.model = model;
-    this.project = project;
+    this.project = model.getGeneratorProject();
   }
 
   public void run()
@@ -79,7 +87,7 @@ public class BusinessObjectGenerator
   {
     Project appControllerProject = ProjectUtils.getApplicationControllerProject();
 
-    GeneratorLogPage log = GeneratorLogPage.getPage(model.getLogTitle());
+    log = GeneratorLogPage.getPage(model.getLogTitle());
     log.initialize();
     log.info(model.getLogTitle()+" started");
 
@@ -148,7 +156,7 @@ public class BusinessObjectGenerator
     String verb = content!=null ? " updated " : " created ";
     log.info("SQLite DDL script "+fileName+verb+" in src/META-INF folder in "+appControllerProject.getShortLabel());
 
-    // generate persistence mapping file
+    // generate OLD MAF 2.0 persistence mapping file
      fileName = "persistenceMapping.xml";
      sourceURL = FileUtils.getSourceURL(appControllerProject, "META-INF", fileName);
      content = FileUtils.getStringFromInputStream(FileUtils.getInputStream(sourceURL));
@@ -193,20 +201,58 @@ public class BusinessObjectGenerator
     // generate config properties file
     fileName = "mobile-persistence-config.properties";
     sourceURL = FileUtils.getSourceURL(appControllerProject, "META-INF", fileName);
-    if (!URLFileSystem.exists(sourceURL))
+    // 2-2-2016: Always regenerate properties file to get/update MCS entries when MCS connection is used after initialy usage of wizard
+    InputStream is =FileUtils.getInputStream(sourceURL);
+//    if (!URLFileSystem.exists(sourceURL))
+//    {
+    // don't regenerate when running edit persistence mapping wizard
+    if (!model.isEditMode()) 
     {
       output = processor.processTemplate(model, "persistenceConfig.vm");
       FileUtils.addFileToProject(sourceURL, output, null);      
-      log.info("Persistence configuration file "+fileName+" created in src/META-INF folder in "+appControllerProject.getShortLabel());
+      verb = is!=null ? " updated " : " created ";
+      log.info("Persistence configuration file "+fileName+verb+"  in src/META-INF folder in "+appControllerProject.getShortLabel());      
+      if (model.getExistingPersistenceMappingModel()==null)
+      {
+        setApplicationListenerClass(log);            
+      }
     }
 
-    setApplicationListenerClass(log);      
 
     if (model.getDataControl()!=null)
     {
       addWebServiceDataControlUsage(log);      
     }
+
+    addAppControllerDependency();
+      
     log.info(model.getLogTitle()+" finished succesfully");
+  }
+
+  private void addAppControllerDependency()
+  {
+    // add dependency from VC project to APP prj so it can see Java classes
+    Project appPrj = ProjectUtils.getApplicationControllerProject(); 
+    Project viewPrj = ProjectUtils.getViewControllerProject(); 
+    if (appPrj!=null && viewPrj!=null)
+    {
+      // Code below causes following error:
+//      java.lang.IllegalArgumentException: Missing parameter. Parent element for object being depended on, must be specified
+//              at oracle.ide.model.DependableFactory.ensureParent(DependableFactory.java:252)
+//              at oracle.ide.model.DependableFactory.createDependable(DependableFactory.java:93)
+//              at oracle.ateam.sample.mobile.dt.controller.BusinessObjectGenerator.addAppControllerDependency(BusinessObjectGenerator.java:242)      
+      
+//      Dependable dep = DependableFactory.getInstance().createDependable(new Context(Ide.getActiveWorkspace(), appPrj));
+      Context ctx = Context.newIdeContext(appPrj);
+      ctx.setWorkspace(Ide.getActiveWorkspace());
+      ctx.setProject(appPrj);
+      DependableFactory.Params params = new DependableFactory.Params(ctx);
+      params.setElement(project);
+      params.setParent(Ide.getActiveWorkspace());      
+      Dependable dep = DependableFactory.getInstance().createDependable(ctx);
+      DependencyConfiguration.getInstance(viewPrj).addDependency(dep);      
+      log.info(" Added dependency in ViewController project on ApplicationController project");
+    }
   }
 
   private void setApplicationListenerClass(GeneratorLogPage log)
@@ -219,10 +265,19 @@ public class BusinessObjectGenerator
     XmlComponentModel appXmlModel = XmlComponentModel.createXmlComponentModel(FrameworkXmlKeys.XMLKEY_ROOT_ATTR_LISTENER_CLASS,
                                               FrameworkXmlKeys.PANEL_ROOT_XMLKEY,
                                               appPanelGui); 
-    appXmlModel.updateModelValue("oracle.ateam.sample.mobile.lifecycle.InitDBLifeCycleListener");
-    log.info("Application Lifecycle Event Listener class in adfmf-application.xml set to oracle.ateam.sample.mobile.lifecycle.InitDBLifeCycleListener");
+    String listener = appXmlModel.getModelValue();
+    if (listener==null || listener.endsWith(".LifeCycleListenerImpl"))
+    {
+      appXmlModel.updateModelValue("oracle.ateam.sample.mobile.lifecycle.InitDBLifeCycleListener");
+      log.info("Application Lifecycle Event Listener class in adfmf-application.xml set to oracle.ateam.sample.mobile.lifecycle.InitDBLifeCycleListener");      
+    }
   }
 
+  /**
+   * This method is only used for generating old MAF 2.0 style persistenceMapping XML.
+   * @param text
+   * @return
+   */
   private Map<String,String> getExistingMappings(String text)
   {
     String startElem = "<class-mapping-descriptor>";
@@ -274,6 +329,14 @@ public class BusinessObjectGenerator
     }
     // also remove WEB_SERVICE_CALL table
      startMatch = "CREATE TABLE WEB_SERVICE_CALL ";
+     startPos = newContent.indexOf(startMatch);
+    if (startPos > -1)
+    {
+      int endPos = newContent.indexOf(");", startPos);
+      newContent = newContent.substring(0, (startPos==0 ? 0 : startPos - 1)) + newContent.substring(endPos + 2);
+    }
+    // also remove STORAGE_OBJECT table
+     startMatch = "CREATE TABLE STORAGE_OBJECT ";
      startPos = newContent.indexOf(startMatch);
     if (startPos > -1)
     {

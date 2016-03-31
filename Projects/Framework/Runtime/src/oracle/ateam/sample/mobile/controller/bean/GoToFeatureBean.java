@@ -2,6 +2,8 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 02-nov-2015   Steven Davelaar
+ 1.2           AdfmfJavaUtilities.getFeatureId() now returns id in 2.1.3 / 2.2
  16-dec-2013   Steven Davelaar
  1.1           AdfmfJavaUtilities.getFeatureName() returns id instead of name! Fixed bug
                that this bean does not work as exected when feature id and name are different
@@ -57,9 +59,9 @@ public class GoToFeatureBean
     {
       throw new AdfException("Next feature Id unknown, cannot go to feature",AdfException.ERROR);      
     }
-    // method AdfmfJavaUtilities.getFeatureName() returns the ID!!!
+    // method AdfmfJavaUtilities.getFeatureName() returns the ID!!! NOT ANY MORE in 2.2!
 //    previousFeatureId = AdfmfContainerUtilities.getFeatureByName(AdfmfJavaUtilities.getFeatureName()).getId();
-    previousFeatureId = AdfmfJavaUtilities.getFeatureName();
+    previousFeatureId = AdfmfJavaUtilities.getFeatureId();
     AdfmfContainerUtilities.gotoFeature(getNextFeatureId());
   }
 

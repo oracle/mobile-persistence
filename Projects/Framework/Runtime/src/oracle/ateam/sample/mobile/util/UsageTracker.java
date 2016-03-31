@@ -17,12 +17,14 @@ import oracle.adf.model.datacontrols.device.DeviceManager;
 import oracle.adf.model.datacontrols.device.DeviceManagerFactory;
 import oracle.adf.model.datacontrols.device.Location;
 
-import oracle.adfmf.dc.ws.rest.RestServiceAdapter;
 import oracle.adfmf.framework.api.AdfmfContainerUtilities;
 import oracle.adfmf.framework.api.JSONBeanSerializationHelper;
 
 import oracle.ateam.sample.mobile.Version;
+import oracle.ateam.sample.mobile.controller.bean.ConnectivityBean;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
+
+import oracle.maf.api.dc.ws.rest.RestServiceAdapter;
 
 /**
  * Class used to track the mobile app usage. In mobile-persistence-config, two endpoints can be configured: one to register
@@ -48,9 +50,7 @@ public class UsageTracker
 
   protected boolean isOffline()
   {
-    String networkStatus = DeviceManagerFactory.getDeviceManager().getNetworkStatus();
-    boolean offline = "NotReachable".equals(networkStatus) || "unknown".equals(networkStatus);
-    return offline;
+    return new ConnectivityBean().isOffline();
   }
 
   protected String getCurrentDateTime()
@@ -155,7 +155,7 @@ public class UsageTracker
       RestServiceAdapter rsa = new NoConnRestServiceAdapterImpl(connectionEndPoint);
       rsa.clearRequestProperties();
       rsa.addRequestProperty("Content-Type", "application/json");
-      rsa.setRequestType(RestServiceAdapter.REQUEST_TYPE_POST);
+      rsa.setRequestMethod(RestServiceAdapter.REQUEST_TYPE_POST);
       rsa.setRequestURI(uri);
       rsa.send(json);
     }

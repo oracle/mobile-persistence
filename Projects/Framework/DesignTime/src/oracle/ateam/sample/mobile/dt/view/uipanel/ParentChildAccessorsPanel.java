@@ -411,8 +411,8 @@ public class ParentChildAccessorsPanel
         }
         childAccessorMethod.setParameterValueProviderDataObject(parent);
         // we assume payload structure is same as one used to discover the data objects
-        // We ONLY do this for new methods, we should preserve the values manually set in persistence-mapping
-        if (!childAccessorMethod.isExisting())
+        // We ONLY do this for new (Not RAML created) methods, we should preserve the values manually set in persistence-mapping
+        if (!childAccessorMethod.isExisting() && !childAccessorMethod.isRamlCreated())
         {
           childAccessorMethod.setPayloadElementName(child.getPayloadListElementName());
           childAccessorMethod.setPayloadRowElementName(child.getPayloadRowElementName());           
@@ -435,7 +435,7 @@ public class ParentChildAccessorsPanel
         parentAccessorMethod.setParameterValueProviderDataObject(child);
         // we assume payload structure is same as one used to discover dthe data objects
         // We ONLY do this for new methods, we should preserve the values manually set in persistence-mapping
-        if (!parentAccessorMethod.isExisting())
+        if (!parentAccessorMethod.isExisting() && !parentAccessorMethod.isRamlCreated())
         {
           parentAccessorMethod.setPayloadElementName(parent.getPayloadListElementName());
           parentAccessorMethod.setPayloadRowElementName(parent.getPayloadRowElementName()); 

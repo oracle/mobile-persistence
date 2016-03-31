@@ -150,15 +150,15 @@ public class CRUDMethodsRESTPanel
     gbc.gridx++;
     contentPanel.add(findAllRequestType, gbc);
 
-
-    gbc.gridy++;
-    gbc.gridx = 0;
-    gbc.weightx = 0.2;
-    contentPanel.add(deleteLocalRowsLabel, gbc);
-    gbc.gridx++;
-    gbc.weightx = 1.0f;
-    contentPanel.add(deleteLocalRowsField, gbc);
-    gbc.weightx = 0;
+// Moved to Runtime Options panel
+//    gbc.gridy++;
+//    gbc.gridx = 0;
+//    gbc.weightx = 0.2;
+//    contentPanel.add(deleteLocalRowsLabel, gbc);
+//    gbc.gridx++;
+//    gbc.weightx = 1.0f;
+//    contentPanel.add(deleteLocalRowsField, gbc);
+//    gbc.weightx = 0;
 
     gbc.gridy++;
     gbc.gridx = 0;
@@ -364,7 +364,8 @@ public class CRUDMethodsRESTPanel
     // so we set payloadElementName to and payloadRowElementName (might be null in case of JSON)
     // to the names stored on the DataObjectInfo when discovering it.
     // We ONLY do this for new methods, we should preserve the values manually set in persistence-mapping
-    if (!method.isExisting())
+    // and we only do this when method is not created through RAML parsing
+    if (!method.isExisting() && !method.isRamlCreated())
     {
       method.setPayloadElementName(getCurrentDataObject().getPayloadListElementName()); 
       method.setPayloadRowElementName(getCurrentDataObject().getPayloadRowElementName());       
@@ -375,6 +376,10 @@ public class CRUDMethodsRESTPanel
    
   private void saveDataObjectProps()
   {    
+    if (getCurrentDataObject()==null)
+    {
+      return;
+    }
     getCurrentDataObject().setFindAllMethod(findOrCreateMethod(findAllField, findAllRequestType));
     getCurrentDataObject().setFindMethod(findOrCreateMethod(findField,findRequestType));
     getCurrentDataObject().setGetCanonicalMethod(findOrCreateMethod(getCanonicalField, getCanonicalRequestType));

@@ -11,6 +11,9 @@ import java.util.List;
 
 import oracle.ateam.sample.mobile.persistence.model.Entity;
 
+ /** 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
+ */ 
 public interface RemotePersistenceManager extends PersistenceManager
 {
   boolean isFindAllSupported(Class clazz);

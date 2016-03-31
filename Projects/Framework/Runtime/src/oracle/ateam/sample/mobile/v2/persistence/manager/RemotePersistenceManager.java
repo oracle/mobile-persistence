@@ -16,6 +16,8 @@ public interface RemotePersistenceManager extends PersistenceManager
 
   boolean isFindAllInParentSupported(Class clazz, String accessorAttribute);
   
+  boolean isGetCanonicalSupported(Class clazz);
+
   boolean isGetAsParentSupported(Class clazz, String accessorAttribute);
 
   boolean isFindSupported(Class clazz);

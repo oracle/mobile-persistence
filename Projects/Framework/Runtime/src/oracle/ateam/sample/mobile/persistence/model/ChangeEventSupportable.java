@@ -17,6 +17,8 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 
 /**
  *  Abstract class that can be extended to support MAF data change events
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public abstract class ChangeEventSupportable
 {

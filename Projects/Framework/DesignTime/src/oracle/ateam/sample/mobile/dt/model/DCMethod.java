@@ -57,6 +57,9 @@ public class DCMethod
   private String samplePayload;
   private String dataControlName;
   private boolean existing = false;
+  private boolean ramlCreated = false;
+  private boolean deleteLocalRows = false;
+  private String attrsToExclude;
 
   public void setExisting(boolean existing)
   {
@@ -359,7 +362,10 @@ public class DCMethod
         if (getQueryParams().size()==0)
         {
           // no params, so we can assume the serialized dataobject will be sent
-          setSendSerializedDataObjectAsPayload(true);          
+          if (!"DELETE".equalsIgnoreCase(getRequestType()) && !isExisting())
+          {
+            setSendSerializedDataObjectAsPayload(true);                      
+          }
         }
         else if (getQueryParams().size()==1)
         {
@@ -618,5 +624,36 @@ public class DCMethod
   public String getAccessorAttribute()
   {
     return accessorAttribute;
+  }
+
+  public void setRamlCreated(boolean ramlCreated)
+  {
+    this.ramlCreated = ramlCreated;
+  }
+
+  public boolean isRamlCreated()
+  {
+    return ramlCreated;
+  }
+
+
+  public void setDeleteLocalRows(boolean deleteLocalRows)
+  {
+    this.deleteLocalRows = deleteLocalRows;
+  }
+
+  public boolean isDeleteLocalRows()
+  {
+    return deleteLocalRows;
+  }
+
+  public void setAttrsToExclude(String attrsToExclude)
+  {
+    this.attrsToExclude = attrsToExclude;
+  }
+
+  public String getAttrsToExclude()
+  {
+    return attrsToExclude;
   }
 }

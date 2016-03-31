@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.util.logging.Logger;
+
 import oracle.adfdt.controller.adfc.source.managedbean.ManagedBean;
 import oracle.adfdt.controller.adfc.source.managedbean.ManagedBeanName;
 import oracle.adfdt.controller.adfc.source.managedbean.ManagedBeanScope;
@@ -32,6 +34,7 @@ import oracle.adfdt.model.objects.DataControl;
 import oracle.adfdtinternal.controller.mobile.navigator.AdfcConfigNodeUtils;
 
 import oracle.adfmf.common.ADFMobileConstants;
+import oracle.adfmf.common.MobileException;
 import oracle.adfmf.common.util.DeviceAccessUtils;
 import oracle.adfmf.common.util.McAppUtils;
 import oracle.adfmf.framework.dt.editor.FrameworkXmlEditorConstants;
@@ -40,7 +43,10 @@ import oracle.adfmf.framework.dt.editor.FrameworkXmlSourceNode;
 import oracle.adfmf.framework.dt.editor.feature.FeatureXmlConstants;
 import oracle.adfmf.framework.dt.editor.feature.FeatureXmlKeys;
 import oracle.adfmf.framework.dt.editor.feature.FeatureXmlSourceNode;
+import oracle.adfmf.framework.dt.editor.plugins.custom.PluginUrlPropertyEditor;
 import oracle.adfmf.framework.dt.ide.FeatureBuilderModel;
+
+import oracle.adfmf.framework.dt.plugins.PluginManager;
 
 import oracle.ateam.sample.mobile.dt.model.TaskFlowModel;
 import oracle.ateam.sample.mobile.dt.model.UIDataObjectInfo;
@@ -70,6 +76,8 @@ import oracle.ide.model.Project;
 import oracle.ide.net.URLFactory;
 import oracle.ide.net.URLFileSystem;
 import oracle.ide.net.URLPath;
+
+import oracle.ide.panels.TraversalException;
 
 import oracle.jdeveloper.library.ApplicationLibraryList;
 import oracle.jdeveloper.library.JLibrary;
@@ -129,10 +137,12 @@ public class UIGenerator
 // before we have set up mobile security
 //    if (model.getSecurityType()!=null)
 //    {
-      addUserContextBean();
+//      addUserContextBean();
 //    }  
     // set iter bean
+    addConnectivityBean();
 
+    
 // No longer needed, is now a native feature in 12.1.3
 //    DataControl dc = model.getDataControl().getRealDataControl();
 //    String ateamBean = "oracle.ateam.sample.mobile.model.bean.StatefulIteratorBeanDcDefinition";
@@ -149,8 +159,7 @@ public class UIGenerator
         addWSCallsFeatureReference();
         addWSCallsJarIfNeeded();        
     }
-// doesnt work yet
-//    addNetworkStatusAccessPermission();
+    
     log.info("MAF User Interface Generator finished succesfully");
   }
 
@@ -253,9 +262,10 @@ public class UIGenerator
     }
   }
 
+
     private void addNetworkStatusAccessPermission()
     {
-////        <adfmf:deviceFeatureAccess>
+    ////        <adfmf:deviceFeatureAccess>
 ////          <adfmf:deviceNetwork allowAccess="true" id="dn1"/>
 ////        </adfmf:deviceFeatureAccess>        
 //        FrameworkXmlSourceNode applicationXml = McAppUtils.findOrCreateApplicationXml(project.getWorkspace());
@@ -530,6 +540,38 @@ public class UIGenerator
           beanScope.setValue("application");
           bean.setManagedBeanScope(beanScope);
           log.info("Added UserContext managed bean to adfc-mobile-config.xml");
+        }
+      }
+    }.run(model);
+
+    //    AbstractModel model = node.getModel();
+  }
+
+  private void addConnectivityBean()
+  {
+    AdfcConfigNode node = AdfcConfigNodeUtils.findDefaultAdfcConfigNode(project);
+    Context context = new Context(null, null, project, node);
+    AbstractModel model = node.getXmlContext(context).getModel();
+    new FixedNameTransactionTask("addConnectivityBean")
+    {
+      protected void performTask(AbstractModel model)
+        throws XmlCommitException
+      {
+        TaskFlow flow = AdfcSingleViewUtils.getSingleTaskFlow(model);
+        if (flow.getManagedBean("Connectivity") == null)
+        {
+          ManagedBean bean = flow.createManagedBean();
+          flow.addManagedBean(bean);
+          ManagedBeanName beanName = bean.createName();
+          beanName.setValue("Connectivity");
+          bean.setName(beanName);
+          ValueEntity beanClass = bean.createManagedBeanClass();
+          beanClass.setValue("oracle.ateam.sample.mobile.controller.bean.ConnectivityBean");
+          bean.setManagedBeanClass(beanClass);
+          ManagedBeanScope beanScope = bean.createManagedBeanScope();
+          beanScope.setValue("application");
+          bean.setManagedBeanScope(beanScope);
+          log.info("Added Connectivity managed bean to adfc-mobile-config.xml");
         }
       }
     }.run(model);

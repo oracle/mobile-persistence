@@ -2,6 +2,8 @@
  Copyright (c) 2014,2015, Oracle and/or its affiliates. All rights reserved.
  
  $revision_history$
+ 14-aug-2015   Steven Davelaar
+ 1.1           delegate check for offline to service class
  06-feb-2013   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
@@ -31,7 +33,8 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
  * For example, the Department object can have a getManager method which uses a ValueHolder to return 
  * the employee on the first call of the getManager method. 
  * This class will execute a SQL statement to retrieve the manager from the database and populate the list. 
-
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class ValueHolder
   implements ValueHolderInterface
@@ -67,14 +70,13 @@ public class ValueHolder
   {
     ClassMappingDescriptor referenceDescriptor = mapping.getReferenceClassMappingDescriptor();
     DBPersistenceManager pm = EntityUtils.getLocalPersistenceManager(referenceDescriptor);
-    String status = DeviceManagerFactory.getDeviceManager().getNetworkStatus();
-    boolean offline = "NotReachable".equals(status) || "unknown".equals(status);
+    EntityCRUDService service = EntityUtils.getEntityCRUDService(referenceDescriptor);  
+    boolean offline = service.isOffline();
     String accessorAttribute = mapping.getAttributeName();
     if (mapping.getAccessorMethod() != null && !offline)
     {
       sLog.fine("Getter method for attribute " + this.mapping.getAttributeName() +
                 " called for the first time, calling get-as-parent web service method");
-      EntityCRUDService service = EntityUtils.getEntityCRUDService(referenceDescriptor);  
       if (service.getRemotePersistenceManager() == null)
       {
         sLog.fine("Cannot execute GetAsParent, no remote persistence manager configured");

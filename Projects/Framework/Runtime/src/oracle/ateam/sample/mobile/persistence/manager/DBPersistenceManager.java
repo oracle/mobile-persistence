@@ -77,6 +77,8 @@ import oracle.ateam.sample.mobile.util.MessageUtils;
  * Implementation of PersistenceManager interface that provides basic CRUD operations against
  * on-device SQLite database.
  * Provides a set of convenience methods to ease creation and execution of custom SQL statements.
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  *
  */
 public class DBPersistenceManager
@@ -1260,7 +1262,7 @@ public class DBPersistenceManager
       {
         Statement pStmt = connection.createStatement();
         String sql = (String) stmts.get(i);
-        sLog.severe("Processing SQL script "+script+", executing statement "+sql);
+        sLog.info("Processing SQL script "+script+", executing statement "+sql);
         try
         {
           pStmt.executeUpdate(sql);

@@ -2,6 +2,15 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
  $revision_history$
+ 24-mar-2016   Steven Davelaar
+ 1.5           - Use new MAF 2.3 RestServiceAdapter and factory class
+ 29-dec-2015   Steven Davelaar
+ 1.4           - HTTP status codes < 300 are no longer treated as exception (work around  for MAF bug still throwing an exception 
+                 if status code is not 200)
+ 08-nov-2015   Steven Davelaar
+ 1.3           - Fixed bug in deriving child attr name to exclude in getPayloadKeyValuePairs (thanks Vik Kumar for reporting)
+ 24-sep-2015   Steven Davelaar
+ 1.2           - Check requestType of custom method, when GET call handleReadResponse insteaf handleWriteResponse
  20-mar-2015   Steven Davelaar
  1.1           - Added method logRestCall
                - Now deleting local rows in findAll and findAllInParent methods (was done in handleResponse before)
@@ -22,13 +31,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import oracle.adfmf.dc.ws.rest.RestServiceAdapter;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.api.Model;
 import oracle.adfmf.framework.exception.AdfException;
 import oracle.adfmf.util.Utility;
 import oracle.adfmf.util.XmlAnyDefinition;
 
+import oracle.ateam.sample.mobile.exception.RestCallException;
 import oracle.ateam.sample.mobile.logging.WebServiceCall;
 import oracle.ateam.sample.mobile.logging.WebServiceCallService;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;
@@ -44,9 +53,14 @@ import oracle.ateam.sample.mobile.v2.security.OAuthTokenManager;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.MessageUtils;
 import oracle.ateam.sample.mobile.util.StringUtils;
+import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.v2.persistence.db.BindParamInfo;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
+import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
+
+import oracle.maf.api.dc.ws.rest.RestServiceAdapter;
+import oracle.maf.api.dc.ws.rest.RestServiceAdapterFactory;
 
 /**
  * Abstract class that provides generic implementation of some of the methods of the
@@ -60,6 +74,7 @@ public abstract class RestPersistenceManager
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(RestPersistenceManager.class);
 //  private static final String AUTH_HEADER_PARAM_NAME = "Authorization";
   private Map lastResponseHeaders;
+  private int lastResponseStatus;
 
   public RestPersistenceManager()
   {
@@ -79,6 +94,7 @@ public abstract class RestPersistenceManager
    */
   protected String convertToStringValue(AttributeMapping attrMapping, Object value)
   {
+    sLog.fine("Executing convertToStringValue");
     if (value == null)
     {
       return getRestNullValue();
@@ -114,6 +130,7 @@ public abstract class RestPersistenceManager
    */
   public Map<String,Object> getPayloadKeyValuePairs(Entity entity, List<String> attributesToExclude)
   {
+    sLog.fine("Executing getPayloadKeyValuePairs for "+entity.getClass().getSimpleName());
     Map<String,Object> pairs = new HashMap<String,Object>();
     String entityClass = entity.getClass().getName();
     ObjectPersistenceMapping mapping = ObjectPersistenceMapping.getInstance();
@@ -126,6 +143,7 @@ public abstract class RestPersistenceManager
       String attrName = attrMapping.getAttributeName();
       if (attributesToExclude!=null && attributesToExclude.contains(attrName))
       {
+        sLog.fine("Attribute "+attrName+" excluded while creating payload for "+entity.getClass().getSimpleName());
         continue;
       }
       String payloadAttr = attrMapping.getAttributeNameInPayload();
@@ -197,7 +215,7 @@ public abstract class RestPersistenceManager
             String attrName = attributesToExclude.get(k);
             if (attrName.startsWith(childDataObjectName+"."))
             {
-              childAttrsToIgnore.add(attrName.substring(childDataObjectName.length()));
+              childAttrsToIgnore.add(attrName.substring(childDataObjectName.length()+1));
             }            
           }
         }
@@ -257,18 +275,65 @@ public abstract class RestPersistenceManager
   public String invokeRestService(String connectionName, String requestType, String requestUri, String payload,
                                   Map<String,String> headerParamMap, int retryLimit, boolean secured)
   {
+    sLog.fine("Executing invokeRestService for "+requestType+" "+requestUri+ ", headers:"+headerParamMap+" "+(payload!=null ? payload :""));
     boolean isGET = "GET".equals(requestType);
-    RestServiceAdapter restService = Model.createRestServiceAdapter();
+    RestServiceAdapter restService = setupRestServiceCall( connectionName,  requestType,  requestUri,  payload,
+                                  headerParamMap,  retryLimit);
+
+    String response = "";
+    String uri = restService.getRequestURI();
+    long startTime = System.currentTimeMillis();
+    try
+    {
+      response = restService.send((isGET? null: payload));      
+      sLog.fine("Response from "+requestType+" "+requestUri+ " :"+response);
+      logRestCall(connectionName,restService.getRequestMethod(),uri,restService.getRequestProperties().toString(),payload,response,startTime,null);
+      setLastResponseHeaders(restService.getResponseHeaders());
+      setLastResponseStatus(restService.getResponseStatus());
+      return response;
+    }
+    catch (Exception e)
+    {
+      setLastResponseHeaders(restService.getResponseHeaders());
+      setLastResponseStatus(restService.getResponseStatus());
+      // check whether response is in 200 range, MAF incorrevty throws an error when response status is 201 or 202
+      // 304 is Not Modified, happens when eTag is same as on server
+      if (restService.getResponseStatus() < 300 || restService.getResponseStatus()==304)
+      {
+        // return detail message as response if available
+        String causeMessage = e.getCause() != null? e.getCause().getLocalizedMessage() : null;
+        logRestCall(connectionName,restService.getRequestMethod(),uri,restService.getRequestProperties().toString(),payload,causeMessage,startTime,e);
+        return causeMessage;
+      }
+      else
+      {
+        logRestCall(connectionName,restService.getRequestMethod(),uri,restService.getRequestProperties().toString(),payload,null,startTime,e);
+        RestCallException re = new RestCallException(e);
+        re.setRequestMethod(requestType);
+        re.setRequestUri(uri);
+        re.setResponseHeaders(restService.getResponseHeaders());
+        re.setResponseStatus(restService.getResponseStatus());
+        return handleInvokeRestServiceError(requestType,uri,re);        
+      }
+    }
+  }
+
+  public RestServiceAdapter setupRestServiceCall(String connectionName, String requestType, String requestUri, String payload,
+                                  Map<String,String> headerParamMap, int retryLimit)
+  {
+    sLog.fine("Executing setupRestServiceCall for "+requestType+" "+requestUri);
+    boolean isGET = "GET".equals(requestType);
+    RestServiceAdapter restService = RestServiceAdapterFactory.newFactory().createRestServiceAdapter();
     restService.clearRequestProperties();
     restService.setConnectionName(connectionName);
     if ("PATCH".equals(requestType))
     {
-      restService.setRequestType("POST");
+      restService.setRequestMethod("POST");
       restService.addRequestProperty("X-HTTP-Method-Override", "PATCH");
     }
     else
     {
-      restService.setRequestType(requestType);
+      restService.setRequestMethod(requestType);
     }
     //    boolean added = addAuthorizationHeaderIfNeeded(connectionName, requestUri, secured, restService);
     if (headerParamMap != null)
@@ -291,20 +356,50 @@ public abstract class RestPersistenceManager
     boolean payloadSet = payload != null && !"".equals(payload.trim());
     uri = isGET? uri + (payloadSet? "?" + payload: ""): uri;
     restService.setRequestURI(uri);
-    String response = "";
+      return restService;    
+  }
+
+  /**
+   * This methods calls a REST service that returns binary data. Since the response is returned as an in-memory
+   * byte array, this method should only be used for small files. For larger files, the HTTP response output stream
+   * should be streamed directly to a file on the file system.
+   * @param connectionName
+   * @param requestType
+   * @param requestUri
+   * @param payload
+   * @param headerParamMap
+   * @param retryLimit
+   * @return
+   */
+  public byte[] invokeByteArrayRestService(String connectionName, String requestType, String requestUri, String payload,
+                                  Map<String,String> headerParamMap, int retryLimit)
+  {
+
+    RestServiceAdapter restService = setupRestServiceCall(connectionName,  requestType,  requestUri,  payload,
+                                   headerParamMap,  retryLimit);
+    byte[] response = null;
     long startTime = System.currentTimeMillis();
+    boolean isGET = "GET".equals(requestType);
+    String uri = restService.getRequestURI();
     try
     {
-      response = restService.send((isGET? null: payload));      
-      logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,response,startTime,null);
+      response = restService.sendReceive((isGET? null: payload));      
+      logRestCall(connectionName,restService.getRequestMethod(),uri,restService.getRequestProperties().toString(),payload,"byte[]",startTime,null);
       setLastResponseHeaders(restService.getResponseHeaders());
+      setLastResponseStatus(restService.getResponseStatus());
       return response;
     }
     catch (Exception e)
     {
-      logRestCall(connectionName,restService.getRequestType(),uri,restService.getRequestProperties().toString(),payload,null,startTime,e);
       setLastResponseHeaders(restService.getResponseHeaders());
-      return handleInvokeRestServiceError(requestType,uri,e);
+      setLastResponseStatus(restService.getResponseStatus());
+      logRestCall(connectionName,restService.getRequestMethod(),uri,restService.getRequestProperties().toString(),payload,null,startTime,e);
+      RestCallException re = new RestCallException(e);
+      re.setRequestMethod(requestType);
+      re.setRequestUri(uri);
+      re.setResponseHeaders(restService.getResponseHeaders());
+      re.setResponseStatus(restService.getResponseStatus());
+      throw re;       
     }
   }
 
@@ -332,7 +427,6 @@ public abstract class RestPersistenceManager
     {
       WebServiceCall wscall = new WebServiceCall();
       wscall.setIsNewEntity(true);
-      EntityUtils.generatePrimaryKeyValue(wscall, 1);
       wscall.setConnection(connection);
       wscall.setDuration(duration);
       wscall.setMethod(method);
@@ -349,7 +443,11 @@ public abstract class RestPersistenceManager
         String error = (causeError==null || "".equals(causeError)) ? rootError : causeError;
         wscall.setErrorMessage(error);        
       }
-      new WebServiceCallService(false).saveWebServiceCall(wscall);
+      // Execute on separate thread and sequentially so we don;t run into issues with PK value already exist
+      TaskExecutor.getDBInstance().execute(true, () ->
+      {
+        new WebServiceCallService(false).saveWebServiceCall(wscall);        
+      });
     }  
   }
   
@@ -364,8 +462,13 @@ public abstract class RestPersistenceManager
    * @param e
    * @return
    */
-  protected String handleInvokeRestServiceError(String requestType, String uri, Exception e)
+  protected String handleInvokeRestServiceError(String requestType, String uri, Exception exception)
   {
+    Exception e = exception;
+    if (exception instanceof RestCallException)
+    {
+      e = ((RestCallException)exception).getWrappedException();
+    }
     String rootError = e.getLocalizedMessage();
     String causeError = e.getCause() != null? e.getCause().getLocalizedMessage() : null;
     // the cause exception can have a null or "" message, in that case we throw the root exception message
@@ -563,6 +666,7 @@ public abstract class RestPersistenceManager
 
   public void sendWriteRequest(Entity entity, Method method, String action)
   {
+    sLog.fine("Executing sendRemoveRequest for class "+entity.getClass().getSimpleName()+" and method "+method.getName());
     Map<MethodParameter,String> paramValues = createParameterMap(entity, method, null, action);
     try
     {
@@ -612,6 +716,7 @@ public abstract class RestPersistenceManager
 
   public void sendRemoveRequest(Entity entity, Method method)
   {
+    sLog.fine("Executing sendRemoveRequest for class "+entity.getClass().getSimpleName());
     sendWriteRequest(entity, method, ACTION_REMOVE);
   }
 
@@ -622,7 +727,7 @@ public abstract class RestPersistenceManager
    */
   public void getCanonical(Entity entity)
   {
-
+    sLog.fine("Executing getCanonical for class "+entity.getClass().getSimpleName());
     Class entityClass = entity.getClass();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
     Method getCanonicalMethod = descriptor.getGetCanonicalMethod();
@@ -647,11 +752,15 @@ public abstract class RestPersistenceManager
   }
 
   /**
-   * Invoke a custom method
+   * Execute a custom method Rest resource. 
+   * The Rest call is executed using the definition of the method 
+   * in persistence-mapping.xml for the entity class that has the same name as the methodName argument
    * @param entity
+   * @param methodName
    */
   public void invokeCustomMethod(Entity entity, String methodName)
   {
+    sLog.fine("Executing invokeCustomMethod for class "+ entity.getClass().getSimpleName()+" and method "+methodName);
     Class entityClass = entity.getClass();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
     Method customMethod = descriptor.getCustomMethod(methodName);
@@ -666,7 +775,14 @@ public abstract class RestPersistenceManager
       String restResponse = invokeRestService(customMethod, paramValues);
       if (restResponse != null)
       {
-        handleWriteResponse(entity, customMethod, null, restResponse);
+        if ("GET".equalsIgnoreCase(customMethod.getRequestType()))
+        {
+          handleReadResponse(restResponse, entityClass, customMethod.getPayloadElementName(), customMethod.getPayloadRowElementName(), null, customMethod.isDeleteLocalRows());
+        }
+        else
+        {
+          handleWriteResponse(entity, customMethod, null, restResponse);          
+        }
       }
     }
     catch (Exception e)
@@ -675,9 +791,17 @@ public abstract class RestPersistenceManager
     }
   }
 
-
+  /**
+   * Execute findAll Rest resource. 
+   * The Rest call is executed using the findAllMethod definition in persistence-mapping.xml for
+   * the entity class
+   * @param <E>
+   * @param entityClass
+   * @return
+   */
   public <E extends Entity> List<E> findAll(Class entityClass)
   {
+    sLog.fine("Executing findAll for class "+entityClass.getSimpleName());
     List<E> entities = new ArrayList<E>();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
     Method findAllMethod = descriptor.getFindAllMethod();
@@ -700,6 +824,12 @@ public abstract class RestPersistenceManager
         entities =
           handleReadResponse(restResponse, entityClass, findAllMethod.getPayloadElementName(),
                              findAllMethod.getPayloadRowElementName(), null, findAllMethod.isDeleteLocalRows());
+
+        // do COmmit is using WAL
+        if (PersistenceConfig.useWAL() )
+        {
+          dbpm.commmit();
+        }
         // only if an order-by statement is specified, we execute the find method against the local DB to reorder
         // the entity list. Note that the entity instances are not recreated because they will be retrieved from the cache
         if (descriptor.isPersisted() && descriptor.getOrderBy() != null)
@@ -715,8 +845,19 @@ public abstract class RestPersistenceManager
     return entities;
   }
 
+  /**
+   * Execute findAllInParent Rest resource. 
+   * The Rest call is executed using the findAllInParent definition in persistence-mapping.xml for
+   * the entity class and specified accessorAttribute
+   * @param <E>
+   * @param childEntityClass
+   * @param parent
+   * @param accessorAttribute
+   * @return
+   */
   public <E extends Entity> List<E> findAllInParent(Class childEntityClass, Entity parent, String accessorAttribute)
   {
+    sLog.fine("Executing findAllInParent for child class "+childEntityClass.getSimpleName()+ " and parent class "+parent.getClass().getSimpleName());
     List<E> entities = new ArrayList<E>();
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(childEntityClass);
     Method findAllInParentMethod = descriptor.getFindAllInParentMethod(accessorAttribute);
@@ -755,18 +896,88 @@ public abstract class RestPersistenceManager
     return entities;
   }
 
+  /**
+   * Execute find Rest resource. 
+   * The Rest call is executed using the findMethod definition in persistence-mapping.xml for
+   * the entity class
+   * @param <E>
+   * @param entityClass
+   * @param searchValue
+   * @return
+   */
   public <E extends Entity> List<E> find(Class entityClass, String searchValue)
   {
-    return Collections.EMPTY_LIST;
+    sLog.fine("Executing find for class "+entityClass.getSimpleName());
+    List<E> entities = new ArrayList<E>();
+    ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
+    Method findMethod = descriptor.getFindMethod();
+    if (findMethod == null)
+    {
+      sLog.severe("No find method found for " + entityClass.getName());
+      return entities;
+    }
+    // we don't know for which param the search value might be used, so we create a map
+    // with all attrs as keys with this search value, so it can be applied to the proper
+    // attr in createParameterMap
+    Map<String,String> searchValues = new HashMap<String,String>();
+    if (searchValue!=null)
+    {
+      List<MethodParameter> params = findMethod.getParams();
+      for (MethodParameter param : params)
+      {
+        searchValues.put(param.getName(),searchValue);
+      }      
+    }
+    Map<MethodParameter,String> paramValues = createParameterMap(null, findMethod, searchValues, null);
+    try
+    {
+      String restResponse = invokeRestService(findMethod, paramValues);
+      if (restResponse != null)
+      {
+        DBPersistenceManager dbpm = getLocalPersistenceManager();
+        entities =
+          handleReadResponse(restResponse, entityClass, findMethod.getPayloadElementName(),
+                             findMethod.getPayloadRowElementName(), null, findMethod.isDeleteLocalRows());
+
+        // do Commit is using WAL
+        if (PersistenceConfig.useWAL() )
+        {
+          dbpm.commmit();
+        }
+        // only if an order-by statement is specified, we execute the find method against the local DB to reorder
+        // the entity list. Note that the entity instances are not recreated because they will be retrieved from the cache
+        if (descriptor.isPersisted() && descriptor.getOrderBy() != null)
+        {
+          entities = dbpm.findAll(entityClass);
+        }
+      }
+    }
+    catch (Exception e)
+    {
+      handleWebServiceInvocationError(descriptor, e, false);
+    }
+    return entities;
   }
 
+  /**
+   * This method is not implemented, it returns an empty list.
+   * If your Rest service support search by attribute names, than make a subclass and override this
+   * method to call your Rest service find method.
+   * @param <E>
+   * @param entityClass
+   * @param searchValue
+   * @param attrNamesToSearch
+   * @return
+   */
   public <E extends Entity> List<E> find(Class entityClass, String searchValue, List<String> attrNamesToSearch)
   {
+    sLog.fine("Executing find for class "+entityClass.getSimpleName());
     return Collections.EMPTY_LIST;
   }
 
   public Map<MethodParameter,String> createParameterMap(Entity entity, Method method, Map<String,String> searchValues, String action)
   {
+    sLog.fine("Executing createParameterMap for method "+method.getName());
     List<MethodParameter> params = method.getParams();
     Map<MethodParameter,String> paramValues = new HashMap<MethodParameter,String>();
     // if we need to send serialized DO as payload, we add it to parameter map with param name as ""
@@ -822,6 +1033,7 @@ public abstract class RestPersistenceManager
 
   public Entity getAsParent(Class parentEtityClass, Entity child, String accessorAttribute)
   {
+    sLog.fine("Executing getAsParent for parent class "+parentEtityClass.getSimpleName()+ " and child class "+child.getClass().getSimpleName());
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(parentEtityClass);
     Method getAsParentMethod = descriptor.getGetAsParentMethod(accessorAttribute);
     if (getAsParentMethod == null)
@@ -865,6 +1077,17 @@ public abstract class RestPersistenceManager
     return lastResponseHeaders;
   }
 
+
+  public void setLastResponseStatus(int lastResponseStatus)
+  {
+    this.lastResponseStatus = lastResponseStatus;
+  }
+
+  public int getLastResponseStatus()
+  {
+    return lastResponseStatus;
+  }
+
   protected abstract String getSerializedDataObject(Entity entity, String collectionElementName, String rowElementName,
                                                     boolean deleteRow);
 
@@ -873,9 +1096,9 @@ public abstract class RestPersistenceManager
 
   protected abstract <E extends Entity> List<E> handleReadResponse(String restResponse, Class entityClass, String collectionElementName,
                                              String rowElementName, List<BindParamInfo> parentBindParamInfos,
-                                             boolean deleteLocalRowsOnFindAll);
+                                             boolean deleteLocalRows);
 
   protected abstract <E extends Entity> List<E> handleResponse(String restResponse, Class entityClass, String collectionElementName,
                                              String rowElementName, List<BindParamInfo> parentBindParamInfos, E currentEntity,
-                                             boolean deleteLocalRowsOnFindAll);
+                                             boolean deleteLocalRows);
 }

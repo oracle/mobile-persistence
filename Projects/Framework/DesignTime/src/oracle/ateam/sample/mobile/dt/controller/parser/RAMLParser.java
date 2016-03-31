@@ -60,25 +60,27 @@ public class RAMLParser
   private String ramlFile;
   private boolean flattenNestedObjects;
   private List<Map<String, String>> schemas;
+  private Raml raml;
 
-  public RAMLParser(String ramlFile, String connectionName, String connectionUri,
+  public RAMLParser(String ramlFile, String connectionName,
                               List<HeaderParam> headerParams, boolean flattenNestedObjects)
   {
     super();
     this.connectionName = connectionName;
-    this.connectionUri = connectionUri;
     this.headerParams = headerParams;
     this.ramlFile = ramlFile;
     this.flattenNestedObjects = flattenNestedObjects;
+    
   }
 
-  public List<DataObjectInfo> run()
+  public void run()
   {
     //        String newFileContent = fileContent.replaceAll("\t", "  ");
     //        is = new ByteArrayInputStream(newFileContent.getBytes());
-    Raml raml = getRamlDocument();
+    raml = getRamlDocument();
     String contentType = raml.getMediaType();
-    if (contentType!=null)
+    // AMPA runtime already defauklts content-type to application/json
+    if (contentType!=null && !"application/json".equals(contentType))
     {
       HeaderParam contentTypeParam = new HeaderParam();
       contentTypeParam.setName("Content-Type");
@@ -99,7 +101,42 @@ public class RAMLParser
     {
       doi.cleanUpAttrNames();
     }
-    return dataObjectInfos;
+  }
+  
+  /**
+   * Call this method to get the Uri prefix that that should be added to the URI propert of each
+   * persistence CRUD method. This method compares the URI of the REST connection to the baseURI defined
+   * in the RAML document. If the end of the connection URI is same as (start of) baseURI then that part doesn't
+   * need to be prefixed.
+   * 
+   * @param connectionUri
+   * @return
+   */
+  public String getUriPrefix(String connectionUri) 
+  {
+    String oriBaseUri = raml.getBaseUri();
+    String uriPrefix = oriBaseUri;
+    String baseUri = oriBaseUri;
+
+    int lastSlash = oriBaseUri.length();
+    while (lastSlash > 0) {
+       baseUri =  baseUri.substring(0,lastSlash);
+        if (connectionUri.endsWith(baseUri)) {
+            uriPrefix = oriBaseUri.substring(lastSlash);
+            break;
+        }
+        lastSlash = baseUri.lastIndexOf("/");
+    }
+    return uriPrefix;
+  }
+
+  /**
+   * Call this method to get list of parsed data objects after calling run method.
+   * @return
+   */
+  public List<DataObjectInfo> getParsedDataObjects() 
+  {
+      return dataObjectInfos;
   }
 
   private String findSchema(String name)
@@ -290,9 +327,9 @@ public class RAMLParser
         getMethod.setPayloadElementName(doi.getPayloadListElementName());
       }
       getMethod.setPayloadRowElementName(doi.getPayloadRowElementName());        
-      // set existing to true, to prevent that we override the values of PayloadElementName and PayloadRowElementName
+      // set RamlCreated to true, to prevent that we override the values of PayloadElementName and PayloadRowElementName
       /// later on in the wizard
-      getMethod.setExisting(true);
+      getMethod.setRamlCreated(true);
       if (isCanonical)
       {
         doi.setGetCanonicalMethod(getMethod);
@@ -396,10 +433,17 @@ public class RAMLParser
     // payload row element attributes have the correct values for this method.
     method.setPayloadElementName(doi.getPayloadListElementName());
     method.setPayloadRowElementName(doi.getPayloadRowElementName());
-    method.setSendSerializedDataObjectAsPayload(true);
-    // set existing to true, to prevent that we override the values of PayloadElementName and PayloadRowElementName
+    if ("DELETE".equalsIgnoreCase(requestType))
+    {
+      method.setSendSerializedDataObjectAsPayload(false);      
+    }
+    else
+    {
+      method.setSendSerializedDataObjectAsPayload(true);      
+    }
+    // set RamlCreated to true, to prevent that we override the values of PayloadElementName and PayloadRowElementName
     /// later on in the wizard
-    method.setExisting(true);
+    method.setRamlCreated(true);
     // we set the crud methods based on most commonly used conventions of request type
     // user can always change this in crud resources wizard page
     if (requestType.equals("POST"))

@@ -24,6 +24,7 @@ import oracle.ateam.sample.mobile.dt.model.BusinessObjectGeneratorModel;
 import oracle.ateam.sample.mobile.dt.model.DCMethod;
 import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
 import oracle.ateam.sample.mobile.dt.model.jaxb.MobileObjectPersistence;
+import oracle.ateam.sample.mobile.dt.util.PersistenceConfigUtils;
 import oracle.ateam.sample.mobile.dt.util.ProjectUtils;
 import oracle.ateam.sample.mobile.dt.view.uipanel.AttributesPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.CRUDMethodParametersPanel;
@@ -32,6 +33,7 @@ import oracle.ateam.sample.mobile.dt.view.uipanel.DataObjectsPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.GeneratorSettingsPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.ParentChildAccessorsPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.RESTResourcesPanel;
+import oracle.ateam.sample.mobile.dt.view.uipanel.RuntimeOptionsPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.SecurityWarningPanel;
 import oracle.ateam.sample.mobile.dt.view.uipanel.SelectURLConnectionPanel;
 
@@ -59,7 +61,6 @@ import oracle.javatools.dialogs.DialogUtil;
 public class EditPersistenceMappingWizard extends Wizard
 {
 
-  private static final String DEFAULT_PACKAGE_PROPERTY = "defaultPackage";
 
   public static final String MODEL_KEY = "model";
   static final String STATE_DATA_OBJECTS = "dataObjects";
@@ -67,6 +68,7 @@ public class EditPersistenceMappingWizard extends Wizard
   static final String STATE_PERSISTENCE_MAPPING= "pmapping";
   static final String STATE_CRUD_METHOD= "crudMethods";
   static final String STATE_CRUD_METHOD_PARAMS = "crudMethodParams";
+  static final String STATE_RUNTIME_OPTIONS = "runtimeOptions";
   static final String STATE_OPTIONS = "options";
 
 //  private String wizardTitle = "Create Mobile Web Service Proxy and Persistence Provider";
@@ -95,7 +97,10 @@ public class EditPersistenceMappingWizard extends Wizard
       builder.newState(STATE_CRUD_METHOD, step, STATE_CRUD_METHOD_PARAMS,false);
 
       step = new Step("Resource Details", CRUDMethodParametersPanel.class, null);
-      builder.newState(STATE_CRUD_METHOD_PARAMS, step, STATE_OPTIONS,false);
+      builder.newState(STATE_CRUD_METHOD_PARAMS, step, STATE_RUNTIME_OPTIONS,false);
+
+      step = new Step("Runtime Options", RuntimeOptionsPanel.class, null);
+      builder.newState(STATE_RUNTIME_OPTIONS, step, STATE_OPTIONS,false);
 
       step = new Step("Generator Settings", GeneratorSettingsPanel.class, null);
       builder.newFinalState(STATE_OPTIONS, step);
@@ -106,9 +111,9 @@ public class EditPersistenceMappingWizard extends Wizard
     {
       FSM stateMachine = builder.getFSM();
       Namespace ns = new Namespace();
-      String defaultPackage = ProjectUtils.getViewControllerProject().getProperty(DEFAULT_PACKAGE_PROPERTY);
-      BusinessObjectGeneratorModel model = new BusinessObjectGeneratorModel(defaultPackage);
+      BusinessObjectGeneratorModel model = new BusinessObjectGeneratorModel();
       model.setLogTitle(wizardTitle);
+      model.setEditMode(true);
 
       PersistenceMappingLoader loader = new PersistenceMappingLoader();
       MobileObjectPersistence jaxbModel = loader.loadJaxbModel();
@@ -119,24 +124,28 @@ public class EditPersistenceMappingWizard extends Wizard
         model.setDataObjectInfos(new ArrayList<DataObjectInfo>(existingDataObjects));      
       }
       model.setRestfulWebService(true);
-      // set connectionName based on first one found
-      String connectionName = null;
-      for (DataObjectInfo doi : model.getDataObjectInfos())
-       {
-        for (DCMethod method : doi.getAllMethods())
-        {
-          if (method.getConnectionName()!=null)
+      
+      // if connectionName not yet set based on MCS settings, then set connectionName based on first one found
+      if (model.getConnectionName()!=null)
+      {
+        String connectionName = null;
+        for (DataObjectInfo doi : model.getDataObjectInfos())
+         {
+          for (DCMethod method : doi.getAllMethods())
           {
-            connectionName = method.getConnectionName();
+            if (method.getConnectionName()!=null)
+            {
+              connectionName = method.getConnectionName();
+              break;
+            }
+          }
+          if (connectionName!=null)
+          {
             break;
           }
-        }
-        if (connectionName!=null)
-        {
-          break;
-        }
-       }
-       model.setConnectionName(connectionName);
+         }
+         model.setConnectionName(connectionName);        
+      }
       ns.put(MODEL_KEY, model);
 
       FSMWizard wizard = new FSMWizard(stateMachine, ns);
@@ -209,7 +218,7 @@ public class EditPersistenceMappingWizard extends Wizard
     {
       BusinessObjectGeneratorModel model = (BusinessObjectGeneratorModel) context.get(MODEL_KEY);
       model.setLogTitle(logTitle);
-      BusinessObjectGenerator generator = new BusinessObjectGenerator(ProjectUtils.getViewControllerProject(),model);
+      BusinessObjectGenerator generator = new BusinessObjectGenerator(model);
       generator.run();
     }
     catch (IOException ioe)

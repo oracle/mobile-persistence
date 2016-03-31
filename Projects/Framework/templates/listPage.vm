@@ -9,7 +9,6 @@
 #set ($iteratorName = "${dataObject.accessorName}Iterator")
 $pageDef.createListPageDef($taskFlow.name)
 $pageDef.createIteratorBindings($dataObject)
-$pageDef.createDataSynchBindings()
   <amx:panelPage id="firstPage">
     <amx:facet name="header">
       <amx:outputText value="${dataObject.displayTitlePlural}" id="ot1"/>
@@ -72,7 +71,7 @@ $pageDef.createDataSynchBindings()
       <amx:spacer height="10" id="ms1"/>
  
       #if (!$dataObject.parent)
-      <amx:commandLink  text="Refresh" actionListener="#{bindings.${pageDef.createDoRemoteFindAllBinding(${dataObjectName})}.execute}" disabled="#{deviceScope.hardware.networkStatus=='NotReachable' or deviceScope.hardware.networkStatus=='unknown'}"  id="menRefr">
+      <amx:commandLink  text="Refresh" actionListener="#{bindings.${pageDef.createDoRemoteFindAllBinding(${dataObjectName})}.execute}" disabled="#{deviceScope.hardware.networkStatus=='NotReachable' or deviceScope.hardware.networkStatus=='unknown' or Connectivity.offline}"  id="menRefr">
         <amx:closePopupBehavior id="mencRefr" popupId="p1" type="action"/>                         
       </amx:commandLink>
       <amx:spacer height="20" id="ms2"/>
@@ -80,7 +79,9 @@ $pageDef.createDataSynchBindings()
       #SYNCHRONIZE_LINK($dataObject)
       <amx:spacer height="20" id="ms3"/>
       #PENDING_SYNCH_ACTIONS_LINK($dataObject)
-      <amx:spacer height="10" id="ms4"/>
+      <amx:spacer height="20" id="ms4"/>
+      #FORCE_OFFLINE_LINK($dataObject)
+      <amx:spacer height="10" id="ms5"/>
     </amx:panelGroupLayout>
   </amx:popup>
 </amx:view>

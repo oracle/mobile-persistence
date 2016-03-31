@@ -2,6 +2,11 @@
   Copyright ? 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  04-mar-2016   Steven Davelaar
+  1.4           Made handleReadResponse, handleresponse and getSerializedDataObjecy public so we can use this to process 
+                request and/or response from custom REST calls that directly call invokerestService
+  10-dec-2015   Steven Davelaar
+  1.3           Changed log level to info when something is not found in JSON payload
   24-mar-2015   Steven Davelaar
   1.2           removed deletion of local rows from handleResponse method. Now done in findAll, findAllInParent methods
                 in RestPersistenceManager
@@ -27,9 +32,11 @@ import oracle.adfmf.json.JSONObject;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.StringUtils;
 import oracle.ateam.sample.mobile.v2.persistence.db.BindParamInfo;
+import oracle.ateam.sample.mobile.v2.persistence.db.DBConnectionFactory;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingOneToMany;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
+import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
 
 
@@ -56,7 +63,7 @@ public class RestJSONPersistenceManager
    * @param deleteRow
    * @return
    */
-  protected String getSerializedDataObject(Entity entity, String elementName, String rowElementName, boolean deleteRow)
+  public String getSerializedDataObject(Entity entity, String elementName, String rowElementName, boolean deleteRow)
   {
     return getSerializedDataObject(entity, elementName, rowElementName,null,deleteRow);
   }
@@ -76,8 +83,9 @@ public class RestJSONPersistenceManager
    * @param deleteRow
    * @return JSON-formatted string containing the serialized entity instance
    */
-  protected String getSerializedDataObject(Entity entity, String elementName, String rowElementName, List<String> attributesToExclude, boolean deleteRow)
+  public String getSerializedDataObject(Entity entity, String elementName, String rowElementName, List<String> attributesToExclude, boolean deleteRow)
   {
+    sLog.fine("Executing getSerializedDataObject");
     Map<String,Object> keyValuePairs = getPayloadKeyValuePairs(entity,attributesToExclude);
     Map<String,Object> entityInstance = null;
     if (rowElementName != null)
@@ -152,6 +160,7 @@ public class RestJSONPersistenceManager
    */
   protected String substituteNullValuesInPayload(String json)
   {
+    sLog.finest("Executing substituteNullValuesInPayload");
     String newJson = StringUtils.substitute(json, "{\".null\":true}", "null");
     newJson = StringUtils.substitute(newJson, "{\"@nil\":\"true\"}", "null");
     return newJson;
@@ -168,9 +177,10 @@ public class RestJSONPersistenceManager
    * @param deleteAllRows no longer used (delete performed in calling method)
    * @return
    */
-  protected <E extends Entity> List<E> handleReadResponse(String jsonResponse, Class entityClass, String collectionElementName,
+  public <E extends Entity> List<E> handleReadResponse(String jsonResponse, Class entityClass, String collectionElementName,
                                     String rowElementName, List<BindParamInfo> parentBindParamInfos, boolean deleteAllRows)
   {
+    sLog.fine("Executing handleReadResponse");
     return handleResponse(jsonResponse, entityClass,collectionElementName,
                                     rowElementName,parentBindParamInfos, null, deleteAllRows);
   }
@@ -188,9 +198,11 @@ public class RestJSONPersistenceManager
    * @param deleteAllRows no longer used (delete performed in calling method)
    * @return
    */
-  protected <E extends Entity> List<E> handleResponse(String json, Class entityClass, String collectionElementName,
+  public <E extends Entity> List<E> handleResponse(String json, Class entityClass, String collectionElementName,
                                     String rowElementName, List<BindParamInfo> parentBindParamInfos, E currentEntity, boolean deleteAllRows)
   {
+    sLog.fine("Executing handleResponse");      
+    long startTime = System.currentTimeMillis();
     String jsonResponse = substituteNullValuesInPayload(json); 
     List<E> entities = new ArrayList<E>();
     if (!jsonResponse.startsWith("{") && !jsonResponse.startsWith("["))
@@ -231,12 +243,17 @@ public class RestJSONPersistenceManager
 //      MessageUtils.handleError(e.getLocalizedMessage());
       throw new AdfException(e);
     }
+// once we switch ff auto-commit for each row, we need to commit here.
+//    new DBPersistenceManager().commmit();
+    long duration = System.currentTimeMillis() - startTime;
+    sLog.fine("handleResponse for "+entityClass.getName()+": "+duration+" ms");
     return entities;
   }
 
   protected Object findCollectionElement(JSONObject node, String collectionElementName)
     throws JSONException
   {
+    sLog.finest("Executing findCollectionElement");
     Object collection = null;
     Iterator keys = node.keys();
     while (keys.hasNext())
@@ -266,6 +283,7 @@ public class RestJSONPersistenceManager
                                                List<BindParamInfo> parentBindParamInfos, List<E> entities, E currentEntity)
     throws JSONException
   {
+    sLog.fine("Executing findAndProcessPayloadElements");
     if (collection instanceof JSONArray)
     {
       JSONArray rows = (JSONArray) collection;
@@ -277,7 +295,7 @@ public class RestJSONPersistenceManager
           Object realRow = getJSONElement(row, rowElementName, true);
           if (realRow == null)
           {
-            sLog.severe("Cannot find row element name " + rowElementName);
+            sLog.info("Cannot find row element name " + rowElementName);
             //              MessageUtils.handleError("Cannot find row element name " + rowElementName);
             continue;
           }
@@ -329,6 +347,7 @@ public class RestJSONPersistenceManager
   protected Object getJSONElement(JSONObject row, String elementName, boolean throwError)
     throws JSONException
   {
+    sLog.finest("Executing getJSONElement");
     try
     {
       String[] elements = StringUtils.stringToStringArray(elementName, ".");
@@ -348,7 +367,7 @@ public class RestJSONPersistenceManager
         else
         {
           value = null;
-          sLog.severe("Cannot find JSON element " + element + " in payload");
+          sLog.info("Cannot find JSON element " + element + " in payload");
           break;
         }
       }
@@ -368,6 +387,7 @@ public class RestJSONPersistenceManager
                                          E currentEntity)
     throws JSONException
   {
+    sLog.finest("Executing processPayloadElement");
     if (row.keys()==null  || !row.keys().hasNext()) 
     {
         //this an empty JSON Object : "{}", do not create an entity instance
@@ -394,7 +414,12 @@ public class RestJSONPersistenceManager
         {
           // skip this mapping as it needs to fire another rest call, we want lazy loading
           // when the child list is really needed in UI
-          continue;
+          // 24-sep-2015: UNLESS the child list is NOT empty, then we might be in offline optimization
+          // scenario where all parent and child rows are retrieved in one go
+          if (rawValue==null || (rawValue instanceof JSONArray && ((JSONArray)rawValue).length()==0 ))
+          {
+            continue;            
+          }
         }
         // some restful service return an object instead of list when there is only one item in the list
         if (rawValue instanceof JSONArray || rawValue instanceof JSONObject)
@@ -425,7 +450,13 @@ public class RestJSONPersistenceManager
       if (isAllPrimaryKeyBindParamInfosPopulated(descriptor, bindParamInfos))
       {
         DBPersistenceManager dbpm = getLocalPersistenceManager();
-        dbpm.mergeRow(bindParamInfos, true);
+        // we want to set auto-comit to false, and then do the commit at the end of handleResponse method
+        // this increases DB write performance with about 20%.
+        // For this to work, we need to enable WAL (can be done now through db.use.WAL in persistence-config) 
+        // , but still causes issues on Android "Error in SQL step", 
+        // so keep it to false for now
+//        dbpm.mergeRow(bindParamInfos, true);
+        dbpm.mergeRow(bindParamInfos, !PersistenceConfig.useWAL());
       }
       else
       {

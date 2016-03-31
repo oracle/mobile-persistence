@@ -25,6 +25,7 @@ import oracle.ateam.sample.mobile.dt.model.DCMethodParameter;
 import oracle.ateam.sample.mobile.dt.model.DataObjectInfo;
 import oracle.ateam.sample.mobile.dt.model.HeaderParam;
 import oracle.ateam.sample.mobile.dt.model.jaxb.ClassMappingDescriptor;
+import oracle.ateam.sample.mobile.dt.model.jaxb.CrudServiceClass;
 import oracle.ateam.sample.mobile.dt.model.jaxb.DirectMapping;
 import oracle.ateam.sample.mobile.dt.model.jaxb.ForeignKeyColumnReference;
 import oracle.ateam.sample.mobile.dt.model.jaxb.HeaderParameter;
@@ -46,6 +47,7 @@ public class PersistenceMappingLoader
 {
   
 //  private List<DataObjectInfo> dataObjects  = new ArrayList<DataObjectInfo>();
+  public static final String STORAGE_OBJECT_CLASS = "oracle.ateam.sample.mobile.mcs.storage.StorageObject";
   public static final String DATA_SYNC_ACTION_CLASS = "oracle.ateam.sample.mobile.v2.persistence.service.DataSynchAction";
   public static final String WEB_SERVICE_CALL_CLASS = "oracle.ateam.sample.mobile.logging.WebServiceCall";
   private Map<ClassMappingDescriptor,DataObjectInfo> dataObjects  = new HashMap<ClassMappingDescriptor,DataObjectInfo>();
@@ -106,7 +108,8 @@ public class PersistenceMappingLoader
       for (ClassMappingDescriptor descriptor : mop.getClassMappingDescriptor())
       {
         if (!DATA_SYNC_ACTION_CLASS.equals(descriptor.getClassName())
-            && !WEB_SERVICE_CALL_CLASS.equals(descriptor.getClassName()))
+          && !WEB_SERVICE_CALL_CLASS.equals(descriptor.getClassName())
+          && !STORAGE_OBJECT_CLASS.equals(descriptor.getClassName()))
         {
           DataObjectInfo doi = addDataObject(descriptor);        
           dataObjects.put(descriptor,doi);          
@@ -116,7 +119,8 @@ public class PersistenceMappingLoader
       for (ClassMappingDescriptor descriptor : mop.getClassMappingDescriptor())
       {
         if (!DATA_SYNC_ACTION_CLASS.equals(descriptor.getClassName())
-            && !WEB_SERVICE_CALL_CLASS.equals(descriptor.getClassName()))
+          && !WEB_SERVICE_CALL_CLASS.equals(descriptor.getClassName())
+          && !STORAGE_OBJECT_CLASS.equals(descriptor.getClassName()))
         {  
           addChildAccessors(descriptor, dataObjects.get(descriptor));        
           addParentAccessors(descriptor, dataObjects.get(descriptor));        
@@ -139,12 +143,22 @@ public class PersistenceMappingLoader
     doi.setExisting(true);
     doi.setClassName(name);
     doi.setPackageName(packageName);
-    if (descriptor.getCrudServiceClass()!=null)
+    CrudServiceClass serviceClass = descriptor.getCrudServiceClass();
+    if (serviceClass!=null)
     {
-      String serviceClass = descriptor.getCrudServiceClass().getClassName();
-      lastDotPos = serviceClass.lastIndexOf(".");
-      doi.setServicePackageName(serviceClass.substring(0,lastDotPos));
-      doi.setServiceClassName(serviceClass.substring(lastDotPos+1));      
+      String serviceClassName = descriptor.getCrudServiceClass().getClassName();
+      lastDotPos = serviceClassName.lastIndexOf(".");
+      doi.setServicePackageName(serviceClassName.substring(0,lastDotPos));
+      doi.setServiceClassName(serviceClassName.substring(lastDotPos+1));     
+      
+      doi.setRemoteReadInBackground(serviceClass.isRemoteReadInBackground());
+      doi.setRemoteWriteInBackground(serviceClass.isRemoteWriteInBackground());
+      doi.setAutoQuery(serviceClass.isAutoQuery());
+      doi.setGeneratePrimaryKey(serviceClass.isAutoIncrementPrimaryKey());
+      doi.setEnableOfflineTransactions(serviceClass.isEnableOfflineTransactions());
+      doi.setShowWebServiceErrors(serviceClass.isShowWebServiceInvocationErrors());
+      doi.setRemotePersistenceManager(serviceClass.getRemotePersistenceManager());
+      doi.setLocalPersistenceManager(serviceClass.getLocalPersistenceManager());
     }
     doi.setPayloadDateFormat(descriptor.getDateFormat());
     doi.setPayloadDateTimeFormat(descriptor.getDateTimeFormat());
@@ -170,6 +184,7 @@ public class PersistenceMappingLoader
       AttributeInfo attr = doi.getAttributeDef(descriptor.getCanonicalTriggerAttribute());
       doi.setCanonicalTriggerAttribute(attr);
     }
+    
 
     // first create methods so we can lookup find-all-in-parent-method when
     // create one-to-many mappings
@@ -254,9 +269,12 @@ public class PersistenceMappingLoader
     {
       DirectMapping dm = parentPopulatedAttrs.get(attr);
       DataObjectInfo parent = findDataObject(dm.getParentClass());
-      AttributeInfo parentAttr = parent.getAttributeDef(dm.getParentAttributeName());
-      attr.setParentDataObject(parent);
-      attr.setParentReferenceAttribute(parentAttr);
+      if (parent!=null) 
+      {
+          AttributeInfo parentAttr = parent.getAttributeDef(dm.getParentAttributeName());
+          attr.setParentDataObject(parent);
+          attr.setParentReferenceAttribute(parentAttr);          
+      }
     }
   }
 
@@ -355,6 +373,8 @@ public class PersistenceMappingLoader
 //    dcMethod.setRequestType(method.getRequestType().value());
     dcMethod.setRequestType(method.getRequestType());
     dcMethod.setSendSerializedDataObjectAsPayload(method.isSendDataObjectAsPayload());
+    dcMethod.setDeleteLocalRows(method.isDeleteLocalRows());
+    dcMethod.setAttrsToExclude(method.getAttributesToExclude());
     if (method.getUri()!=null)
     {
       // REST service, we set the uri in name field, and name in accessorName

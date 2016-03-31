@@ -2,6 +2,12 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  22-mar-2016   Steven Davelaar
+  1.5           Only refresh direct mapping attrs in refreshEntity
+  16-feb-2016   Steven Davelaar
+  1.4           Added getRemotePersistenceManager, getClassInstance, added support for Boolean attrs
+  21-aug-2015   Steven Davelaar
+  1.3           Added check ib.getIterator is not null in refreshCurrentEntity
   19-mar-2015   Steven Davelaar
   1.2           Added method refreshCurrentEntity
   20-jan-2015   Steven Davelaar
@@ -19,6 +25,7 @@ import java.math.BigDecimal;
 
 import java.sql.Timestamp;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +43,7 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.DateUtils;
 import oracle.ateam.sample.mobile.v2.persistence.manager.DBPersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.manager.PersistenceManager;
+import oracle.ateam.sample.mobile.v2.persistence.manager.RemotePersistenceManager;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMappingDirect;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
@@ -143,16 +151,19 @@ public class EntityUtils
     {
       return rawValue.toString();
     }
+    else if (attrType == Boolean.class)
+    {
+      return "true".equalsIgnoreCase(rawValue.toString());
+    }
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entityClass);
     if (columnValue instanceof String && attrType.isAssignableFrom(Date.class))
     {
       // return attr date format instead of descriptor dateTime. If attr dateFormat is not set in
       // persistence-mapping.xml, it will return the descritor dateTime format anyway
-//      return DateUtils.convertToDate(attrType, (String) columnValue, descriptor.getDateFormat(),
-//                                     descriptor.getDateTimeFormat());
+      //      return DateUtils.convertToDate(attrType, (String) columnValue, descriptor.getDateFormat(),
+      //                                     descriptor.getDateTimeFormat());
       AttributeMapping am = descriptor.findAttributeMappingByName(attrName);
-      return DateUtils.convertToDate(attrType, (String) columnValue, descriptor.getDateFormat(),
-                                     am.getDateFormat());
+      return DateUtils.convertToDate(attrType, (String) columnValue, descriptor.getDateFormat(), am.getDateFormat());
     }
     boolean conversionNeeded = true;
     boolean valueHolder = columnValue instanceof ValueHolderInterface;
@@ -273,10 +284,9 @@ public class EntityUtils
 
   public static Map<String, Object> getEntityAttributeValues(Entity entity)
   {
-    ObjectPersistenceMapping mapping = ObjectPersistenceMapping.getInstance();
-    ClassMappingDescriptor descriptor = mapping.findClassMappingDescriptor(entity.getClass().getName());
-    List<AttributeMappingDirect> attrMappings = descriptor.getAttributeMappingsDirect();
     HashMap<String, Object> attrs = new HashMap<String, Object>();
+    ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entity.getClass());
+    List<AttributeMappingDirect> attrMappings = descriptor.getAttributeMappingsDirect();
     for (AttributeMappingDirect attrMapping: attrMappings)
     {
       attrs.put(attrMapping.getAttributeName(), entity.getAttributeValue(attrMapping.getAttributeName()));
@@ -284,6 +294,12 @@ public class EntityUtils
     return attrs;
   }
 
+  /**
+   * Create new instance for given entityClass
+   * @param <E>
+   * @param entityClass
+   * @return
+   */
   public static <E extends Entity> E getNewEntityInstance(Class entityClass)
   {
     try
@@ -330,6 +346,13 @@ public class EntityUtils
     return same;
   }
 
+  /**
+   * Generate unique primary key for the entity, provided that the eneity is persistable, the autoIncrementPrimaryKey
+   * property is set to true, and the primary key attribute is still null.
+   * @param pm
+   * @param entity
+   * @param increment
+   */
   public static void generatePrimaryKeyValue(Entity entity, int increment)
   {
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entity.getClass());
@@ -337,6 +360,11 @@ public class EntityUtils
     generatePrimaryKeyValue(pm, entity, increment);
   }
 
+  /**
+   * Returns true when all promary key attributes are null, returns false otherwise
+   * @param entity
+   * @return
+   */
   public static boolean primaryKeyIsNull(Entity entity)
   {
     boolean pknull = true;
@@ -353,17 +381,26 @@ public class EntityUtils
     return pknull;
   }
 
+  /**
+   * Generate unique primary key for the entity, provided that the eneity is persistable, the autoIncrementPrimaryKey
+   * property is set to true, and the primary key attribute is still null.
+   * @param pm
+   * @param entity
+   * @param increment
+   */
   public static void generatePrimaryKeyValue(PersistenceManager pm, Entity entity, int increment)
   {
     ClassMappingDescriptor descriptor = ClassMappingDescriptor.getInstance(entity.getClass());
-    if (!descriptor.isPersisted() || !descriptor.isAutoIncrementPrimaryKey())
+    if (!descriptor.isPersisted() || !descriptor.isAutoIncrementPrimaryKey() || !primaryKeyIsNull(entity))
     {
       return;
     }
     List<AttributeMapping> keyMappings = descriptor.getPrimaryKeyAttributeMappings();
+    List<String> attrsToRefresh = new ArrayList<String>();
     for (AttributeMapping keyMapping: keyMappings)
     {
       String attrName = keyMapping.getAttributeName();
+      attrsToRefresh.add(attrName);
       Class attrType = EntityUtils.getJavaType(entity.getClass(), attrName);
       if (attrType.isAssignableFrom(Date.class))
       {
@@ -401,7 +438,7 @@ public class EntityUtils
       }
 
     }
-
+    entity.refreshUI(attrsToRefresh); 
   }
 
   /**
@@ -442,7 +479,11 @@ public class EntityUtils
     String dcName = serviceClassName.substring(lastDot + 1);
     // getDataControlById throws exception when DC does not exist
     //    DataControl dc = (DataControl) bc.getDataControlById(dcName);
-    DataControl dc = (DataControl) bc.get(dcName);
+    DataControl dc = null;
+    if (bc != null)
+    {
+      dc = (DataControl) bc.get(dcName);
+    }
     EntityCRUDService service = null;
     // first try to lookup the crud service through its data control, if it doesn't exist, just
     // instantiate the class
@@ -478,47 +519,59 @@ public class EntityUtils
     return service;
   }
 
+  /**
+   *  Get an instance of the local persistence manager class as configured in persistence-mapping.xml
+   *  for the ClassMappingDescriptor of the entity class passed in.
+   * @param entityClass
+   * @return
+   */
   public static DBPersistenceManager getLocalPersistenceManager(ClassMappingDescriptor descriptor)
   {
-    // do not obtain persistence manager through new service instance, ight
-    // trgger unwanted (remote) findAll
-    //    EntityCRUDService service = getEntityCRUDService(descriptor);
-    //    if (service!=null)
-    //    {
-    //      return service.getLocalPersistenceManager();
-    //    }
     DBPersistenceManager pm = null;
     String className = descriptor.getLocalPersistenceManagerClassName();
-    if (className == null)
+    if (className == null || "".equals(className))
     {
       // might not be set for child entity
       className = DBPersistenceManager.class.getName();
     }
-    try
+    Object instance = getClassInstance(className);
+    if (instance instanceof DBPersistenceManager)
     {
-      Class pmClass = Utility.loadClass(className);
-      //        Class pmClass = Class.forName(className, false, Thread.currentThread().getContextClassLoader());
-      pm = (DBPersistenceManager) pmClass.newInstance();
+      pm =  (DBPersistenceManager)instance;
     }
-    catch (InstantiationException e)
+    else if (instance != null)
     {
-      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
-                             AdfException.ERROR);
-    }
-    catch (IllegalAccessException e)
-    {
-      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
-                             AdfException.ERROR);
-    }
-    catch (ClassNotFoundException e)
-    {
-      throw new AdfException("Error creating instance for class" + className + ": " + e.getLocalizedMessage(),
+      throw new AdfException("Local persistence manager class " + className + ": should extend DBPersistenceManager",
                              AdfException.ERROR);
     }
     return pm;
   }
 
-
+  /**
+   *  Get an instance of the remote persistence manager class as configured in persistence-mapping.xml
+   *  for the ClassMappingDescriptor of the entity class passed in.
+   * @param entityClass
+   * @return
+   */
+  public static RemotePersistenceManager getRemotePersistenceManager(ClassMappingDescriptor descriptor)
+  {
+    RemotePersistenceManager pm = null;
+    String className = descriptor.getRemotePersistenceManagerClassName();
+    if (className != null && !"".equals(className))
+    {
+      Object instance = getClassInstance(className);
+      if (instance instanceof RemotePersistenceManager)
+      {
+        pm =  (RemotePersistenceManager)instance;
+      }
+      else if (instance != null)
+      {
+        throw new AdfException("Remote persistence manager class " + className + ": should implement RemotePersistenceManager interface",
+                               AdfException.ERROR);
+      }
+    }
+    return pm;
+  }
 
   /**
    * Calls the add[EntityName] method using reflection in the EntityCRUDService subclass for
@@ -531,9 +584,15 @@ public class EntityUtils
     Class beanClass = entity.getClass();
     String typeName = entity.getClass().getName();
     String addMethodName = "add" + typeName.substring(typeName.lastIndexOf(".") + 1);
-    Class[] paramTypes = new Class[] { int.class, beanClass };
-    Object[] params = new Object[] { new Integer(index), entity};
-    Utility.invokeIfPossible(crudService, addMethodName, paramTypes, params);        
+    Class[] paramTypes = new Class[]
+    {
+      int.class, beanClass
+    };
+    Object[] params = new Object[]
+    {
+      new Integer(index), entity
+    };
+    Utility.invokeIfPossible(crudService, addMethodName, paramTypes, params);
   }
 
 
@@ -548,11 +607,35 @@ public class EntityUtils
     Class beanClass = entity.getClass();
     String typeName = entity.getClass().getName();
     String removeMethodName = "remove" + typeName.substring(typeName.lastIndexOf(".") + 1);
-    Class[] paramTypes = new Class[] { beanClass };
-    Object[] params = new Object[] { entity};
-    Utility.invokeIfPossible(crudService, removeMethodName, paramTypes, params);        
+    Class[] paramTypes = new Class[]
+    {
+      beanClass
+    };
+    Object[] params = new Object[]
+    {
+      entity
+    };
+    Utility.invokeIfPossible(crudService, removeMethodName, paramTypes, params);
   }
 
+    /**
+     * This method refresh all attributes that have a direct attribute mapping in persistence-mapping.xml.
+     * It calls entity.refreshUI with this list of attribute names.
+     * @param <E>
+     * @param entity
+     */
+    public static <E extends Entity> void refreshEntity(Entity entity)
+    {
+      
+      List<AttributeMappingDirect> mappings = ClassMappingDescriptor.getInstance(entity.getClass()).getAttributeMappingsDirect();
+      List<String> attrs = new ArrayList<String>();
+      for (AttributeMapping mapping : mappings)
+      {
+        attrs.add(mapping.getAttributeName());      
+      }
+      entity.refreshUI(attrs);
+    }
+  
   /**
    * The standard technique to refresh UI using providerChangeSupport.fireProviderRefresh only refreshes
    * the UI correctly when a list view is used. With a form layout, we need to call
@@ -560,46 +643,116 @@ public class EntityUtils
    * As we do not now the current row key (or index) nor current entity in the model layer, we need to access the iterator binding
    * to find out this information.
    * Not elegant to access ViewController objects but it works, as long as the iterator binding exists.
-   * That's why we have to catch any exception because the actual iterator name might be different than what we assume, 
+   * That's why we have to catch any exception because the actual iterator name might be different than what we assume,
    * in which case the developer has to override this method and use the correct iterator name.
    *
-   * @param entityListName name of the collection attribute that needs to be refreshed. We assume the iterator binding is 
+   * @param entityListName name of the collection attribute that needs to be refreshed. We assume the iterator binding is
    * named after the entityListName suffixed with "Iterator".
    * @param entities list f entities that holds the current enity that needs to be refreshed
    * @param providerChangeSupport instance used to invoke the fireProviderChange method
+   * 
+   * @deprecated This method can cause an endless loop in combination with getCanonicalEntityy method. Also, the 
+   * iteratorRefresh method was an awkward way to do it, including the "guessing" of iterator name. Use the new refreshEntity 
+   * method instead.
    */
-  public static <E extends Entity> void refreshCurrentEntity(String entityListName, List<E> entities, ProviderChangeSupport providerChangeSupport)
+  public static <E extends Entity> void refreshCurrentEntity(String entityListName, List<E> entities,
+                                                             ProviderChangeSupport providerChangeSupport)
   {
-    String iteratorBindingName = entityListName+"Iterator";
+        String iteratorBindingName = entityListName + "Iterator";
+        try
+        {
+          AmxIteratorBinding ib =
+            (AmxIteratorBinding) AdfmfJavaUtilities.evaluateELExpression("#{bindings." + iteratorBindingName + "}");
+          // when initializing iterator which results in calling findAll and this refresh the iterator is not yet
+          // available
+          if (ib != null && ib.getIterator() != null)
+          {
+            // we do not want to use ib.refresh because this resets the current row to the first row, potentially
+            // firing some unwanted REST calls, instead we acll fireProviderChange passing in the current entity and row key
+            // We can only use ib.refresh when the current row is the first row, which we do, because
+            // only ib.refresh also refreshes DVT's correctly in the UI. (And when the iterator is used by a graph, the
+            // current row will typically be the first row anyway)
+            int index = ib.getIterator().getCurrentIndex();
+            if (index == 0)
+            {
+              ib.refresh();
+            }
+            else if (index > -1 && index < entities.size())
+            {
+              Object rowKey = ib.getIterator().getCurrentRowKey();
+              providerChangeSupport.fireProviderChange(entityListName, rowKey, entities.get(index));
+            }
+          }
+        }
+        catch (Exception e)
+        {
+          // assumed iterator binding expression is wrong, just do nothing
+          sLog.info("Cannot find " + iteratorBindingName +
+                    " binding, UI might not refresh correctly when form layout is used.");
+        }
+  }
+
+
+  public static Object getClassInstance(String className)
+  {
+    Object instance = null;
+    if (className == null || "".equals(className))
+    {
+      return null;
+    }
     try
     {
-      AmxIteratorBinding ib =
-          (AmxIteratorBinding) AdfmfJavaUtilities.evaluateELExpression("#{bindings."+iteratorBindingName+"}");
-      if (ib!=null)
-      {
-        // we do not want to use ib.refresh because this resets the current row to the first row, potentially
-        // firing some unwanted REST calls, instead we acll fireProviderChange passing in the current entity and row key
-        // We can only use ib.refresh when the current row is the first row, which we do, because
-        // only ib.refresh also refreshes DVT's correctly in the UI. (And when the iterator is used by a graph, the
-        // current row will typically be the first row anyway)
-         int index = ib.getIterator().getCurrentIndex();
-         if (index==0)
-         {
-           ib.refresh();
-         }
-         else if (index > -1 && index < entities.size())
-         {
-           Object rowKey = ib.getIterator().getCurrentRowKey();
-           providerChangeSupport.fireProviderChange(entityListName, rowKey, entities.get(index));             
-         }
-      }
+      Class clazz = Utility.loadClass(className);
+      //      Class clazz = Class.forName(className, false, Thread.currentThread().getContextClassLoader());
+      instance = clazz.newInstance();
     }
-    catch (Exception e)
+    catch (InstantiationException e)
     {
-      // assumed iterator binding expression is wrong, just do nothing
-      sLog.info("Cannot find "+iteratorBindingName+" binding, UI might not refresh correctly when form layout is used.");      
+      throw new AdfException("Error creating instance for class " + className + ": InstantiationException " + e.getLocalizedMessage(),
+                             AdfException.ERROR);
+    }
+    catch (IllegalAccessException e)
+    {
+      throw new AdfException("Error creating instance for class " + className + ": IllegalAccessException " + e.getLocalizedMessage(),
+                             AdfException.ERROR);
+    }
+    catch (ClassNotFoundException e)
+    {
+      throw new AdfException("Error creating instance for class " + className + ": ClassNotFoundException " + e.getLocalizedMessage(),
+                             AdfException.ERROR);
+    }
+    return instance;
+  }
+
+  public static Object getSingletonInstance(String className, String instantationMethod)
+  {
+    Class clazz;
+    try
+    {
+      clazz = Class.forName(className);
+      Method method = clazz.getMethod(instantationMethod, clazz);
+      Object o = method.invoke(null, null);
+      return o;
+    }
+    catch (ClassNotFoundException e)
+    {
+      throw new AdfException("Error creating singleton instance for class" + className + ": ClassNotFoundException" + e.getLocalizedMessage(),
+                             AdfException.ERROR);
+    }
+    catch (NoSuchMethodException e)
+    {
+      throw new AdfException("Error creating singleton instance for class" + className + " and method "+instantationMethod+": NoSuchMethodException" + e.getLocalizedMessage(),
+                             AdfException.ERROR);
+    }
+    catch (InvocationTargetException e)
+    {
+      throw new AdfException("Error creating singleton instance for class" + className + ": InvocationTargetException " + e.getLocalizedMessage(),
+                             AdfException.ERROR);
+    }
+    catch (IllegalAccessException e)
+    {
+      throw new AdfException("Error creating singleton instance for class" + className + ": IllegalAccessException " + e.getLocalizedMessage(),
+                             AdfException.ERROR);
     }
   }
-  
-
 }

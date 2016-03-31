@@ -2,6 +2,9 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  09-feb-2015   Steven Davelaar
+  1.1           Fix endless loop caused by copeAttrValues when canonicalGet is executed
+                on some attribute getter.
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
@@ -251,7 +254,10 @@ public abstract class AbstractPersistenceManager implements PersistenceManager
     // first set the value of canoncalGetExecuted of toInstance on fromInstance
     // This is to prevent endless loop when we invoke getCanonical from a attribute getter
     // method
-    fromInstance.setCanonicalGetExecuted(toInstance.canonicalGetExecuted());
+    // SDA 09-02-2016, we still can get endless loop with new entity. So, we temporarily switch
+    // canoncalGetExecuted to true on fromInstance, and then after copy action we set it back to orig value
+    boolean oldValue = fromInstance.canonicalGetExecuted();
+    fromInstance.setCanonicalGetExecuted(true);
     Map attrValues = EntityUtils.getEntityAttributeValues(fromInstance);
     Iterator attrNames = attrValues.keySet().iterator();
     while (attrNames.hasNext())
@@ -263,6 +269,7 @@ public abstract class AbstractPersistenceManager implements PersistenceManager
         toInstance.setAttributeValue(attrName, value);        
       }
     }
+    fromInstance.setCanonicalGetExecuted(oldValue);
   }
 
   /**

@@ -174,7 +174,11 @@ public class JSONExampleDataObjectParser
           childDoi.setParent(currentDataObject);
           // we don't know at this point which data objects will be selected for generation
           // so we need to set findAll method on all of them
-          childDoi.setFindAllMethod(currentDataObject.getFindAllMethod());
+          // SD 22-feb-2016, we no longer set it at child object, better to have user do this
+          // manually in rare case that parent data object os not selected.
+          // When parsing RAML with nested data object in payload like department -> employees,
+          // we donlt want the departments findAll to end up with employees data object as well
+          // childDoi.setFindAllMethod(currentDataObject.getFindAllMethod());
           dataObjectInfos.add(childDoi);
           AccessorInfo accessorInfo = new AccessorInfo(currentDataObject, childDoi);
           accessorInfo.setChildAccessorPayloadName(payloadAttrPrefix+key);

@@ -2,6 +2,10 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  21-feb-2016   Steven Davelaar
+  1.2           Added check for reference descriptor is persisted
+  14-aug-2015   Steven Davelaar
+  1.1           delegate check for offline to service class
   08-jan-2015   Steven Davelaar
   1.0           initial creation
  ******************************************************************************/
@@ -88,22 +92,13 @@ public class IndirectList<E extends Entity>
 
   public void add(int index, E childEntity)
   {
-    // if this is a new entity, then call the add[EntityName] method on the service class or parent entity
-    if (EntityUtils.primaryKeyIsNull(childEntity))
-    {
-      Class beanClass = childEntity.getClass();
-      String typeName = childEntity.getClass().getName();
-      String addMethodName = "add" + typeName.substring(typeName.lastIndexOf(".") + 1);
-      Class[] paramTypes = new Class[] { int.class, beanClass };
-      Object[] params = new Object[] { new Integer(index), childEntity};
-      Utility.invokeIfPossible(this.entity, addMethodName, paramTypes, params);        
-    }
     List<E> oldList = new ArrayList<E>();
     oldList.addAll(getDelegate());
     getDelegate().add(index, childEntity);    
-    // MAF 2.1 no longer automatically refreshes iterator binding when using Create operation 
-    // on typed collection from data control palette, need to log bug.
-    entity.refreshChildEntityList(oldList, getDelegate(), mapping.getAttributeName());
+    // Call refresh entity list si developers can oveeride this method to execute
+    // UI refresh code related to the new entity, like totals etc.
+//    entity.refreshChildEntityList(oldList, getDelegate(), mapping.getAttributeName());
+    entity.childEntityAdded(childEntity);
   }
 
   public boolean remove(Object o)
@@ -113,20 +108,13 @@ public class IndirectList<E extends Entity>
 
   public E remove(int index)
   {
+    List<E> oldList = new ArrayList<E>();
+    oldList.addAll(getDelegate());
     E element = getDelegate().remove(index);
-    if (element!=null)
-    {
-      // call the remove[EntityName] method on the service class or parent entity
-      Class beanClass = element.getClass();
-      String typeName = element.getClass().getName();
-      String removeMethodName = "remove" + typeName.substring(typeName.lastIndexOf(".") + 1);
-      Class[] paramTypes = new Class[] { beanClass };
-      Object[] params = new Object[] { element};
-      Utility.invokeIfPossible(entity, removeMethodName, paramTypes, params);        
-      // MAF 2.1 does not correctly refresh the UI when using Delete operation 
-      // in form layout, but refreshing the iterator binding does NOT fix this,
-      // like ot does with Create operation
-    }
+    // Call refresh entity list si developers can oveeride this method to execute
+    // UI refresh code related to the new entity, like totals etc.
+//    entity.refreshChildEntityList(oldList, getDelegate(), mapping.getAttributeName());
+    entity.childEntityRemoved(element);
     return element;
   }
 
@@ -223,20 +211,24 @@ public class IndirectList<E extends Entity>
   protected List<E> buildDelegate()
   {
     final ClassMappingDescriptor referenceDescriptor = mapping.getReferenceClassMappingDescriptor();
-    String status = DeviceManagerFactory.getDeviceManager().getNetworkStatus();
-    boolean offline = "NotReachable".equals(status) || "unknown".equals(status);
+    final EntityCRUDService service = EntityUtils.getEntityCRUDService(referenceDescriptor);  
+    boolean offline = service.isOffline();
+    delegate = new ArrayList();
     if (mapping.getAccessorMethod() != null && !offline)
     {
       sLog.fine("Getter method for attribute " + this.mapping.getAttributeName() +
                 " called for the first time, calling find-all-in-parent web service method");
-      final EntityCRUDService service = EntityUtils.getEntityCRUDService(referenceDescriptor);  
       boolean inBackground = service.isDoRemoteReadInBackground();
       if (inBackground)
       {
         TaskExecutor.getInstance().execute(true
             , () -> {
-                      DBPersistenceManager pm = EntityUtils.getLocalPersistenceManager(referenceDescriptor);
-                      List oldList = pm.findAllInParent(referenceDescriptor.getClazz(), entity, mapping);   
+                      List oldList = new ArrayList();
+                      if (referenceDescriptor.isPersisted())
+                      {
+                        DBPersistenceManager pm = EntityUtils.getLocalPersistenceManager(referenceDescriptor);
+                        oldList = pm.findAllInParent(referenceDescriptor.getClazz(), entity, mapping);                           
+                      }
                       // we don't want the child service to start another backgrounf thread, so we temporarily switch
                       // off background read
                       service.setDoRemoteReadInBackground(false);        
@@ -250,12 +242,17 @@ public class IndirectList<E extends Entity>
       else
       {
         service.doRemoteFindAllInParent(entity,mapping.getAttributeName());        
+        delegate = service.getEntityList();
       }
     }
-    sLog.fine("Getter method for attribute " + this.mapping.getAttributeName() +
-                " called for the first time, querying database to retrieve the content");
-    DBPersistenceManager pm = EntityUtils.getLocalPersistenceManager(referenceDescriptor);
-    List result = pm.findAllInParent(referenceDescriptor.getClazz(), entity, mapping);      
+    List result = delegate;
+    if (referenceDescriptor.isPersisted())
+    {
+      sLog.fine("Getter method for attribute " + this.mapping.getAttributeName() +
+                  " called for the first time, querying database to retrieve the content");
+      DBPersistenceManager pm = EntityUtils.getLocalPersistenceManager(referenceDescriptor);
+      result = pm.findAllInParent(referenceDescriptor.getClazz(), entity, mapping);            
+    }
     return result;
   }
 

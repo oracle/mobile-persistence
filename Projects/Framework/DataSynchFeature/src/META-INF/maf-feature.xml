@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <adfmf:features xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:adfmf="http://xmlns.oracle.com/adf/mf">
-  <adfmf:feature id="oracle.ateam.sample.mobile.datasynch" name="oracle.ateam.sample.mobile.datasynch">
+  <adfmf:feature id="oracle.ateam.sample.mobile.datasynch" name="Data Sync Actions">
     <adfmf:content id="oracle.ateam.sample.mobile.datasynch.1">
       <adfmf:amx file="oracle.ateam.sample.mobile.datasynch/data-synch-tf.xml#data-synch-tf"/>
     </adfmf:content>

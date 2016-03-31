@@ -19,7 +19,8 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
  * synchronization with a remote data source.
  *
  * @see oracle.ateam.sample.mobile.persistence.service.EntityCRUDService
- *
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  *
  */
 public interface PersistenceManager

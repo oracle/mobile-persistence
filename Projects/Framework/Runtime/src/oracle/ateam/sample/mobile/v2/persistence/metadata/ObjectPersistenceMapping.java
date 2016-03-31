@@ -52,7 +52,7 @@ public class ObjectPersistenceMapping
       {
         // we use mobile-object-persistence as top node name so we can edit it inside JDev!
         topNode =
-          (ObjectPersistenceMapping) KXmlUtil.loadFromXml(is, ObjectPersistenceMapping.class,
+          (ObjectPersistenceMapping) KXmlUtil.getInstance().loadFromXml(is, ObjectPersistenceMapping.class,
                                                           "mobileObjectPersistence");
       }
       catch (Exception e)
@@ -70,7 +70,9 @@ public class ObjectPersistenceMapping
    */
   public Map<String, ClassMappingDescriptor> getClassMappingDescriptors()
   {
-    if (classMappingDescriptors == null)
+    // S0metimes this gets invoked in context of ApplicationCOntroller project where data oject classes
+    // will not be found when defined in ViewController project
+    if (classMappingDescriptors == null || classMappingDescriptors.size()==0)
     {
       classMappingDescriptors = new HashMap<String, ClassMappingDescriptor>();
       List<XmlAnyDefinition> descriptors = this.getChildDefinitions("classMappingDescriptor");

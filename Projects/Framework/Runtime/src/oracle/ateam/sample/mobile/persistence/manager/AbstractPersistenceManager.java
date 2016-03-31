@@ -34,6 +34,8 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
  * Abstract class that provides generic implementation of some of the methods of the
  * PersistenceManager interface that can be used by concrete subclasses.
  * The Persistence manager interface provides basic CRUD operations for a given entity instance. 
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public abstract class AbstractPersistenceManager implements PersistenceManager
 

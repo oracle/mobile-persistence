@@ -30,6 +30,8 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
  * Optionally, it also contains SQL operator information when used to construct SQL where clause.
  * This class is also used to create an entity from a web service payload. When parsing the web service payload a list
  * of bindParamInfos is created which is then used to create an entity instance and to insert a row in the SQLite database.
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class BindParamInfo
 {

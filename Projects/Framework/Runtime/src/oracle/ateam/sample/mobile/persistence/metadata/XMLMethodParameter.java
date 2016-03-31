@@ -15,6 +15,8 @@ import oracle.adfmf.util.XmlAnyDefinition;
 
 /**
  * Implementation of SOAP method parameter or REST resource parameter that reads values from persistenceMapping.xml
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class XMLMethodParameter extends XmlAnyDefinition implements MethodParameter
 {

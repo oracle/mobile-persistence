@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  17-feb-2016   Steven Davelaar
+  1.2           Added support for Boolean Java type
   19-mar-2015   Steven Davelaar / Puja Subramanyam
   1.1           Fix in convertDateValueIfNeeded to keep time component 
   08-jan-2015   Steven Davelaar
@@ -42,7 +44,7 @@ public class BindParamInfo
     // Mapping based on http://docs.oracle.com/javase/1.5.0/docs/guide/jdbc/getstart/mapping.html#1034737
     typeMapping.put(String.class, new Integer(Types.CHAR));
     typeMapping.put(BigDecimal.class, new Integer(Types.NUMERIC));
-    typeMapping.put(Boolean.class, new Integer(Types.BIT));
+    typeMapping.put(Boolean.class, new Integer(Types.CHAR));
     typeMapping.put(Integer.class, new Integer(Types.INTEGER));
     typeMapping.put(Long.class, new Integer(Types.BIGINT));
     typeMapping.put(Float.class, new Integer(Types.REAL));
@@ -98,6 +100,10 @@ public class BindParamInfo
 
   public void setValue(Object value)
   {
+    if (value!=null && javaType==Boolean.class)
+    {
+      value = value.toString();
+    }
     this.value = convertDateValueIfNeeded(value);
   }
 

@@ -27,6 +27,8 @@ import oracle.ateam.sample.mobile.util.MessageUtils;
  * Class that performs data synchronization on a set of data data sync actions passed in.
  * The data synchronization is performed by calling the appropriate method on the remote 
  * persistence manager configured fot this entity in persistenceMapping.xml
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class DataSynchronizer
   implements Runnable

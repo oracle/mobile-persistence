@@ -13,6 +13,8 @@ import oracle.adfmf.util.XmlAnyDefinition;
 
  /**
   * Interface that defines SOAP method header parameter or RESTful resource header parameter
+  * 
+  * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
   */
 public interface MethodHeaderParameter
 {

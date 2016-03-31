@@ -36,6 +36,8 @@ import oracle.ateam.sample.mobile.util.MessageUtils;
  * After 30 seconds an error is thrown.
  * For this mechanism to work correctly, you always need to call releaseConnection() in the finally block of your 
  * code when calling getConnection() in the try block.
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class DBConnectionFactory
 {

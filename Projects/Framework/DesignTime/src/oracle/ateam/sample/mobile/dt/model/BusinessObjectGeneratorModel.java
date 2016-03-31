@@ -7,6 +7,9 @@
 ******************************************************************************/
 package oracle.ateam.sample.mobile.dt.model;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+
 import java.net.URL;
 
 import java.util.ArrayList;
@@ -24,6 +27,9 @@ import oracle.ateam.sample.mobile.dt.controller.parser.DataControlDataObjectPars
 import oracle.ateam.sample.mobile.dt.model.jaxb.MobileObjectPersistence;
 
 import oracle.ateam.sample.mobile.dt.util.FileUtils;
+
+import oracle.ateam.sample.mobile.dt.util.PersistenceConfigUtils;
+import oracle.ateam.sample.mobile.dt.util.ProjectUtils;
 
 import oracle.ide.Ide;
 
@@ -58,6 +64,20 @@ public class BusinessObjectGeneratorModel {
   private boolean overwriteServiceObjectClasses = false;
   private boolean enableUsageTracking = false;
   private boolean maf20Style = false;
+  private String uriPrefix = "";
+  // this should have same default value as Generator options panel.
+  private Project generatorProject;
+  private boolean useMCS = false;
+  private String mcsBackendId;
+  private String mcsAnonymousAccessKey;
+  
+  // editMode is true when running the Edit Persistence Mapping wizard
+  private boolean editMode = false;
+
+  public BusinessObjectGeneratorModel()
+  {
+    init();
+  }
 
   public void setMaf20Style(boolean maf20Style)
   {
@@ -103,13 +123,6 @@ public class BusinessObjectGeneratorModel {
   private List<DCMethod> restResources = new ArrayList<DCMethod>();
   private List<HeaderParam> headerParams = new ArrayList<HeaderParam>();
 
-   public BusinessObjectGeneratorModel(String defaultPackage)
-   {
-     setPackageName(defaultPackage+".model");  
-     setServicePackageName(defaultPackage+".model.service");  
-     setMaf20Style(oldPersistenceMappingFileExists());
-   }
-   
    private boolean oldPersistenceMappingFileExists()
    {
      Project appControllerProject = McAppUtils.getApplicationControllerProject(Ide.getActiveWorkspace()
@@ -447,4 +460,129 @@ public class BusinessObjectGeneratorModel {
       }
     }
   }
+
+
+  public void setUriPrefix(String uriPrefix)
+  {
+    this.uriPrefix = uriPrefix;
+  }
+
+  /**
+   * Returns the prefix that must be added to URI property of each CRUD method
+   * @return
+   */
+  public String getUriPrefix()
+  {
+    return uriPrefix;
+  }
+
+  public void setGeneratorProject(Project generatorProject)
+  {
+    this.generatorProject = generatorProject;
+  }
+
+  public Project getGeneratorProject()
+  {
+    return generatorProject;
+  }
+
+
+  public void setUseMCS(boolean useMCS)
+  {
+    this.useMCS = useMCS;
+  }
+
+  public boolean isUseMCS()
+  {
+    return useMCS;
+  }
+
+  public void setMcsBackendId(String mcsBackendId)
+  {
+    this.mcsBackendId = mcsBackendId;
+  }
+
+  public String getMcsBackendId()
+  {
+    return mcsBackendId;
+  }
+
+  public void setMcsAnonymousAccessKey(String mcsAnonymousAccessKey)
+  {
+    this.mcsAnonymousAccessKey = mcsAnonymousAccessKey;
+  }
+
+  public String getMcsAnonymousAccessKey()
+  {
+    return mcsAnonymousAccessKey;
+  }
+
+
+  public void setEditMode(boolean editMode)
+  {
+    this.editMode = editMode;
+  }
+
+  /**
+   * true when running edit persistence mapping wizard
+   * @return
+   */
+  public boolean isEditMode()
+  {
+    return editMode;
+  }
+
+  private void init()
+  {
+    // set MCS settings from persistence config, so they are not lost when regenerating this file
+    PersistenceConfigUtils.initializeMCSSettings(this);
+
+    setMaf20Style(oldPersistenceMappingFileExists());
+
+    Project appProject = ProjectUtils.getApplicationControllerProject();
+    // we store Generator settings as project propagainst AppliationController prj, so we can default to values used
+    // the last time    
+    String generatorProjectName = appProject.getProperty(GENERATOR_PROJECT);
+    Project generatorProject = ProjectUtils.getApplicationControllerProject();
+    if (generatorProjectName!=null)
+    {
+      Map<String, Project> projects = ProjectUtils.getProjects();
+      if (projects.containsKey(generatorProjectName))
+      {
+        generatorProject = projects.get(generatorProjectName);
+      }
+    }
+    this.setGeneratorProject(generatorProject);  
+    String defaultPackage = generatorProject.getProperty(DEFAULT_PACKAGE_PROPERTY);
+    
+    String dataObjectPackage = appProject.getProperty(DATA_OBJECT_PACKAGE);
+    if (dataObjectPackage==null)
+    {
+      dataObjectPackage = defaultPackage+".model";
+    }
+    setPackageName(dataObjectPackage);  
+
+    String servicePackage = appProject.getProperty(SERVICE_PACKAGE);
+    if (servicePackage==null)
+    {
+      servicePackage = defaultPackage+".model.service";
+    }
+    setServicePackageName(servicePackage);  
+    
+    String overwriteDataObjects = appProject.getProperty(OVERWRITE_DATA_OBJECTS);
+    // default to true, so only when false saved as prj prop then set to false    
+    setOverwriteDataObjectClasses(!"false".equalsIgnoreCase(overwriteDataObjects));
+    
+    String overwriteServices = appProject.getProperty(OVERWRITE_SERVICES);
+    // default to false, so only when true saved as prj prop then set to true    
+    setOverwriteServiceObjectClasses("true".equalsIgnoreCase(overwriteServices));
+  }
+
+  private static final String DEFAULT_PACKAGE_PROPERTY = "defaultPackage";
+  public static final String GENERATOR_PROJECT = "ampaGeneratorProject";
+  public static final String DATA_OBJECT_PACKAGE = "ampaDataObjectPackage";
+  public static final String SERVICE_PACKAGE = "ampaServicePackage";
+  public static final String OVERWRITE_DATA_OBJECTS = "ampaOverwriteDataObjects";
+  public static final String OVERWRITE_SERVICES = "ampaOverwriteServices";
+
 }

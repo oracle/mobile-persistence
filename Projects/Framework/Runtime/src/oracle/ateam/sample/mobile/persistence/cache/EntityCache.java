@@ -18,6 +18,8 @@ import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 
 /**
  * This classes caches all entities. Entities can be accessed by their key   
+ * 
+ * @deprecated Use the class with same name in oracle.ateam.sample.mobile.v2.persistence.* instead
  */
 public class EntityCache
 {
