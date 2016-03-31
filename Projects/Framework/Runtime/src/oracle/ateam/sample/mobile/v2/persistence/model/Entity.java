@@ -24,9 +24,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
 
-import oracle.adfmf.java.beans.PropertyChangeSupport;
-
-import oracle.ateam.sample.mobile.persistence.metadata.ClassMappingDescriptor;
 import oracle.ateam.sample.mobile.v2.persistence.service.IndirectList;
 import oracle.ateam.sample.mobile.v2.persistence.service.ValueHolderInterface;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;

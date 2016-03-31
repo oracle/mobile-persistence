@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  29-mar-2016   Steven Davelaar
+  1.6           Fixed errors in JavaDoc
   14-feb-2016   Steven Davelaar
   1.5           Disallowed multiple threads to use same DB connection when WAL is enabled. For this
                 to work, each thread must obtain its won DB cnnection instance, which means this
@@ -39,22 +41,19 @@ import oracle.ateam.sample.mobile.util.MessageUtils;
  * Class that returns a Database Connection. The database name is read from
  * mobile-persistence-config.properties file that should be stored in the META-INF directory of the
  * ApplicationController project.
- * Since we are using Write Ahead Logging when creating the DB (see https://www.sqlite.org/wal.html) we
- * can have concurrent read operations, write operations will be executed sequentially by SQLite
+ * Since SQLite is a single-user database it can be accessed by only one DB connection 
+ * at a time. Since multiple background threads might want to access the database simultaneously, this class 
+ * ensures that only one connection is used for the main thread and all background threads. This is implemented by 
+ * a "wait": if a connection is requested, and the connection is still "in use" by another thread, it will wait for at
+ * most 30 seconds to see whether the connection has been released in the meantime by the other thread. 
+ * After 30 seconds an error is thrown.
+ * For this mechanism to work correctly, you always need to call releaseConnection() in the finally block of your 
+ * code when calling getConnection() in the try block. When using the DBPersistenceManager class to access the database,
+ * this connection management is handled for you.
  *
  */
 public class DBConnectionFactory
 {
-
-  // This was the old way this worked befire we switched to WAL:
-  //    * Since SQLite is a single-user database it can be accessed by only one DB connection
-  //    * at a time. Since multiple background threads might want to access the database simultaneously, this class
-  //    * ensures that only one connection is used for the main thread and all background threads. This is implemented by
-  //    * a "wait": if a connection is requested, and the connection is still "in use" by another thread, it will wait for at
-  //    * most 30 seconds to see whether the connection has been released in the meantime by the other thread.
-  //    * After 30 seconds an error is thrown.
-  //    * For this mechanism to work correctly, you always need to call releaseConnection() in the finally block of your
-  //    * code when calling getConnection() in the try block.
 
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(DBConnectionFactory.class);
   protected static Connection conn = null;
@@ -105,7 +104,7 @@ public class DBConnectionFactory
         long startTime = System.currentTimeMillis();
         while (connectionInUse)
         {
-          sLog.finest("WAITING to acquire DB connection... Ms: "+(System.currentTimeMillis()-startTime));
+          sLog.fine("WAITING to acquire DB connection... Ms: "+(System.currentTimeMillis()-startTime));
           // another thread is still using the connection, wait until released
           // with a maximum of 30 seconds
           if (System.currentTimeMillis()-startTime > 30000)
@@ -120,7 +119,7 @@ public class DBConnectionFactory
   }
 
   /**
-   * No need to call this method when you are using Write Ahead Logging
+   * Releases the connection so another thread can access it
    */
   public static void releaseConnection()
   {

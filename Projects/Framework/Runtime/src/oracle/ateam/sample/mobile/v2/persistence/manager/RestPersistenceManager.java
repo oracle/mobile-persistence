@@ -359,6 +359,18 @@ public abstract class RestPersistenceManager
       return restService;    
   }
 
+  /**
+   * This methods calls a REST service that returns binary data. Since the response is returned as an in-memory
+   * byte array, this method should only be used for small files. For larger files, the HTTP response output stream
+   * should be streamed directly to a file on the file system.
+   * @param connectionName
+   * @param requestType
+   * @param requestUri
+   * @param payload
+   * @param headerParamMap
+   * @param retryLimit
+   * @return
+   */
   public byte[] invokeByteArrayRestService(String connectionName, String requestType, String requestUri, String payload,
                                   Map<String,String> headerParamMap, int retryLimit)
   {

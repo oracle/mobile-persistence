@@ -2,6 +2,9 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 
  $revision_history$
+ 25-mar-2016   Steven Davelaar
+ 1.2           - Implemented streaming for both retrieving and uploading files from/to MCS
+               - Use new RestServiceAdapter and  RestServiceAdapterFactory class
  07-mar-2016   Steven Davelaar
  1.1           - Add collectionName to response payload when storing object in MCS, so we can insert/update
                it in DB, collectionName if part of primary key 
@@ -11,6 +14,8 @@
 ******************************************************************************/
 package oracle.ateam.sample.mobile.v2.persistence.manager;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -22,6 +27,8 @@ import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
+
+import java.nio.file.StandardCopyOption;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,7 +43,6 @@ import javax.microedition.io.HttpConnection;
 
 import oracle.adf.model.datacontrols.device.DeviceManagerFactory;
 
-import oracle.adfmf.dc.ws.rest.RestServiceAdapter;
 import oracle.adfmf.framework.api.AdfmfContainerUtilities;
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.api.JSONBeanSerializationHelper;
@@ -48,11 +54,19 @@ import oracle.adfmf.json.JSONObject;
 
 import oracle.ateam.sample.mobile.exception.RestCallException;
 import oracle.ateam.sample.mobile.mcs.storage.StorageObject;
+import oracle.ateam.sample.mobile.mcs.storage.StorageObjectService;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.util.MessageUtils;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.ClassMappingDescriptor;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
+
+import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
+
+import oracle.maf.api.dc.ws.rest.RestServiceAdapter;
+
+import oracle.maf.api.dc.ws.rest.RestServiceAdapterFactory;
 
 import sun.misc.BASE64Encoder;
 
@@ -183,7 +197,7 @@ public class MCSPersistenceManager
    * method to get object metadata. If the object already exists in local DB, we pass in the If-None-Match
    * header with the local Etag value so we can find out whether the local object is stil current.
    * If the REST call returns status code 304 - Not Modified, we know there is no need to fetch the object
-   * content from MCS and the istLocalVersionIsCurrent flag will be set to true on the storageObject instance.
+   * content from MCS.
    * @param storageObject
    */
   public void findStorageObjectMetadata(StorageObject storageObject)
@@ -198,20 +212,27 @@ public class MCSPersistenceManager
       headerParams.put("If-None-Match", storageObject.getETag());
     }
     // response is always null with HEAD call
-    String response = invokeRestService(getConnectionName(), "HEAD", uri, null, headerParams, 0, false);
-    if (getLastResponseStatus() == 304)
+    try
     {
-      // 304 is Not Modified, this means local eTag is sams as remote, so
-      // no need to retrieve the content of it has been retrieved before
-//      if (storageObject.getFilePath() != null)
-//      {
-//        storageObject.setLocalVersionIsCurrent(true);
-//      }
+      String response = invokeRestService(getConnectionName(), "HEAD", uri, null, headerParams, 0, false);
+      if (getLastResponseStatus() == 304)
+      {
+        // 304 is Not Modified, this means local eTag is sams as remote, so
+        // no need to retrieve the content of it has been retrieved before
+      //      if (storageObject.getFilePath() != null)
+      //      {
+      //        storageObject.setLocalVersionIsCurrent(true);
+      //      }
+      }
+      else
+      {
+        // populate the object metadata attrs with the response headers
+        populateStorageObjectMetadata(storageObject, getLastResponseHeaders(),true);
+      }
     }
-    else
+    catch (Exception e)
     {
-      // populate the object metadata attrs with the response headers
-      populateStorageObjectMetadata(storageObject, getLastResponseHeaders());
+      handleWebServiceInvocationError(ClassMappingDescriptor.getInstance(StorageObject.class),e,false);                
     }
   }
 
@@ -220,8 +241,9 @@ public class MCSPersistenceManager
    * The storage object is not saved to local DB here. 
    * @param storageObject
    * @param headers
+   * @param saveToDB
    */
-  public void populateStorageObjectMetadata(StorageObject storageObject, Map headers)
+  public void populateStorageObjectMetadata(StorageObject storageObject, Map headers, boolean saveToDB)
   {
     sLog.fine("Executing populateStorageObjectMetadata");
     Object cl = headers.get("Content-Length");
@@ -236,7 +258,9 @@ public class MCSPersistenceManager
     storageObject.setModifiedOn((String) headers.get("Oracle-Mobile-Modified-On"));
     storageObject.setETag((String) headers.get("ETag"));
     storageObject.setName((String) headers.get("Oracle-Mobile-Name"));
-    if (ClassMappingDescriptor.getInstance(storageObject.getClass()).isPersisted())
+    // Fire Data change events to refresh UI
+    EntityUtils.refreshEntity(storageObject);
+    if (saveToDB)
     {
       getLocalPersistenceManager().mergeEntity(storageObject, true);
       storageObject.setIsNewEntity(false);
@@ -246,38 +270,96 @@ public class MCSPersistenceManager
   /**
    * Call MCS Storage API /platform/storage/collections/{collection}/objects/{object} with GET
    * method. The object metadata return in header params is saved into the storage object passed into
-   * this method, the actual content of the storage object is returned as byte array.
-   * The localVersionIsCurrent property of the storage object is set to true, so by default we do not retrieve
-   * the same object twice within one application session.
+   * this method, the actual content of the storage object is streamed to the file system.
    * 
    * @param storageObject
    */
-  public byte[] findStorageObject(StorageObject storageObject)
+  public void findStorageObject(StorageObject storageObject)
   {
-    sLog.fine("Executing findStorageObject");
-    String uri = STORAGE_COLLECTIONS_URI + storageObject.getCollectionName() + "/objects/" + storageObject.getId();
-    Map<String, String> headerParams = new HashMap<String, String>();
+    sLog.fine("Executing findStorageObject");    
     // if the file content has been retrieved before, we pass in eTag header, so we don't download
     // it again while it is unchanged
-    if (storageObject.getETag() != null &&  storageObject.getFilePath()!=null)
+    boolean checkIsUpdated = storageObject.getETag() != null &&  storageObject.getFilePath()!=null;
+    if (checkIsUpdated)
     {
-      // Set If-None-Match header param so we know whether the object has changed
-      headerParams.put("If-None-Match", storageObject.getETag());
+      // make HEAD call to get metadata and to check whether we need to downlaod the file itself
+      // again
+        findStorageObjectMetadata(storageObject);
+        if (getLastResponseStatus() == 304)
+        {
+          // 304 is Not Modified, this means local eTag is same as remote
+          sLog.fine("Storage Object "+storageObject.getId()+" not modified since last download, E-Tags still match");
+          return;
+        }
     }
-    byte[] response = invokeByteArrayRestService(getConnectionName(), "GET", uri, null, headerParams, 0);
-    if (getLastResponseStatus() == 304)
+    // stream storage file from MCS to file system
+    String requestURI =
+      STORAGE_COLLECTIONS_URI + storageObject.getCollectionName() + "/objects/" + storageObject.getId();
+    HashMap<String, String> httpHeadersValue = new HashMap<String, String>();
+    addMCSHeaderParamsIfNeeded(httpHeadersValue);
+    RestServiceAdapter adp = RestServiceAdapterFactory.newFactory().createRestServiceAdapter();
+    adp.setConnectionName(getConnectionName());
+    adp.setRequestMethod("GET");
+    String requestEndPoint = adp.getConnectionEndPoint(getConnectionName());
+    String request = requestEndPoint + requestURI;
+    // Get the URI which is defined after the end point
+    // Get the connection
+    HttpConnection connection = null;
+    StorageObjectService sos = (StorageObjectService) EntityUtils.getEntityCRUDService(StorageObject.class);
+    long startTime = System.currentTimeMillis();
+    try
     {
-      // 304 is Not Modified, this means local eTag is same as remote
-      sLog.fine("Storage Object "+storageObject.getId()+" not modified since last download, E-Tags still match");
+      connection = adp.getHttpConnection("GET", request, httpHeadersValue);
+      InputStream is = adp.getInputStream(connection);      
+      // set the input stream on the storage object and save metadata and stream to file system
+      boolean gzip = "gzip".equalsIgnoreCase(adp.getResponseHeaders().get("Content-Encoding"));
+      // check whether respons eis Gzip, if so change InputStream to GZIPInputStream
+      is = gzip ? new GZIPInputStream(is) : is;
+      storageObject.setContentStream(is);
+      // if we checked ETag with HEAD call by calling findStorageObjectMetadata, the metdata are already
+      // set on storageObject
+      if (!checkIsUpdated)
+      {
+        populateStorageObjectMetadata(storageObject,adp.getResponseHeaders(),false);        
+      }
+      sos.saveStorageObjectOnDevice(storageObject);
+
+      if (storageObject.getDownloadCallback()!=null)
+      {
+        sLog.fine("Executing download callback for storage Object "+storageObject.getId());
+        storageObject.getDownloadCallback().run();        
+      }
+        
+      logRestCall(connectionName,"GET",requestURI,httpHeadersValue.toString(),null,"byte[]",startTime,null);
+//      sLog.fine("Storage Object "+storageObject.getId()+" downloaded succesfully");
     }
-    else
+    catch (Exception e)
     {
-      // populate the object metadata attrs with the response headers
-      populateStorageObjectMetadata(storageObject, getLastResponseHeaders());
-      sLog.fine("Storage Object "+storageObject.getId()+" downloaded succesfully");
+      logRestCall(connectionName,"GET",requestURI,httpHeadersValue.toString(),null,"byte[]",startTime,null);
+      String error = e.getCause() != null? e.getCause().getLocalizedMessage() : e.getLocalizedMessage();
+      String message = "Error invoking REST GET service " + requestURI + " : " + error;
+      sLog.severe(message);
+      if (adp.getResponseStatus()==404)
+      {
+        // also remove local storage object if exists
+        sos.removeStorageObject(storageObject, true);
+      }
+      handleWebServiceInvocationError(ClassMappingDescriptor.getInstance(StorageObject.class),e,false);                
     }
-//    storageObject.setLocalVersionIsCurrent(true);
-    return response;
+    finally 
+    {
+      if (connection!=null)
+      {
+        try
+        {
+          connection.close();
+        }
+        catch (IOException e)
+        {
+          sLog.severe("Error closing Http connection: "+e.getLocalizedMessage());
+        }
+      }
+    }
   }
 
   @Override
@@ -458,7 +540,7 @@ public class MCSPersistenceManager
 
   /**
    * Creates or updates a storage object in an MCS collection. The ID of the storage object is used
-   * as the object identifier, so, when an objet with the same ID already exists in this collection, it will be updated
+   * as the object identifier, so, when an object with the same ID already exists in this collection, it will be updated
    * and the ETag value of the object will be incremented with 1, the new ETag value returned by MCS is stored in the
    * SQLIte DB together with the other metadata returned by MCS.
    * If the filePath is not set on the storageObject, this method will do nothing.
@@ -469,7 +551,7 @@ public class MCSPersistenceManager
     sLog.fine("Executing storeStorageObject");
     if (storageObject.getFilePath()==null)
     {
-      sLog.severe("Cannot store object in MCS, no file path available");
+      sLog.severe("Cannot store object in MCS, file not found on file system: "+storageObject.getFilePath() );
       return;
     }
 
@@ -479,22 +561,21 @@ public class MCSPersistenceManager
     httpHeadersValue.put("Oracle-Mobile-Name", storageObject.getId());
     httpHeadersValue.put("Content-Type", storageObject.getContentType());
     addMCSHeaderParamsIfNeeded(httpHeadersValue);
-
+    RestServiceAdapter adp = RestServiceAdapterFactory.newFactory().createRestServiceAdapter();
+    HttpConnection connection = null;
+    long startTime = System.currentTimeMillis();
     try
     {
-      RestServiceAdapter adp = Model.createRestServiceAdapter();
       adp.setConnectionName(getConnectionName());
       String requestEndPoint = adp.getConnectionEndPoint(getConnectionName());
       String request = requestEndPoint + requestURI;
       // Get the URI which is defined after the end point
       // Get the connection
-      HttpConnection connection = adp.getHttpConnection("PUT", request, httpHeadersValue);
+      connection = adp.getHttpConnection("PUT", request, httpHeadersValue);
       Path path = Paths.get(storageObject.getFilePath());
-      byte[] data = Files.readAllBytes(path);
-      long startTime = System.currentTimeMillis();
       //        FileInputStream fis = new FileInputStream(storageObject.getContent());
       OutputStream os = connection.openOutputStream();
-      os.write(data);
+      Files.copy(path, os);
 
       //        copyStream(fis, connection.openOutputStream());
       Integer code = connection.getResponseCode();
@@ -508,9 +589,9 @@ public class MCSPersistenceManager
       //           ,"href":"/mobile/platform/storage/collections/Services/objects/51e48d9a-0d9d-4627-b3e8-c2eaaa8886ae"}
       //    ,{"rel":"self","href":"/mobile/platform/storage/collections/Services/objects/51e48d9a-0d9d-4627-b3e8-c2eaaa8886ae"}]}
       InputStream is = adp.getInputStream(connection);
-      boolean gzip = adp.getResponseHeaders().get("Content-Encoding").equals("gzip");
+      boolean gzip = "gzip".equalsIgnoreCase(adp.getResponseHeaders().get("Content-Encoding"));
       String response = getResponse(is, gzip);
-      logRestCall(connectionName,"STREAM",requestURI,httpHeadersValue.toString(),"byte[]",response,startTime,null);
+      logRestCall(connectionName,"PUT",requestURI,httpHeadersValue.toString(),"byte[]",response,startTime,null);
 //      System.err.println(response);
       JSONObject responseObject = (JSONObject) JSONBeanSerializationHelper.fromJSON(JSONObject.class, response);
       // add the collection name to the payload, this is part of primary key and needed for DB insert/update!
@@ -520,11 +601,25 @@ public class MCSPersistenceManager
     }
     catch (Exception e)
     {
-      logRestCall(connectionName,"STREAM",requestURI,httpHeadersValue.toString(),"byte[]",null,System.currentTimeMillis(),e);
-      throw new AdfException(e, AdfException.ERROR);
+      logRestCall(connectionName,"PUT",requestURI,httpHeadersValue.toString(),"byte[]",null,startTime,e);
+      String error = e.getCause() != null? e.getCause().getLocalizedMessage() : e.getLocalizedMessage();
+      String message = "Error invoking REST PUT service " + requestURI + " : " + error;
+      sLog.severe(message);
+      handleWebServiceInvocationError(ClassMappingDescriptor.getInstance(StorageObject.class),e,false);                
     }
-    finally
+    finally 
     {
+      if (connection!=null)
+      {
+        try
+        {
+          connection.close();
+        }
+        catch (IOException e)
+        {
+          sLog.severe("Error closing Http connection: "+e.getLocalizedMessage());
+        }
+      }
     }
   }
 
@@ -538,7 +633,14 @@ public class MCSPersistenceManager
     sLog.fine("Executing removeStorageObject");
       String requestURI =
         STORAGE_COLLECTIONS_URI + storageObject.getCollectionName() + "/objects/" + storageObject.getId();
-      invokeRestService(getConnectionName(),"DELETE",requestURI,null,null,0,false);
+    try
+    {
+     invokeRestService(getConnectionName(),"DELETE",requestURI,null,null,0,false);
+    }
+    catch (Exception e)
+    {
+      handleWebServiceInvocationError(ClassMappingDescriptor.getInstance(StorageObject.class),e,false);                
+    }
   }
 
   /**

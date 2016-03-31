@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  29-mar-2016   Steven Davelaar
+  1.2           added check for persistence-config flag to use location in context event
   10-mar-2016   Steven Davelaar
   1.1           added determineLocationFailed flag so we only try it once per session
                 if location cannot be rerieved
@@ -18,10 +20,11 @@ import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.DateUtils;
+import oracle.ateam.sample.mobile.v2.persistence.metadata.PersistenceConfig;
 
 /**
  * Internal use only
- * Class used to create MCS analytics context event in MCSPersistenceManager
+ * Class used to create MCS analytics context event in MCSPersistenceManager.
  */
 
 public class ContextEvent extends AnalyticsEvent
@@ -57,12 +60,15 @@ public class ContextEvent extends AnalyticsEvent
     properties.put("osName", os);
     properties.put("osVersion", version);
     properties.put("carrier", networkStatus);
-    Location loc = determineLocation();
-    if (loc != null)
+    if (PersistenceConfig.useLocationforAnalytics())
     {
-      // lat/lng must be sent as string, otherwise error returned!
-      properties.put("longitude", loc.getLongitude() + "");
-      properties.put("latitude", loc.getLatitude() + "");
+      Location loc = determineLocation();
+      if (loc != null)
+      {
+        // lat/lng must be sent as string, otherwise error returned!
+        properties.put("longitude", loc.getLongitude() + "");
+        properties.put("latitude", loc.getLatitude() + "");
+      }      
     }
   }
 

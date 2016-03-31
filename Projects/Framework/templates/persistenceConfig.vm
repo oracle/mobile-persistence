@@ -13,6 +13,9 @@ mcs.mobile-backend-id=${WSM.mcsBackendId}
 mcs.anonymous-key=${WSM.mcsAnonymousAccessKey}
 #end
 
+# Send location with MCS analytics events?
+analytics.use.location=false
+
 # background rest calls
 enable.parallel.rest.calls=true
 
