@@ -2,6 +2,10 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
+  29-mar-2016   Steven Davelaar
+  1.8           Synchronized methods that acquire and release DB connection
+  23-mar-2016   Steven Davelaar
+  1.7           Added log message with DB file location
   04-mar-2016   Steven Davelaar
   1.6           Allow passing in null for bindParamInfos argument in executeSqlDml
   07-jan-2016   Steven Davelaar
@@ -129,7 +133,7 @@ public class DBPersistenceManager
    * @param bindParamInfos
    * @return
    */
-  public ResultSet executeSqlSelect(String sql, List<BindParamInfo> bindParamInfos)
+  public synchronized ResultSet executeSqlSelect(String sql, List<BindParamInfo> bindParamInfos)
   {
     sLog.fine("Executing SQL statement "+sql);
     PreparedStatement statement = null;
@@ -166,7 +170,7 @@ public class DBPersistenceManager
    * @param bindParamInfos
    * @param doCommit
    */
-  public void executeSqlDml(String sql, List<BindParamInfo> bindParamInfos, boolean doCommit)
+  public synchronized void executeSqlDml(String sql, List<BindParamInfo> bindParamInfos, boolean doCommit)
   {
     PreparedStatement statement = null;
     try
@@ -1271,6 +1275,7 @@ public class DBPersistenceManager
    */
   public void initDBIfNeeded()
   {
+    sLog.info("SQLite database path: "+PersistenceConfig.getDatabaseFilePath());
     File dbFile = new File(PersistenceConfig.getDatabaseFilePath());
     if (!dbFile.exists())
     {
@@ -1313,7 +1318,7 @@ public class DBPersistenceManager
         }
         catch (Exception e)
         {
-          throw new AdfException("Error enrypting the database: "+e.getMessage(), AdfException.ERROR);
+          throw new AdfException("Error encrypting the database: "+e.getMessage(), AdfException.ERROR);
         }
         finally
         {
@@ -1399,7 +1404,7 @@ public class DBPersistenceManager
   /**
    *  Execute Comnmit statement on DB connection
    */
-  public void commmit()
+  public synchronized void commmit()
   {
     try
     {
@@ -1419,7 +1424,7 @@ public class DBPersistenceManager
   /**
    *  Execute Rollback statement on DB connection
    */
-  public void rollback()
+  public synchronized void rollback()
   {
     try
     {

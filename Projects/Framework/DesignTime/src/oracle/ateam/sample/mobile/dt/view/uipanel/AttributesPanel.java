@@ -161,6 +161,10 @@ public class AttributesPanel
           {
             throw new TraversalException(doi.getClassName()+": "+attr.getAttrName()+" is not a valid Java attribute name.");
           }
+          if ("key".equals(attr.getAttrName()))
+          {
+            throw new TraversalException(doi.getClassName()+": "+attr.getAttrName()+" cannot be used as attribute name, getKey method reserved for MAF iterator management");
+          }
         }
         // we also re-apply the parameterValueProviderObject for each method, so defaulting logic is re-executed
         // now that we have key attributes. This is useful when we used RAML: the methods are there, but the path

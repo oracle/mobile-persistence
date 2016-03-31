@@ -2,6 +2,8 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
    
   $revision_history$
+  23-mar-2016   Steven Davelaar
+  1.3           Added method getKey 
   20-feb-2016   Steven Davelaar
   1.2           Added callback method childEntityAdded/removed 
   19-mar-2015   Steven Davelaar
@@ -17,12 +19,11 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 import oracle.adfmf.framework.exception.AdfException;
 
-import oracle.adfmf.java.beans.PropertyChangeSupport;
-
-import oracle.ateam.sample.mobile.persistence.metadata.ClassMappingDescriptor;
 import oracle.ateam.sample.mobile.v2.persistence.service.IndirectList;
 import oracle.ateam.sample.mobile.v2.persistence.service.ValueHolderInterface;
 import oracle.ateam.sample.mobile.v2.persistence.metadata.AttributeMapping;
@@ -42,9 +43,11 @@ public abstract class Entity<E> extends ChangeEventSupportable
 {
 
   private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(Entity.class);
+  private static final AtomicLong sKeySequence = new AtomicLong(0);
   
   private transient boolean isNewEntity = false;
   private transient boolean canonicalGetExecuted = false;
+  private Long key;
 
   public void setCanonicalGetExecuted(boolean canonicalGetExecuted)
   {
@@ -274,6 +277,27 @@ public abstract class Entity<E> extends ChangeEventSupportable
       AdfmfJavaUtilities.flushDataChangeEvent();
       
     });
+  }
+
+  /**
+   * This method returns a unique "iterator" key which is required by AmxCollectionModel so it can correctly manage
+   * new and removed instances and send data change events to refresh the UI accordingly. MAF runtime explicitly
+   * checks for a method by this name. If such a method is not present, it will check whether an attribute is marked as
+   * key attribute in the persdef info of the data control collection. In other words, this getKey method 
+   * saves AMPA users from having to set such a key attribute manually.
+   * The unique key is assigned when the getKey method is called for the first time.
+   * This "iterator" key should NOT be confused with the entity primary key specified in AMPA persistence-mapping.xml. 
+   * That primary key is used to uniqely identify a row in SQLite DB and if the auto-generate flag is set to true, 
+   * it is assigned just before the row is inserted in QSQLite DB to ensure uniqueness.
+   * @return unique iterator key
+   */
+  public Long getKey()
+  {
+    if (key == null)
+    {
+      key = sKeySequence.getAndIncrement();
+    }
+    return key;
   }
 
 }

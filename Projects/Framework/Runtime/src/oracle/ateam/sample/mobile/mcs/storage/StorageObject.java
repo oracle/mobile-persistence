@@ -2,38 +2,32 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 
  $revision_history$
+ 25-mar-2016   Steven Davelaar
+ 1.1           - replaced method getContent with getContentStream
+               - removed get/setStoredOnDevice
+               - getFilePath returns null when file does not exist on file system
  29-dec-2015   Steven Davelaar
  1.0           initial creation
 ******************************************************************************/
 package oracle.ateam.sample.mobile.mcs.storage;
 
 import java.io.File;
-
-import java.io.IOException;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.InputStream;
 
 import oracle.adfmf.framework.api.AdfmfJavaUtilities;
 
-import oracle.ateam.sample.mobile.util.ADFMobileLogger;
 import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.v2.persistence.model.Entity;
-import oracle.ateam.sample.mobile.v2.persistence.util.EntityUtils;
 
 /**
- * Representation of MCS storage object. Ths object holds the metadata of the storage obhject, as well as a reference to
- * file location on the mobile device. The getContent() method returns the content of the file as a byte array.
- * By default storage objects retrieved from MCS are stored on the device: the file itself on the file system, and the
- * metadata in the STORAGE_OBJECT table. To prevent local storage you can call setStoreOnDevice(false), and the file is
- * then only accessible by calling getContent().
+ * Representation of MCS storage object. This object holds the metadata of the storage object, as well as a reference to
+ * file location on the mobile device. The get/setContentStream can be used to temporarily store
+ * the (new) content of the file. If the contentStream is set, then calling StorageObjectService.saveStorageObjectToDevice
+ * will stream the file to the device and save the storage object metadata in the SQLite DB.
  */
 public class StorageObject
   extends Entity
 {
-
-  private static ADFMobileLogger sLog = ADFMobileLogger.createLogger(StorageObjectService.class);
 
   private final static String APP_DIR =
     AdfmfJavaUtilities.getDirectoryPathRoot(AdfmfJavaUtilities.ApplicationDirectory);
@@ -51,12 +45,11 @@ public class StorageObject
   private String filePath;
   private Boolean localVersionIsCurrent = false;
   private String directoryPath; 
-  private Boolean storeOnDevice = true;
-  private transient byte[] content;
+  private transient InputStream contentStream;
+  private transient Runnable downloadCallback;
   // dummy attrs to prevent serialization 
   private transient String downloadIfNeeded;
   private transient String downloadIfNeededInBackground;
-  private Runnable downloadCallback;
 
   public String getCreatedOn()
   {
@@ -91,8 +84,25 @@ public class StorageObject
       });
   }
 
+  /**
+   * Returns the file path where storage object file is stored on file system.
+   * Note that when the path is set, but it is invalid (pointing to a non-existing file), this
+   * method returns null. This is to handle iOS simulator testing, where the simulator path changes after
+   * a redeployment of the app, but the dataase with storage object rows is preserved, causing an invalid
+   * file path.
+   * @return
+   */
   public String getFilePath()
   {
+    if (filePath!=null)
+    {
+      File file = new File(filePath);
+      if (!file.exists())
+      {
+        // clear filePath
+        filePath = null;
+      }      
+    }
     return filePath;
   }
 
@@ -106,8 +116,11 @@ public class StorageObject
   {
     if (!isLocalVersionIsCurrent())
     {
+      // we immediately set the local version current flag to true, because a data change event
+      // to refresh UI might call this method again before the download is completed
+      setLocalVersionIsCurrent(true);
       StorageObjectService sos = new StorageObjectService(true,true);
-      sos.findStorageObjectInMCS(this,false);      
+      sos.findStorageObjectInMCS(this);      
     }
     return "";
   }
@@ -122,8 +135,11 @@ public class StorageObject
   {
     if (!isLocalVersionIsCurrent())
     {
+      // we immediately set the local version current flag to true, because a data change event
+      // to refresh UI might call this method again before the download is completed
+      setLocalVersionIsCurrent(true);
       StorageObjectService sos = new StorageObjectService(false,false);
-      sos.findStorageObjectInMCS(this,false);
+      sos.findStorageObjectInMCS(this);
     }
     return "";
   }
@@ -239,43 +255,15 @@ public class StorageObject
   }
 
 
-  public void setStoreOnDevice(Boolean storeOnDevice)
+  public void setContentStream(InputStream contentStream)
   {
-    this.storeOnDevice = storeOnDevice;
+    this.contentStream = contentStream;
   }
 
-  public Boolean isStoreOnDevice()
+  public InputStream getContentStream()
   {
-    return storeOnDevice;
+    return contentStream;
   }
-
-  public Boolean getStoreOnDevice()
-  {
-    return storeOnDevice;
-  }
-
-  public void setContent(byte[] content)
-  {
-    this.content = content;
-  }
-
-  public byte[] getContent()
-  {
-    if (content==null && getFilePath()!=null)
-    {
-      Path path = Paths.get(getFilePath());
-      try
-      {
-        content = Files.readAllBytes(path);
-      }
-      catch (IOException e)
-      {
-        sLog.severe("Error reading bytes from file "+getId()+": "+e.getLocalizedMessage());
-      }
-    }
-    return content;
-  }
-
 
   public void setDownloadCallback(Runnable downloadCallback)
   {

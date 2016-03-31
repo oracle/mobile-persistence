@@ -618,23 +618,23 @@ public class EntityUtils
     Utility.invokeIfPossible(crudService, removeMethodName, paramTypes, params);
   }
 
-  /**
-   * This method refresh all attributes that have a direct attribute mapping in persistence-mapping.xml.
-   * It calls entity.refreshUI with this list of attribute names.
-   * @param <E>
-   * @param entity
-   */
-  public static <E extends Entity> void refreshEntity(Entity entity)
-  {
-    
-    List<AttributeMappingDirect> mappings = ClassMappingDescriptor.getInstance(entity.getClass()).getAttributeMappingsDirect();
-    List<String> attrs = new ArrayList<String>();
-    for (AttributeMapping mapping : mappings)
+    /**
+     * This method refresh all attributes that have a direct attribute mapping in persistence-mapping.xml.
+     * It calls entity.refreshUI with this list of attribute names.
+     * @param <E>
+     * @param entity
+     */
+    public static <E extends Entity> void refreshEntity(Entity entity)
     {
-      attrs.add(mapping.getAttributeName());      
+      
+      List<AttributeMappingDirect> mappings = ClassMappingDescriptor.getInstance(entity.getClass()).getAttributeMappingsDirect();
+      List<String> attrs = new ArrayList<String>();
+      for (AttributeMapping mapping : mappings)
+      {
+        attrs.add(mapping.getAttributeName());      
+      }
+      entity.refreshUI(attrs);
     }
-    entity.refreshUI(attrs);
-  }
   
   /**
    * The standard technique to refresh UI using providerChangeSupport.fireProviderRefresh only refreshes

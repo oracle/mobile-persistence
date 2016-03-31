@@ -1,21 +1,21 @@
-# SQL Lite db name
+# SQLite settings
 db.name=${WSM.workspaceName}.db
-
-# DB creation script
+db.encryption=false
 ddl.script=META-INF/${WSM.workspaceName}.sql
 
 # Location of XML mapping file in classpath
 persistence.mapping.xml=META-INF/persistence-mapping.xml
 
 #if ($WSM.useMCS)
-# MCS connection details, applicationScope EL Expressions are allowed!
+# MCS connection details, applicationScope EL Expressions are allowed for backend ID and anonymous key
 mcs.connection=${WSM.connectionName}
 mcs.mobile-backend-id=${WSM.mcsBackendId}
 mcs.anonymous-key=${WSM.mcsAnonymousAccessKey}
 #end
 
+# Send location with MCS analytics events?
+analytics.use.location=false
+
 # background rest calls
 enable.parallel.rest.calls=true
 
-# Work around for bug 22666682 (fixed in MAF 2.3), can cause app to hang when using MafExecutorService
-use.maf.executor.service=false

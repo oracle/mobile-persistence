@@ -18,7 +18,6 @@
          <directMapping attributeName="contentLength" payloadAttributeName="contentLength" columnName="CONTENT_LENGTH" columnDataType="NUMERIC" required="false" persisted="true" javaType="java.lang.Long" keyAttribute="false"/>
          <directMapping attributeName="collectionName" payloadAttributeName="collectionName" columnName="COLLECTION_NAME" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="true"/>
          <directMapping attributeName="filePath" columnName="FILE_PATH" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.String" keyAttribute="false"/>
-         <directMapping attributeName="storeOnDevice" columnName="STORE_ON_DEVICE" columnDataType="VARCHAR" required="false" persisted="true" javaType="java.lang.Boolean" keyAttribute="false"/>
       </attributeMappings>
       <methods>
          <findMethod uri="/platform/storage/collections/{collection}/objects" requestType="GET" sendDataObjectAsPayload="false" payloadElementName="items">

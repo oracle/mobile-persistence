@@ -2,6 +2,14 @@
  Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 
  $revision_history$
+ 25-mar-2016   Steven Davelaar
+ 1.3           - Use MessageUtils.handleError instead of throwing exception in method findStorageObjectInMCS so
+               exception is also shown wehn triggered from background thread.
+               - Renamed method resetStorageObject to resetStorageObjectMetadata
+               - renamed method findStorageObjectMetadataRemote to findStorageObjectMetadataInMCS
+               - saveStorageObjectToFileSystem: check for byte array not null
+ 23-mar-2016   Steven Davelaar
+ 1.2           Use storageobject name as file name when downloading. Only use storageObject id if name is null
  07-mar-2016   Steven Davelaar
  1.1           saveStorageObjectToFileSystem now uses id instead of name to construct filepath!
  29-dec-2015   Steven Davelaar
@@ -15,7 +23,17 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+
+import java.nio.file.Path;
+
+import java.nio.file.Paths;
+
+import java.nio.file.StandardCopyOption;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +45,7 @@ import oracle.adfmf.framework.exception.AdfException;
 
 import oracle.ateam.sample.mobile.exception.RestCallException;
 import oracle.ateam.sample.mobile.util.ADFMobileLogger;
+import oracle.ateam.sample.mobile.util.MessageUtils;
 import oracle.ateam.sample.mobile.util.TaskExecutor;
 import oracle.ateam.sample.mobile.v2.persistence.cache.EntityCache;
 import oracle.ateam.sample.mobile.v2.persistence.manager.MCSPersistenceManager;
@@ -169,9 +188,7 @@ public class StorageObjectService
   }
 
   /**
-   * Stores the object in MCS, and optionally on the device.
-   * If the storeOnDevice flag of the storage object is true, the metadata are stored
-   * in SQLite DB, and the content is written to the file system.
+   * Stores the object on the device and in MCS
    * If remoteWriteInBackrgound flag is set to true, the storage in MCS happens
    * in background. If we are in offline mode, the store action will be saved as apending
    * sync action.
@@ -181,16 +198,13 @@ public class StorageObjectService
   public void saveStorageObject(StorageObject storageObject)
   {
     sLog.fine("Executing saveStorageObject");
-    if (storageObject.isStoreOnDevice())
-    {
-      saveStorageObjectOnDevice(storageObject);
-    }
+    saveStorageObjectOnDevice(storageObject);
     saveStorageObjectInMCS(storageObject);
   }
 
   /**
    * Stores the object on the device: the metadata are stored
-   * in SQLite DB, and the content is written to the file system.
+   * in SQLite DB, and the contentStream (when set) is written to the file system.
    * 
    * @param storageObject
    */
@@ -236,19 +250,28 @@ public class StorageObjectService
   }
 
   /**
-   * Retrieves all storageObject instances in the collection specified.
-   * @param collectionName
+   * Retrieves all storageObject instances in the collection specified. Looks up the storage objects locally, as well 
+   * as in MCS. It does NOT download the actual storage files from MCS, only the metadata. To retrieve the file itself,
+   * you can call methods getDownloadIfNeeded or getDownloadIfNeededInBackground. These methods are named like a normal
+   * getter method so you can also drag and drop them from the data control palette as an output text (both methods 
+   * return an empty string) to force a download without writing Java code.
+   * @param collection
    */
-  public void findAllStorageObjectsInCollection(String collectionName)
+  public void findAllStorageObjectsInCollection(String collection)
   {
     sLog.fine("Executing findAllStorageObjectsInCollection");
+    if (collection==null || "".equals(collection))
+    {
+      sLog.severe("Cannot execute findAllStorageObjectsInCollection, collection argument must be specified");
+      return;
+    }
     if (isPersisted())
     {
       Map<String,String> searchValues = new HashMap<String,String>();
-      searchValues.put("collectionName", collectionName);
+      searchValues.put("collectionName", collection);
       setEntityList(getLocalPersistenceManager().find(getEntityClass(), searchValues));
     }
-    doRemoteFind(collectionName);
+    doRemoteFind(collection);
   }
   
   /**
@@ -261,33 +284,44 @@ public class StorageObjectService
   }
 
   /**
-   * Invokes the getCanonical method on the remote persistence manager if this has not happened yet
-   * for this instance during this application session. The corresponding row in the local database is also updated if
-   * the entity is persistable. This method uses the setting of remote-read-in-background property
-   * in persistenceMapping.xml to determine whether the method is executed in the background.
-   * While you can call this method from the user interface layer using the data control palette, it is easier and
-   * cleaner to call this method from a getter method for one of the attributes that will be populated by the
-   * getCanonical method call. Here is an example of the code you should add to such a getter method:
-   *
-   * if (!canonicalGetExecuted())
-   * {
-   *   StorageObjectService crudService = (StorageObjectService) EntityUtils.getEntityCRUDService(Department.class);
-   *   crudService.getCanonicalStorageObject(this);
-   * }
-   *
-   * If you specifed the getCanonical triggering attribute in the AMPA REST wizard, then the above code is already generated
-   * for you.
-   *
-   * @param collectionName
+   * Looks up a StorageObject metadata locally as well as in MCS. The storage file will NOT be downloaded.
+   * @param collection
+   * @param objectId
+   * @return
    */
   public StorageObject findStorageObjectMetadata(String collection, String objectId)
   {
     sLog.fine("Executing findStorageObjectMetadata");
+    if (collection==null || "".equals(collection) || objectId==null || "".equals(objectId))
+    {
+      sLog.severe("Cannot execute findStorageObjectMetadata, collection and objectId arguments must be specified");
+      return null;
+    }
     StorageObject storageObject = findOrCreateStorageObject(collection, objectId);
-    findStorageObjectMetadataRemote(storageObject);
+    findStorageObjectMetadataInMCS(storageObject);
     return storageObject;
   }
     
+  /**
+   * Looks up a StorageObject locally as well as in MCS. The storage file will be downloaded if the file has not
+   * been downloaded before or when the version in MCS is newer (checked using ETag)
+   * @param collection
+   * @param objectId
+   * @return
+   */
+  public StorageObject findStorageObject(String collection, String objectId)
+  {
+    sLog.fine("Executing findStorageObject");
+    if (collection==null || "".equals(collection) || objectId==null || "".equals(objectId))
+    {
+      sLog.severe("Cannot execute findStorageObject, collection and objectId arguments must be specified");
+      return null;
+    }
+    StorageObject storageObject = findOrCreateStorageObject(collection, objectId);
+    findStorageObjectInMCS(storageObject);
+    return storageObject;
+  }
+  
   /**
    * Looks up a StorageObject locally in the entity cache, and if it is not there, it queries
    * the SQLite DB. If storage object is not found, a new instance is returned with
@@ -300,6 +334,11 @@ public class StorageObjectService
   public StorageObject findOrCreateStorageObject(String collection, String objectId)
   {
     sLog.fine("Executing findOrCreateStorageObject");
+    if (collection==null || "".equals(collection) || objectId==null || "".equals(objectId))
+    {
+      sLog.severe("Cannot execute findOrCreateStorageObject, collection and objectId arguments must be specified");
+      return null;
+    }
     StorageObject storageObject = null;
     if (isPersisted())
     {
@@ -321,12 +360,20 @@ public class StorageObjectService
     return storageObject;
   }
 
-  public void findStorageObjectMetadataRemote(StorageObject storageObject)
+  /**
+   * Get a storageObject metadata from MCS.
+   * If remoteReadInBackground is set to true in persistence-mapping.xml (the default), the file will be retrieved
+   * in a background thread.
+   * @param collection
+   * @param objectId
+   * @see getStorageObjectContentRemote
+   */
+  public void findStorageObjectMetadataInMCS(StorageObject storageObject)
   {
-    sLog.fine("Executing findStorageObjectMetadataRemote");
+    sLog.fine("Executing findStorageObjectMetadataInMCS");
     if (isOffline())
     {
-      sLog.fine("Cannot execute getStorageObjectMetadataRemote, no network connection");
+      sLog.fine("Cannot execute findStorageObjectMetadataInMCS, no network connection");
       return;
     }
     TaskExecutor.getInstance().execute(isDoRemoteReadInBackground(), () ->
@@ -335,36 +382,41 @@ public class StorageObjectService
         // we want to proces pending actions before we do remote read
         synchronize(false);
         getMCSPersistenceManager().findStorageObjectMetadata(storageObject);
-        if (storageObject.isStoreOnDevice())
-        {
-          getLocalPersistenceManager().mergeEntity(storageObject, true);
-        }
+        getLocalPersistenceManager().mergeEntity(storageObject, true);
       });    
   }
 
   /**
    * Get a storageObject with the metadata and content from MCS.
+   * If remoteReadInBackground is set to true in persistence-mapping.xml (the default), the file will be retrieved
+   * in a background thread.
    * @param collection
    * @param objectId
    * @see getStorageObjectContentRemote
    */
-  public StorageObject findStorageObjectInMCS(String collection, String objectId, boolean throwNotFoundException)
+  public StorageObject findStorageObjectInMCS(String collection, String objectId)
   {
     sLog.fine("Executing findStorageObjectInMCS");
+    if (collection==null || "".equals(collection) || objectId==null || "".equals(objectId))
+    {
+      sLog.severe("Cannot execute findStorageObjectInMCS, collection and objectId arguments must be specified");
+      return null;
+    }
     StorageObject storageObject = findOrCreateStorageObject(collection, objectId);
-    findStorageObjectInMCS(storageObject,throwNotFoundException);
+    findStorageObjectInMCS(storageObject);
     return storageObject;
   }
   
   /**
    * Retrieve the file content and metadata from MCS and save it to a file on the system and store the filePath 
    * and metadata in the storageObject (see method storeObjectContent).
-   * If the device is offline, or the isLocalVersionIsCurrent flag on the storage object is true, then
-   * this method will do nothing.
+   * If remoteReadInBackground is set to true in persistence-mapping.xml (the default), the file will be retrieved
+   * in a background thread.
+   * If the device is offline this method will do nothing. 
    * @param storageObject
    * @see storeObjectContent
    */
-  public void findStorageObjectInMCS(StorageObject storageObject, boolean throwNotFoundException)
+  public void findStorageObjectInMCS(StorageObject storageObject)
   {
     sLog.fine("Executing findStorageObjectInMCS");
     if (isOffline())
@@ -372,104 +424,73 @@ public class StorageObjectService
       sLog.fine("Cannot execute findStorageObjectInMCS, device is offline");
       return;
     }
-//    if (storageObject.isLocalVersionIsCurrent()) 
-//    {
-//      sLog.fine("Local version of storage object "+storageObject.getId()+" is already current");
-//      return;
-//    }
     TaskExecutor.getInstance().execute(isDoRemoteReadInBackground(), () ->
       {
         // auto synch any pending storage actions first, pass false for inBackground because
         // we want to proces pending actions before we do remote read
         synchronize(false);
-        try
-        {
-          byte[] response = getMCSPersistenceManager().findStorageObject(storageObject);
-          // response is null when local file (based on value of eTag) is current version
-          if (response!=null)
-          {
-            if (storageObject.getDownloadCallback()!=null)
-            {
-              sLog.fine("Executing download callback for storage Object "+storageObject.getId());
-              storageObject.getDownloadCallback().run();        
-            }
-            storageObject.setContent(response);
-            if (storageObject.isStoreOnDevice())
-            {
-              saveStorageObjectOnDevice(storageObject);            
-            }  
-          }
-        }
-        catch (RestCallException e)
-        {
-           // check whether object is not found in MCS
-           if (e.getResponseStatus()==404)
-           {
-             // remove the storage object from DB and file system  
-             removeStorageObject(storageObject, true);
-             if (throwNotFoundException)
-             {
-               throw e;                        
-             }
-           }
-        }
+        getMCSPersistenceManager().findStorageObject(storageObject);
       });    
   }
 
   /**
-   * Save byte content of storage object to a file on file system. The default directory for download is the value
-   * of AdfmfJavaUtilities.ApplicationDirectory concatenated with /MCS/ and the name of the collection.
+   * Stream content of storage object to a file on file system and close the stream. 
+   * If the contentStream is null, this method will do nothing.
+   * The default target directory for streaming is the value of AdfmfJavaUtilities.ApplicationDirectory concatenated 
+   * with /MCS/ and the name of the collection.
+   * The storageObject name is used as file name. If the storageObject name is null, the storageObject id is used as file name. 
+   * If streaming of the file is succesfull, the storageObject filePath is set to the fully qualified file system path.
    * If the content type is application/zip, we unzip the file in the same directory after downloading to the file system.
    * 
    * @param storageObject
-   * @param response
    */
   public void saveStorageObjectToFileSystem(StorageObject storageObject)  
   {
     sLog.fine("Executing saveStorageObjectToFileSystem");
-    byte[] content = storageObject.getContent();
+    InputStream contentStream = storageObject.getContentStream();
+    if (contentStream==null)
+    {
+      sLog.fine("contentStream is null, file not saved to file system");
+      return;
+    }
+    // set up file path based on directoryPath and storageObject name/id
+    String fileName = storageObject.getName()!= null ? storageObject.getName() : storageObject.getId();
+    String filePath = storageObject.getFilePath();
     String dir = storageObject.getDirectoryPath();
     File fileDir = new File(dir);
     if (!fileDir.exists())
     {
       fileDir.mkdirs();      
     }
-    String filePath = dir + File.separator + storageObject.getId();
-    File file = new File(filePath);
-    OutputStream fos = null;
+    filePath = dir + File.separator + fileName;
     try
     {
-      fos = new FileOutputStream(file);
-      fos.write(content);
-      fos.flush();
+      Files.copy(contentStream, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
       storageObject.setFilePath(filePath);
-      sLog.info("Storage Object "+storageObject.getId()+" succesfully saved to file system.");
-    }
-    catch (FileNotFoundException e)
-    {
-      sLog.info("Storage Object "+storageObject.getId()+" NOT saved to file system: "+e.getLocalizedMessage());
+      sLog.info("Storage Object "+fileName+" succesfully saved to file system.");
+      storageObject.setLocalVersionIsCurrent(true);
+      File file = new File(filePath);
+      if ("application/zip".equals(storageObject.getContentType()))
+      {
+        unzipFile(file, file.getParentFile(),false);
+      }     
     }
     catch (IOException e)
     {
-      sLog.info("Storage Object "+storageObject.getId()+" NOT saved to file system: "+e.getLocalizedMessage());
+      sLog.info("Storage Object "+fileName+" NOT saved to file system: "+e.getLocalizedMessage());
     }
     finally
     {
-      if (fos!=null)
-      {
         try
         {
-          fos.close();
+          storageObject.setContentStream(null);
+          contentStream.close();
         }
         catch (IOException e)
         {
         }
-      }
-    }
-    if ("application/zip".equals(storageObject.getContentType()))
-    {
-      unzipFile(file, file.getParentFile(),false);
-    }     
+    }      
+
   }
 
   /**
@@ -478,7 +499,7 @@ public class StorageObjectService
    * @param unzipDir
    * @param deleteZipFile
    */
-  protected void unzipFile(File zipFile, File unzipDir, boolean deleteZipFile)
+  public void unzipFile(File zipFile, File unzipDir, boolean deleteZipFile)
   {
     sLog.fine("Executing unzipFile for "+zipFile.getName());
     if (!unzipDir.exists())
@@ -541,7 +562,7 @@ public class StorageObjectService
    * will do nothing when the storageObject is not persisted to the database.
    * @param storageObject
    */
-  public void resetStorageObject(StorageObject storageObject)
+  public void resetStorageObjectMetadata(StorageObject storageObject)
   {
     super.resetEntity(storageObject);
   }
