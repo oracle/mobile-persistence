@@ -2,8 +2,6 @@
   Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
   
   $revision_history$
-  17-feb-2016   Steven Davelaar
-  1.2           Added support for Boolean Java type
   19-mar-2015   Steven Davelaar / Puja Subramanyam
   1.1           Fix in convertDateValueIfNeeded to keep time component 
   08-jan-2015   Steven Davelaar
@@ -100,10 +98,6 @@ public class BindParamInfo
 
   public void setValue(Object value)
   {
-    if (value!=null && javaType==Boolean.class)
-    {
-      value = value.toString();
-    }
     this.value = convertDateValueIfNeeded(value);
   }
 
