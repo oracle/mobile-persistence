@@ -1,5 +1,9 @@
 A-Team Mobile Persistence Accelerator
 =====================================
+
+**UPDATE:** This project is no longer maintained. AMPA is now part of Oracle MAF 2.3.1 http://www.ateam-oracle.com/migrating-ampa-apps-to-oracle-maf-2-3-1-client-data-model/
+
+# Overview
 The A-Team Mobile Persistence Accelerator (AMPA) is a lightweight persistence and data synchronization framework developed by the Oracle Mobile A-Team. 
 AMPA works on top of Oracle Mobile Application Framework (MAF).
 It eases the consumption of RESTful services, and provides a complete persistence layer that allows you to use the mobile application in offline mode. 
